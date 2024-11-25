@@ -9,9 +9,10 @@ Struct that handle the registering the user
 type RegisterRequestHandler struct {
 	FirstName string `json:"firstname"`
 	LastName  string `json:"lastname"`
+	Phone     string `json:"phone"`
 	Email     string `json:"email"`
 	Password  string `json:"password"`
-	Phone     string `json:"phone"`
+	Owner     bool   `json:"owner"`
 	Career    string `json:"career"`
 }
 

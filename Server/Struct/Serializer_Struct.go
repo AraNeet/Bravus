@@ -1,7 +1,8 @@
 package Struct
 
 import (
-	models2 "github.com/AramisAra/BravusBackend/models"
+	"github.com/AramisAra/BravusBackend/models"
+	"github.com/google/uuid"
 )
 
 // UserSerializer
@@ -13,11 +14,12 @@ type UserSerializer struct {
 	LastName  string `json:"lastname"`
 	Email     string `json:"email"`
 	Phone     string `json:"phone"`
+	Owner     bool   `json:"owner"`
 	Career    string `json:"career"`
 
-	Animals      []models2.Animal      `json:"animals"`
-	Appointments []models2.Appointment `json:"appointments"`
-	Services     []models2.Service     `json:"services"`
+	Animals      []models.Animal      `json:"animals"`
+	Appointments []models.Appointment `json:"appointments"`
+	Services     []models.Service     `json:"services"`
 }
 
 // ServiceSerializer
@@ -45,9 +47,9 @@ type AnimalSerializer struct {
 Struct take information from the database and cuts out data
 */
 type AppointmentSerializer struct {
-	ClientName string `json:"client-name"`
-	OwnerName  string `json:"owner-name"`
-	Service    string `json:"service"`
-	Date       string `json:"date"`
-	Time       string `json:"time"`
+	ClientID uuid.UUID `json:"client-id"`
+	OwnerID  uuid.UUID `json:"owner-id"`
+	Service  string    `json:"service"`
+	Date     string    `json:"date"`
+	Time     string    `json:"time"`
 }

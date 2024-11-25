@@ -17,14 +17,14 @@ type User struct {
 	FirstName string    `json:"firstname"`
 	LastName  string    `json:"lastname"`
 	Phone     string    `json:"phone"`
-	Email     string    `json:"email"`
+	Email     string    `json:"email" gorm:"unique;not null;"`
 	Password  string    `json:"password"`
 	Owner     bool      `json:"owner"`
-	Career    *string   `json:"career"`
+	Career    string    `json:"career"`
 
-	Appointments *[]Appointment `gorm:"many2many;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;serializer:json" json:"appointments"`
-	Animals      *[]Animal      `gorm:"foreignKey:OwnerID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;serializer:json" json:"animals"`
-	Services     *[]Service     `gorm:"foreignKey:UserID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;serializer:json" json:"services"`
+	Appointments []Appointment `gorm:"many2many:appointment_list;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;serializer:json" json:"appointments"`
+	Animals      []Animal      `gorm:"foreignKey:OwnerID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;serializer:json" json:"animals"`
+	Services     []Service     `gorm:"foreignKey:UserID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;serializer:json" json:"services"`
 }
 
 // Animal
