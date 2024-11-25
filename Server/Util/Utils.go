@@ -4,6 +4,7 @@ import (
 	"errors"
 	"github.com/AramisAra/BravusBackend/Struct"
 	"github.com/AramisAra/BravusBackend/models"
+	"github.com/google/uuid"
 )
 
 func Serializer(data interface{}) (interface{}, error) {
@@ -44,4 +45,9 @@ func Serializer(data interface{}) (interface{}, error) {
 	default:
 		return nil, errors.New("unsupported type for serialization")
 	}
+}
+
+func IsValidUUID(id string) bool {
+	_, err := uuid.Parse(id)
+	return err == nil
 }
