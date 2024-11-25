@@ -9,6 +9,7 @@ import (
 	"gorm.io/gorm"
 )
 
+// CreateUser is the endpoint that manages the creation of new user.
 func CreateUser(c *fiber.Ctx) error {
 	Input := Struct.RegisterRequestHandler{}
 	err := c.BodyParser(&Input)
@@ -32,8 +33,8 @@ func CreateUser(c *fiber.Ctx) error {
 	}
 	db := c.Locals("db").(*gorm.DB)
 
-	CreateUser := db.Create(&NewUser)
-	if CreateUser.Error != nil {
+	createUser := db.Create(&NewUser)
+	if createUser.Error != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed Creating the user"})
 	}
 
@@ -44,6 +45,8 @@ func CreateUser(c *fiber.Ctx) error {
 	return c.Status(fiber.StatusOK).JSON(response)
 }
 
+// LoginUser is the endpoint that manages the auth of the user. It checks if login info is correct then creates the JWT
+// TODO: Main thing is setting up the JWT Creation and Management.
 func LoginUser(c *fiber.Ctx) error {
 	Input := Struct.LoginRequestHandler{}
 
@@ -71,6 +74,7 @@ func LoginUser(c *fiber.Ctx) error {
 	return c.Status(fiber.StatusOK).JSON(response)
 }
 
+// GetUser retrieves user information based on a provided query parameter 'id' and returns a JSON response.
 func GetUser(c *fiber.Ctx) error {
 	id := c.Query("id")
 	if id == "" {
@@ -95,6 +99,7 @@ func GetUser(c *fiber.Ctx) error {
 	return c.Status(fiber.StatusOK).JSON(response)
 }
 
+// GetUserWithAnimal fetches a user by a given id from the query parameter, including the user's associated animals.
 func GetUserWithAnimal(c *fiber.Ctx) error {
 	id := c.Query("id")
 	if id == "" {
@@ -119,6 +124,7 @@ func GetUserWithAnimal(c *fiber.Ctx) error {
 	return c.Status(fiber.StatusOK).JSON(response)
 }
 
+// GetUserWithAppointment retrieves a user along with their appointments based on the provided user ID from the query parameters.
 func GetUserWithAppointment(c *fiber.Ctx) error {
 	id := c.Query("id")
 	if id == "" {
@@ -144,6 +150,7 @@ func GetUserWithAppointment(c *fiber.Ctx) error {
 	return c.Status(fiber.StatusOK).JSON(response)
 }
 
+// GetUserWithService retrieves a user and their associated services from the database based on the user ID provided in the query params.
 func GetUserWithService(c *fiber.Ctx) error {
 	id := c.Query("id")
 	if id == "" {
@@ -169,6 +176,7 @@ func GetUserWithService(c *fiber.Ctx) error {
 	return c.Status(fiber.StatusOK).JSON(response)
 }
 
+// GetBusinessUserInfo retrieves business user information based on the provided user ID query parameter.
 func GetBusinessUserInfo(c *fiber.Ctx) error {
 	id := c.Query("id")
 	if id == "" {
@@ -196,6 +204,7 @@ func GetBusinessUserInfo(c *fiber.Ctx) error {
 	return c.Status(fiber.StatusOK).JSON(response)
 }
 
+// ListUser retrieves and returns a list of users who are marked as owners from the database.
 func ListUser(c *fiber.Ctx) error {
 	db := c.Locals("db").(*gorm.DB)
 	var users []models.User
@@ -213,6 +222,7 @@ func ListUser(c *fiber.Ctx) error {
 	return c.Status(fiber.StatusOK).JSON(response)
 }
 
+// UpdateUser updates an existing user's details based on the provided user ID and information.
 func UpdateUser(c *fiber.Ctx) error {
 	id := c.Query("id")
 	if id == "" {
@@ -259,6 +269,7 @@ func UpdateUser(c *fiber.Ctx) error {
 	return c.Status(fiber.StatusOK).JSON(response)
 }
 
+// DeleteUser deletes a user based on a provided query parameter 'id' and returns a status message in JSON format.
 func DeleteUser(c *fiber.Ctx) error {
 	id := c.Query("id")
 	if id == "" {
