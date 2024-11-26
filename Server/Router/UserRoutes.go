@@ -15,6 +15,6 @@ func UserRoutes(app *fiber.App) {
 	User.Get("/get-user-Service", CRUD.GetUserWithService)
 	User.Get("/get-user-business", CRUD.GetBusinessUserInfo)
 	User.Put("/update", CRUD.UpdateUser)
-	User.Get("/get-users", CRUD.ListUser)
+	User.Get("/get-users", CRUD.ListAllBusiness)
 	User.Delete("/delete", CRUD.DeleteUser)
 }

@@ -204,19 +204,25 @@ func GetBusinessUserInfo(c *fiber.Ctx) error {
 	return c.Status(fiber.StatusOK).JSON(response)
 }
 
-// ListUser retrieves and returns a list of users who are marked as owners from the database.
-func ListUser(c *fiber.Ctx) error {
+// ListAllBusiness retrieves and returns a list of users who are marked as owners from the database.
+func ListAllBusiness(c *fiber.Ctx) error {
 	db := c.Locals("db").(*gorm.DB)
 	var users []models.User
 
-	searcher := db.Find(&users, "where owner = true")
-	if searcher.Error != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Failed to get users"})
+	db.Preload("Services").Find(&users, "owner = true")
+	if err := db.Error; err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed Fetching the users"})
 	}
 
-	response, err := Util.Serializer(users)
-	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed Serializing the users"})
+	var response []Struct.UserSerializer
+
+	for _, user := range users {
+		serializedUser, err := Util.Serializer(user)
+		if err != nil {
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed Serializing the user"})
+		}
+		smtUser := serializedUser.(Struct.UserSerializer)
+		response = append(response, smtUser)
 	}
 
 	return c.Status(fiber.StatusOK).JSON(response)
