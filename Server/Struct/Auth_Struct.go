@@ -2,20 +2,6 @@ package Struct
 
 import "github.com/google/uuid"
 
-// RegisterRequestHandler
-/*
-Struct that handle the registering the user
-*/
-type RegisterRequestHandler struct {
-	FirstName string `json:"firstname"`
-	LastName  string `json:"lastname"`
-	Phone     string `json:"phone"`
-	Email     string `json:"email"`
-	Password  string `json:"password"`
-	Owner     bool   `json:"owner"`
-	Career    string `json:"career"`
-}
-
 // LoginRequestHandler
 /*
 Struct that handle the logging in the user
