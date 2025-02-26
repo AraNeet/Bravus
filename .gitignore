@@ -2,6 +2,7 @@ BackEnd/.env
 BackEnd/client_secret.json
 BackEnd/.tokens
 /ReferenceBackend/
+/tmp
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
 # dependencies
