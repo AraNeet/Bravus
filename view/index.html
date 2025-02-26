@@ -1,0 +1,80 @@
+{{template "layouts/main" .}}
+
+{{define "content"}}
+<main>
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="container">
+            <div class="hero-content">
+                <h1>Streamline Your Appointment Scheduling</h1>
+                <p>Efficient appointment management system for businesses. Schedule, manage, and track appointments with ease.</p>
+                <div class="button-group">
+                    <a href="#" class="button primary">
+                        Get Started
+                        <i data-lucide="arrow-right"></i>
+                    </a>
+                    <a href="#" class="button outline">View Demo</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section id="features" class="features">
+        <div class="container">
+            <h2>Key Features</h2>
+            <div class="features-grid">
+                {{range .Features}}
+                <div class="feature-card">
+                    <i data-lucide="{{.Icon}}"></i>
+                    <h3>{{.Title}}</h3>
+                    <p>{{.Description}}</p>
+                </div>
+                {{end}}
+            </div>
+        </div>
+    </section>
+
+    <!-- How it Works Section -->
+    <section id="how-it-works" class="how-it-works">
+        <div class="container">
+            <div class="how-it-works-grid">
+                <div class="content">
+                    <h2>How Bravus Works</h2>
+                    <p>Get started with Bravus in three simple steps:</p>
+                    <ul class="steps">
+                        {{range .Steps}}
+                        <li>
+                            <div class="step-number">{{.Number}}</div>
+                            <span>{{.Text}}</span>
+                        </li>
+                        {{end}}
+                    </ul>
+                </div>
+                <div class="image">
+                    <div class="placeholder">
+                        <i data-lucide="shield"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="cta">
+        <div class="container">
+            <h2>Ready to Get Started?</h2>
+            <p>Join thousands of businesses that trust Bravus for their appointment scheduling needs.</p>
+            <a href="#" class="button secondary">
+                Sign Up Now
+                <i data-lucide="arrow-right"></i>
+            </a>
+        </div>
+    </section>
+</main>
+
+<script>
+    // Initialize Lucide icons
+    lucide.createIcons();
+</script>
+{{end}}
