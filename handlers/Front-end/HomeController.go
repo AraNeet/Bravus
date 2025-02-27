@@ -9,3 +9,4 @@ func HomeView(c *fiber.Ctx) error {
 		"Title": "Bravus - Modern Appointment Scheduling",
 	})
 }
+

@@ -5,22 +5,46 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{.Title}}</title>
     <link rel="stylesheet" href="/static/css/styles.css">
-    <!-- Add HTMX -->
-    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
 </head>
 <body>
-    {{template "header" .}}
+    {{template "partials/header" .}}
     {{template "content" .}}
-    {{template "footer" .}}
+    {{template "partials/footer" .}}
     <script>
         lucide.createIcons();
-        // Add loading states
-        htmx.on('htmx:beforeRequest', function(evt) {
-            evt.detail.elt.classList.add('loading');
-        });
-        htmx.on('htmx:afterRequest', function(evt) {
-            evt.detail.elt.classList.remove('loading');
+        
+        // Create stars
+        function createStars() {
+            const stars = document.getElementById('stars');
+            const numberOfStars = 100;
+            
+            for (let i = 0; i < numberOfStars; i++) {
+                const star = document.createElement('div');
+                star.className = 'star';
+                const x = Math.random() * 100;
+                const y = Math.random() * 100;
+                const size = Math.random() * 2;
+                star.style.left = `${x}%`;
+                star.style.top = `${y}%`;
+                star.style.width = `${size}px`;
+                star.style.height = `${size}px`;
+                star.style.animationDelay = `${Math.random() * 1}s`;
+                stars.appendChild(star);
+            }
+        }
+
+        // Initialize stars
+        createStars();
+
+        // Smooth scroll
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                document.querySelector(this.getAttribute('href')).scrollIntoView({
+                    behavior: 'smooth'
+                });
+            });
         });
     </script>
 </body>

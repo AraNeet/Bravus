@@ -1,90 +1,128 @@
 {{template "layouts/main" .}}
 {{define "content"}}
-<main>
-    <!-- Hero Section -->
-    <section class="hero">
-        <div class="container">
-            <div class="hero-content">
-                <h1 class="gradient-text">Schedule Appointments with Confidence</h1>
-                <p>Streamline your scheduling process with our intelligent appointment management system.</p>
-                <div class="button-group">
-                    <!-- Subscribe Form with HTMX -->
-                    <form class="subscribe-form"
-                          hx-post="/subscribe"
-                          hx-target="#subscribe-message"
-                          hx-swap="innerHTML">
-                        <input type="email" 
-                               name="email" 
-                               placeholder="Enter your email"
-                               required>
-                        <button type="submit" 
-                                class="btn btn-primary"
-                                hx-indicator="#spinner">
-                            <span>Start Free Trial</span>
-                            <span id="spinner" class="htmx-indicator">
-                                <i data-lucide="loader-2" class="spin"></i>
-                            </span>
-                        </button>
-                    </form>
-                    <div id="subscribe-message"></div>
-                    
-                    <!-- Demo Modal Trigger -->
-                    <button class="btn btn-outline"
-                            hx-get="/partials/demo-modal"
-                            hx-target="body"
-                            hx-swap="beforeend">
-                        Watch Demo
-                    </button>
+<div class="stars" id="stars"></div>
+
+<!-- Hero Section -->
+<section class="section hero">
+    <div class="illustration">
+        <div class="computer">
+            <div class="monitor-container">
+                <div class="monitor">
+                    <div class="camera-light"></div>
+                    <div class="screen">
+                        <div class="hero-content">
+                            <div class="hero-frame">
+                                <h1>Bravus</h1>
+                                <p class="hero-subtitle">Streamline your business with intelligent scheduling solutions</p>
+                                <a href="/start" class="btn-start">Start Free Trial</a>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
-        <div class="gradient-orbs">
-            <div class="orb orb-1"></div>
-            <div class="orb orb-2"></div>
-        </div>
-    </section>
+        <div class="floating-element floating-1"></div>
+        <div class="floating-element floating-2"></div>
+        <div class="floating-element floating-3"></div>
+    </div>
+    <div class="scroll-prompt">
+        <span>Scroll to explore</span>
+        <i data-lucide="chevron-down"></i>
+    </div>
+</section>
 
-    <!-- Features Section -->
-    <section class="features" id="features">
-        <div class="container">
-            <h2 class="section-title gradient-text">Everything You Need to Manage Appointments</h2>
-            <div class="features-grid"
-                 hx-get="/features"
-                 hx-trigger="intersect once"
-                 hx-swap="innerHTML">
-                <!-- Features will be loaded here -->
-                <div class="feature-card-placeholder" role="loading">
-                    <div class="shimmer"></div>
-                </div>
-                <div class="feature-card-placeholder" role="loading">
-                    <div class="shimmer"></div>
-                </div>
-                <div class="feature-card-placeholder" role="loading">
-                    <div class="shimmer"></div>
-                </div>
+<!-- Features Section -->
+<section class="section features" id="features">
+    <div class="container">
+        <h2>Powerful Features</h2>
+        <div class="features-grid">
+            <div class="feature-card">
+                <i data-lucide="calendar" class="feature-icon"></i>
+                <h3>Smart Scheduling</h3>
+                <p>Intelligent conflict prevention and automated scheduling optimization. Streamline your appointment management with ease.</p>
+            </div>
+            <div class="feature-card">
+                <i data-lucide="bell" class="feature-icon"></i>
+                <h3>Automated Reminders</h3>
+                <p>Never miss an appointment with smart notifications and reminders. Keep your clients informed and reduce no-shows.</p>
+            </div>
+            <div class="feature-card">
+                <i data-lucide="users" class="feature-icon"></i>
+                <h3>Team Management</h3>
+                <p>Efficiently manage multiple staff members and their schedules. Perfect for businesses of all sizes.</p>
             </div>
         </div>
-    </section>
+    </div>
+</section>
 
-    <!-- Demo Section -->
-    <section class="demo" id="demo">
-        <div class="container">
-            <h2 class="section-title gradient-text">See Bravus in Action</h2>
-            <div class="demo-video">
-                <div class="video-placeholder">
-                    <i data-lucide="play" class="play-icon"></i>
+<!-- Examples Section -->
+<section class="section examples" id="examples">
+    <div class="container">
+        <h2>See It In Action</h2>
+        <div class="examples-grid">
+            <div class="example-card">
+                <div class="example-image">
+                    <img src="/static/images/calendar-view.jpg" alt="Calendar View">
                 </div>
+                <h3>Intuitive Calendar</h3>
+                <p>Easy-to-use interface for managing appointments</p>
+            </div>
+            <div class="example-card">
+                <div class="example-image">
+                    <img src="/static/images/mobile-app.jpg" alt="Mobile App">
+                </div>
+                <h3>Mobile Ready</h3>
+                <p>Access your schedule from anywhere</p>
+            </div>
+            <div class="example-card">
+                <div class="example-image">
+                    <img src="/static/images/analytics.jpg" alt="Analytics Dashboard">
+                </div>
+                <h3>Analytics Dashboard</h3>
+                <p>Track and optimize your business performance</p>
             </div>
         </div>
-    </section>
+    </div>
+</section>
 
-    <!-- CTA Section -->
-    <section class="cta">
-        <div class="container">
-            <h2 class="gradient-text">Ready to Transform Your Scheduling?</h2>
-            <p>Join thousands of businesses that trust Bravus for their appointment scheduling needs.</p>
-            <a href="/signup" class="btn btn-primary">Get Started Now</a>
+<!-- Contact Section -->
+<section class="section contact" id="contact">
+    <div class="container">
+        <div class="contact-grid">
+            <div class="contact-info">
+                <h2>Get In Touch</h2>
+                <p>Ready to transform your scheduling experience? Contact us today.</p>
+                <div class="contact-details">
+                    <div class="contact-item">
+                        <i data-lucide="mail"></i>
+                        <span>contact@bravus.com</span>
+                    </div>
+                    <div class="contact-item">
+                        <i data-lucide="phone"></i>
+                        <span>+1 (555) 123-4567</span>
+                    </div>
+                    <div class="contact-item">
+                        <i data-lucide="map-pin"></i>
+                        <span>123 Business Street, Suite 100<br>San Francisco, CA 94105</span>
+                    </div>
+                </div>
+            </div>
+            <form class="contact-form">
+                <div class="form-group">
+                    <label for="name">Name</label>
+                    <input type="text" id="name" name="name" required>
+                </div>
+                <div class="form-group">
+                    <label for="email">Email</label>
+                    <input type="email" id="email" name="email" required>
+                </div>
+                <div class="form-group">
+                    <label for="message">Message</label>
+                    <textarea id="message" name="message" rows="4" required></textarea>
+                </div>
+                <button type="submit" class="btn-start">Send Message</button>
+            </form>
         </div>
-    </section>
-</main>
+    </div>
+</section>
 {{end}}

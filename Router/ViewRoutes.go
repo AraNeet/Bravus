@@ -6,6 +6,5 @@ import (
 )
 
 func ViewsRoutes(app *fiber.App) {
-	views := app.Group("views")
-	views.Get("/", frontend.HomeView)
+	app.Get("/", frontend.HomeView)
 }
