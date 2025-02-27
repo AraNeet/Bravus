@@ -5,16 +5,23 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{.Title}}</title>
     <link rel="stylesheet" href="/static/css/styles.css">
-    <!-- Include Lucide Icons -->
+    <!-- Add HTMX -->
+    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
 </head>
 <body>
-    {{template "partials/header" .}}
-    {{block "content" .}}{{end}}
-    {{template "partials/footer" .}}
+    {{template "header" .}}
+    {{template "content" .}}
+    {{template "footer" .}}
     <script>
-        // Initialize Lucide icons
         lucide.createIcons();
+        // Add loading states
+        htmx.on('htmx:beforeRequest', function(evt) {
+            evt.detail.elt.classList.add('loading');
+        });
+        htmx.on('htmx:afterRequest', function(evt) {
+            evt.detail.elt.classList.remove('loading');
+        });
     </script>
 </body>
 </html>
