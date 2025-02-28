@@ -4,6 +4,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/AramisAra/BravusBackend/Global"
 	"github.com/AramisAra/BravusBackend/config"
 	"github.com/AramisAra/BravusBackend/models"
 	"gorm.io/driver/postgres"
@@ -17,9 +18,12 @@ func ConnectPostgresDB() *gorm.DB {
 	if err != nil {
 		log.Fatal("Failed to connect to database")
 	}
-	err = db.AutoMigrate(&models.User{}, &models.Animal{}, &models.Appointment{}, &models.Service{})
-	if err != nil {
-		log.Fatal("Failed to migrate database")
+	
+	if Global.Debug || Global.Devmode {
+		err = db.AutoMigrate(&models.User{}, &models.Animal{}, &models.Appointment{}, &models.Service{})
+		if err != nil {
+			log.Fatal("Failed to migrate database")
+		}
 	}
 
 	sqlDB, err := db.DB()
