@@ -11,10 +11,3 @@ func LocalPGMiddleware() func(c *fiber.Ctx) error {
 		return c.Next()
 	}
 }
-
-func LocalEngineView() func(c *fiber.Ctx) error {
-	return func(c *fiber.Ctx) error {
-		c.Locals("engine", Global.Engine)
-		return c.Next()
-	}
-}
