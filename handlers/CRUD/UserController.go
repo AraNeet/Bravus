@@ -241,7 +241,7 @@ func UpdateUser(c *fiber.Ctx) error {
 	db := c.Locals("db").(*gorm.DB)
 	user := models.User{}
 
-	searcher := db.Find(&user, "where id = ?", id)
+	searcher := db.Find(&user, "id = ?", id)
 	if searcher.Error != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "User doesn't exist"})
 	}

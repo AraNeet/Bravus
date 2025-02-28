@@ -61,7 +61,8 @@ func GetAnimal(c *fiber.Ctx) error {
 
 	db := c.Locals("db").(*gorm.DB)
 	animal := models.Animal{}
-	searcher := db.Find(animal, "id = ?", id)
+
+	searcher := db.Find(&animal, "id = ?", id)
 	if searcher.Error != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Animal Doesn't exist"})
 	}
@@ -88,9 +89,9 @@ func UpdateAnimal(c *fiber.Ctx) error {
 	db := c.Locals("db").(*gorm.DB)
 	animal := models.Animal{}
 
-	searcher := db.Find(&animal, "where id = ?", id)
+	searcher := db.Find(&animal, "id = ?", id)
 	if searcher.Error != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "User doesn't exist"})
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Animal doesn't exist"})
 	}
 
 	Input := Struct.AnimalUpdater{}
