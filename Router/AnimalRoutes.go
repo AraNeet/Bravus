@@ -8,4 +8,7 @@ import (
 func AnimalRoutes(app *fiber.App) {
 	animal := app.Group("/animal")
 	animal.Post("/create", CRUD.CreateAnimal)
+	animal.Get("/get-animal", CRUD.GetAnimal)
+	animal.Put("/update", CRUD.UpdateAnimal)
+	animal.Delete("/delete", CRUD.DeleteAnimal)
 }
