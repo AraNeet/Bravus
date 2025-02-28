@@ -74,34 +74,71 @@ func GetAnimal(c *fiber.Ctx) error {
 	return c.Status(fiber.StatusOK).JSON(response)
 }
 
-// func UpdateAnimal(c *fiber.Ctx) error {
-// 	id := c.Query("id")
-// 	if id == "" {
-// 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid ID" })
-// 	}
+// UpdateAnimal
+func UpdateAnimal(c *fiber.Ctx) error {
+	id := c.Query("id")
+	if id == "" {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid ID" })
+	}
 
-// 	if !Util.IsValidUUID(id) {
-// 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid ID"})
-// 	}
+	if !Util.IsValidUUID(id) {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid ID"})
+	}
 
-// 	db := c.Locals("db").(*gorm.DB)
-// 	animal := models.Animal{}
+	db := c.Locals("db").(*gorm.DB)
+	animal := models.Animal{}
 
-// 	searcher := db.Find(&animal, "where id = ?", id)
-// 	if searcher.Error != nil {
-// 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "User doesn't exist"})
-// 	}
+	searcher := db.Find(&animal, "where id = ?", id)
+	if searcher.Error != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "User doesn't exist"})
+	}
 
-// 	Input := Struct.AnimalUpdater{}
-// 	err := c.BodyParser(&Input)
-// 	if err != nil {
-// 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed Parsing the body"})
-// 	}
+	Input := Struct.AnimalUpdater{}
+	err := c.BodyParser(&Input)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed Parsing the body"})
+	}
 
-// 	if Input.AnimalAge != 0 {
-// 		animal.AnimalAge = Input.AnimalAge
-// 	}
-// 	if Input.AnimalSpecie != "" {
-		
-// 	}
-// }
+	if Input.AnimalAge != 0 {
+		animal.AnimalAge = Input.AnimalAge
+	}
+	if Input.AnimalSpecie != "" {
+		animal.AnimalSpecie = Input.AnimalSpecie
+	}
+	if Input.AnimalName != "" {
+		animal.AnimalName = Input.AnimalName
+	}
+
+	Saver := db.Save(&animal)
+	if Saver.Error != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to save updates"})
+	}
+
+	response, err := Util.Serializer(animal)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed Serializing the animal"})
+	}
+
+	return c.Status(fiber.StatusOK).JSON(response)
+}
+
+func DeleteAnimal(c *fiber.Ctx) error {
+	id := c.Query("id")
+	if id == "" {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid ID"})
+	}
+
+	if !Util.IsValidUUID(id) {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid ID"})
+	}
+
+	db := c.Locals("db").(*gorm.DB)
+	animal := models.Animal{}
+
+	deleter := db.Delete(&animal, "id = ?", id)
+	if deleter.Error != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Animal Doesn't exist"})
+	}
+
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{"message": "Animal deleted successfully"})
+}

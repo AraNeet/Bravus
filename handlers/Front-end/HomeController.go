@@ -6,7 +6,7 @@ import (
 
 func HomeView(c *fiber.Ctx) error {
 	return c.Render("index", fiber.Map{
-		"Title": "Bravus - Modern Appointment Scheduling",
+		"Title": "Bravus",
 	})
 }
 
