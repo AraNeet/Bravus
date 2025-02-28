@@ -9,4 +9,6 @@ import (
 var (
 	DB *gorm.DB
 	Engine *html.Engine
+	Debug bool = true
+	Devmode bool = false
 )
