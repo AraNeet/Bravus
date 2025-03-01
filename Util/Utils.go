@@ -29,11 +29,20 @@ func Serializer(data interface{}) (interface{}, error) {
 			AnimalAge:    v.AnimalAge,
 		}, nil
 	case models.Appointment:
+		userAppointmentSerializers := make([]Struct.UserAppointmentSerializer, len(v.Users))
+		for i, user := range v.Users {
+			userAppointmentSerializers[i] = Struct.UserAppointmentSerializer{
+				FirstName: user.FirstName,
+				LastName:  user.LastName,
+				Phone:     user.Phone,
+				Career:    user.Career,
+			}
+		}
 		return Struct.AppointmentSerializer{
-			Users: 		v.Users,
-			Service:  v.ServiceID,
-			Date:     v.Date,
-			Time:     v.Time,
+			Users:   userAppointmentSerializers,
+			Service: v.ServiceID,
+			Date:    v.Date,
+			Time:    v.Time,
 		}, nil
 	case models.Service:
 		return Struct.ServiceSerializer{
@@ -50,4 +59,15 @@ func Serializer(data interface{}) (interface{}, error) {
 func IsValidUUID(id string) bool {
 	_, err := uuid.Parse(id)
 	return err == nil
+}
+
+func IsValidUUIDs(id map[string]string) bool {
+	var pro error
+	for i := range id {
+		test := IsValidUUID(id[i])
+		if !test {
+			return pro != nil
+		}
+	}
+	return pro == nil
 }

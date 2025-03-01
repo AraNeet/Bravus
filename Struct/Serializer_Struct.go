@@ -42,13 +42,24 @@ type AnimalSerializer struct {
 	AnimalAge    uint   `json:"animal-age"`
 }
 
+// UserSerializer for appointments
+/*
+Struct take information from user and make it edit for the appointments.
+*/
+type UserAppointmentSerializer struct {
+	FirstName string `json:"firstname"`
+	LastName  string `json:"lastname"`
+	Phone     string `json:"phone"`
+	Career    string `json:"career"`
+}
+
 // AppointmentSerializer
 /*
 Struct take information from the database and cuts out data
 */
 type AppointmentSerializer struct {
-	Users    []models.User `json:"Users"`
-	Service  uuid.UUID    `json:"service"`
-	Date     string    `json:"date"`
-	Time     string    `json:"time"`
+	Users   []UserAppointmentSerializer `json:"Users"`
+	Service uuid.UUID                   `json:"service"`
+	Date    string                      `json:"date"`
+	Time    string                      `json:"time"`
 }

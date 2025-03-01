@@ -29,9 +29,6 @@ type ServiceRequestHandler struct {
 }
 
 type AppointmentRequestHandler struct {
-	ClientID string `json:"client-id"`
-	OwnerID  string `json:"owner-id"`
-	Service  string `json:"service"`
 	Date     string `json:"date"`
 	Time     string `json:"time"`
 }

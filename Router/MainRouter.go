@@ -6,4 +6,5 @@ func MainRouter(app *fiber.App) {
 	UserRoutes(app)
 	AnimalRoutes(app)
 	ViewsRoutes(app)
+	AppointmentRoutes(app)
 }

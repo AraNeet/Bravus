@@ -30,7 +30,7 @@ func main() {
 
 	Global.DB = handlers.ConnectPostgresDB()
 	Global.Engine = html.New("./view", ".html")
-
+	
 	app := fiber.New(fiber.Config{
 		CaseSensitive: true,
 		StrictRouting: true,

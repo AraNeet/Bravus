@@ -13,5 +13,7 @@ type Appointment struct {
 	Date      string    `json:"date" gorm:"DATE"`
 	Time      string    `json:"time" gorm:"TIME"`
 	Users     []User    `gorm:"many2many:user_appointments;" json:"participants"`
-	ServiceID uuid.UUID  `json:"service-id"`
+	OUserID   uuid.UUID `json:"UserO-ID"`
+	UUserID   uuid.UUID `json:"UserU-ID"`
+	ServiceID uuid.UUID `json:"service-id"`
 }
