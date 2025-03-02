@@ -1,6 +1,8 @@
 package CRUD
 
 import (
+	"time"
+
 	"github.com/AramisAra/BravusBackend/Struct"
 	"github.com/AramisAra/BravusBackend/Util"
 	"github.com/AramisAra/BravusBackend/models"
@@ -15,36 +17,20 @@ func CreateAppointment(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "No ID given"})
 	}
 
-	if !Util.IsValidUUID(id["Oid"]) {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid ID"})
+	err := Util.ValidateUUIDs(id["Oid"], id["Uid"], id["Sid"])
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err.Error()})
 	}
 
-	if !Util.IsValidUUID(id["Uid"]) {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid ID"})
-	}
-
-	if !Util.IsValidUUID(id["Sid"]) {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid ID"})
-	}
-
-	Oid, err := uuid.Parse(id["Oid"])
-	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to Parse ID"})
-	}
-	Uid, err := uuid.Parse(id["Uid"])
-	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to Parse ID"})
-	}
-	Sid, err := uuid.Parse(id["Sid"])
-	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to Parse ID"})
-	}
+	Sid, _ := uuid.Parse(id["Sid"])
 
 	Input := Struct.AppointmentRequestHandler{}
 	err = c.BodyParser(&Input)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to parsed input body"})
 	}
+
+	dataTime, err := time.Parse("01-02-2006 3:04PM", Input.DateTime)
 
 	ids := []string{id["Oid"], id["Uid"]}
 
@@ -57,11 +43,8 @@ func CreateAppointment(c *fiber.Ctx) error {
 	}
 	appointment := models.Appointment{
 		Users:     users,
-		UUserID:   Uid,
-		OUserID:   Oid,
-		Date:      Input.Date,
+		DateTime:  dataTime,
 		ServiceID: Sid,
-		Time:      Input.Time,
 	}
 
 	Creator := db.Create(&appointment)
