@@ -12,7 +12,7 @@ var (
 	Fb = fiber.Config{
 		CaseSensitive: true,
 		StrictRouting: true,
-		Views: Global.Engine,
+		Views:         Global.Engine,
 	}
 	Grm = gorm.Config{
 		Logger: logger.Default.LogMode(logger.Info),
