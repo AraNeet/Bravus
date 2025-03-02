@@ -17,9 +17,9 @@ type UserSerializer struct {
 	Owner     bool   `json:"owner"`
 	Career    string `json:"career"`
 
-	Animals      []models.Animal      `json:"animals"`
-	Appointments []models.Appointment `json:"appointments"`
-	Services     []models.Service     `json:"services"`
+	Animals      []models.Animal         `json:"animals"`
+	Appointments []AppointmentSerializer `json:"appointments"`
+	Services     []models.Service        `json:"services"`
 }
 
 // ServiceSerializer
@@ -58,8 +58,7 @@ type UserAppointmentSerializer struct {
 Struct take information from the database and cuts out data
 */
 type AppointmentSerializer struct {
-	Users   []UserAppointmentSerializer `json:"Users"`
-	Service uuid.UUID                   `json:"service"`
-	Date    string                      `json:"date"`
-	Time    string                      `json:"time"`
+	Users    []UserAppointmentSerializer `json:"Users"`
+	Service  uuid.UUID                   `json:"service"`
+	DateTime string                      `json:"datetime"`
 }

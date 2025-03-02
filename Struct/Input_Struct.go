@@ -29,6 +29,5 @@ type ServiceRequestHandler struct {
 }
 
 type AppointmentRequestHandler struct {
-	Date     string `json:"date"`
-	Time     string `json:"time"`
+	DateTime string `json:"datetime"`
 }

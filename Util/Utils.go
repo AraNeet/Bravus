@@ -11,6 +11,30 @@ import (
 func Serializer(data interface{}) (interface{}, error) {
 	switch v := data.(type) {
 	case models.User:
+		appointmentsData := make([]Struct.AppointmentSerializer, 0)
+		for _, appointment := range v.Appointments {
+			// Create filtered participants for each appointment
+			userAppointmentSerializers := make([]Struct.UserAppointmentSerializer, len(appointment.Users))
+			for i, user := range appointment.Users {
+				userAppointmentSerializers[i] = Struct.UserAppointmentSerializer{
+					FirstName: user.FirstName,
+					LastName:  user.LastName,
+					Phone:     user.Phone,
+					Career:    user.Career,
+				}
+			}
+
+			formattedDateTime := appointment.DateTime.Format("2006-01-02 15:04")
+
+			// Create appointment with filtered participants
+			appointmentData := Struct.AppointmentSerializer{
+				Users:    userAppointmentSerializers,
+				Service:  appointment.ServiceID,
+				DateTime: formattedDateTime,
+			}
+			appointmentsData = append(appointmentsData, appointmentData)
+		}
+
 		return Struct.UserSerializer{
 			FirstName:    v.FirstName,
 			LastName:     v.LastName,
@@ -19,7 +43,7 @@ func Serializer(data interface{}) (interface{}, error) {
 			Owner:        v.Owner,
 			Career:       v.Career,
 			Animals:      v.Animals,
-			Appointments: v.Appointments,
+			Appointments: appointmentsData,
 			Services:     v.Services,
 		}, nil
 	case models.Animal:
@@ -38,11 +62,11 @@ func Serializer(data interface{}) (interface{}, error) {
 				Career:    user.Career,
 			}
 		}
+		formattedDateTime := v.DateTime.Format("2006-01-02 15:04")
 		return Struct.AppointmentSerializer{
-			Users:   userAppointmentSerializers,
-			Service: v.ServiceID,
-			Date:    v.Date,
-			Time:    v.Time,
+			Users:    userAppointmentSerializers,
+			Service:  v.ServiceID,
+			DateTime: formattedDateTime,
 		}, nil
 	case models.Service:
 		return Struct.ServiceSerializer{
@@ -56,18 +80,11 @@ func Serializer(data interface{}) (interface{}, error) {
 	}
 }
 
-func IsValidUUID(id string) bool {
-	_, err := uuid.Parse(id)
-	return err == nil
-}
-
-func IsValidUUIDs(id map[string]string) bool {
-	var pro error
-	for i := range id {
-		test := IsValidUUID(id[i])
-		if !test {
-			return pro != nil
+func ValidateUUIDs(ids ...string) error {
+	for _, id := range ids {
+		if _, err := uuid.Parse(id); err != nil {
+			return errors.New("invalid UUID: " + id)
 		}
 	}
-	return pro == nil
+	return nil
 }
