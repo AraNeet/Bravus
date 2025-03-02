@@ -80,7 +80,7 @@ func GetUser(c *fiber.Ctx) error {
 	if id == "" {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "id is required"})
 	}
-	if !Util.IsValidUUID(id) {
+	if err := Util.ValidateUUIDs(id); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "id is invalid"})
 	}
 
@@ -100,19 +100,21 @@ func GetUser(c *fiber.Ctx) error {
 }
 
 // GetUserWithAnimal fetches a user by a given id from the query parameter, including the user's associated animals.
-func GetUserWithAnimal(c *fiber.Ctx) error {
+func GetUserWithEvery(c *fiber.Ctx) error {
 	id := c.Query("id")
 	if id == "" {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "id is required"})
 	}
-	if !Util.IsValidUUID(id) {
+
+	if err := Util.ValidateUUIDs(id); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "id is invalid"})
 	}
 
 	db := c.Locals("db").(*gorm.DB)
+	db = db.Debug()
 	user := models.User{}
-	db.Preload("Animals").Find(&user, "id = ?", id)
-	if user.Animals == nil {
+	Seacher := db.Preload("Animals").Preload("Appointments").Preload("Appointments.Users").Find(&user, "id = ?", id)
+	if Seacher.Error != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "User doesn't have any animals"})
 	}
 
@@ -124,31 +126,32 @@ func GetUserWithAnimal(c *fiber.Ctx) error {
 	return c.Status(fiber.StatusOK).JSON(response)
 }
 
-// GetUserWithAppointment retrieves a user along with their appointments based on the provided user ID from the query parameters.
-func GetUserWithAppointment(c *fiber.Ctx) error {
-	id := c.Query("id")
-	if id == "" {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "id is required"})
-	}
-	if !Util.IsValidUUID(id) {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "id is invalid"})
-	}
+// // GetUserWithAppointment retrieves a user along with their appointments based on the provided user ID from the query parameters.
+// func GetUserWithAppointment(c *fiber.Ctx) error {
+// 	id := c.Query("id")
+// 	if id == "" {
+// 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "id is required"})
+// 	}
+// 	err := Util.ValidateUUIDs(id)
+// 	if err != nil {
+// 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "id is invalid"})
+// 	}
 
-	db := c.Locals("db").(*gorm.DB)
-	user := models.User{}
+// 	db := c.Locals("db").(*gorm.DB)
+// 	user := models.User{}
 
-	db.Preload("Appointments").Find(&user, "id = ?", id)
-	if user.Appointments == nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "User doesn't have any appointments"})
-	}
+// 	db.Preload("Appointments").Find(&user, "id = ?", id)
+// 	if user.Appointments == nil {
+// 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "User doesn't have any appointments"})
+// 	}
 
-	response, err := Util.Serializer(user)
-	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed Serializing the user"})
-	}
+// 	response, err := Util.Serializer(user)
+// 	if err != nil {
+// 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed Serializing the user"})
+// 	}
 
-	return c.Status(fiber.StatusOK).JSON(response)
-}
+// 	return c.Status(fiber.StatusOK).JSON(response)
+// }
 
 // GetUserWithService retrieves a user and their associated services from the database based on the user ID provided in the query params.
 func GetUserWithService(c *fiber.Ctx) error {
@@ -156,7 +159,8 @@ func GetUserWithService(c *fiber.Ctx) error {
 	if id == "" {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "id is required"})
 	}
-	if !Util.IsValidUUID(id) {
+	err := Util.ValidateUUIDs(id)
+	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "id is invalid"})
 	}
 
@@ -182,7 +186,8 @@ func GetBusinessUserInfo(c *fiber.Ctx) error {
 	if id == "" {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "id is required"})
 	}
-	if !Util.IsValidUUID(id) {
+	err := Util.ValidateUUIDs(id)
+	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "id is invalid"})
 	}
 
@@ -234,7 +239,8 @@ func UpdateUser(c *fiber.Ctx) error {
 	if id == "" {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "id is required"})
 	}
-	if !Util.IsValidUUID(id) {
+	err := Util.ValidateUUIDs(id)
+	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "id is invalid"})
 	}
 
@@ -247,7 +253,7 @@ func UpdateUser(c *fiber.Ctx) error {
 	}
 
 	Input := Struct.UserUpdater{}
-	err := c.BodyParser(&Input)
+	err = c.BodyParser(&Input)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed Parsing the body"})
 	}
@@ -281,7 +287,8 @@ func DeleteUser(c *fiber.Ctx) error {
 	if id == "" {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "id is required"})
 	}
-	if !Util.IsValidUUID(id) {
+	err := Util.ValidateUUIDs(id)
+	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "id is invalid"})
 	}
 

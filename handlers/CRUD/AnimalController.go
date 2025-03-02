@@ -15,7 +15,6 @@ func CreateAnimal(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "No ID Provided"})
 	}
 
-	// Convert string ID to UUID
 	parsedID, err := uuid.Parse(id)
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid ID format"})
@@ -55,7 +54,8 @@ func GetAnimal(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid ID"})
 	}
 
-	if !Util.IsValidUUID(id) {
+	err := Util.ValidateUUIDs(id)
+	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid ID"})
 	}
 
@@ -79,10 +79,11 @@ func GetAnimal(c *fiber.Ctx) error {
 func UpdateAnimal(c *fiber.Ctx) error {
 	id := c.Query("id")
 	if id == "" {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid ID" })
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid ID"})
 	}
 
-	if !Util.IsValidUUID(id) {
+	err := Util.ValidateUUIDs(id)
+	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid ID"})
 	}
 
@@ -95,7 +96,7 @@ func UpdateAnimal(c *fiber.Ctx) error {
 	}
 
 	Input := Struct.AnimalUpdater{}
-	err := c.BodyParser(&Input)
+	err = c.BodyParser(&Input)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed Parsing the body"})
 	}
@@ -129,7 +130,8 @@ func DeleteAnimal(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid ID"})
 	}
 
-	if !Util.IsValidUUID(id) {
+	err := Util.ValidateUUIDs(id)
+	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid ID"})
 	}
 
