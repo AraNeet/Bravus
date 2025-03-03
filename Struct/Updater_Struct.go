@@ -36,6 +36,5 @@ type ServiceUpdater struct {
 Struct that manages appointment request for update date or time of the appointment.
 */
 type AppointmentUpdater struct {
-	Date string `json:"date"`
-	Time string `json:"time"`
+	DateTime string `json:"datetime"`
 }

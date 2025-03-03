@@ -8,4 +8,6 @@ import (
 func AppointmentRoutes(app *fiber.App) {
 	appointment := app.Group("appointment")
 	appointment.Post("/create", CRUD.CreateAppointment)
+	appointment.Put("/update", CRUD.UpdateAppointment)
+	appointment.Delete("/delete", CRUD.DeleteAppointment)
 }

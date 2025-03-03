@@ -59,3 +59,66 @@ func CreateAppointment(c *fiber.Ctx) error {
 
 	return c.Status(fiber.StatusOK).JSON(response)
 }
+
+func UpdateAppointment(c *fiber.Ctx) error {
+	id := c.Query("id")
+	if id == "" {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid ID"})
+	}
+
+	err := Util.ValidateUUIDs(id)
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid ID"})
+	}
+
+	db := c.Locals("db").(*gorm.DB)
+	appointment := models.Appointment{}
+
+	Seacher := db.Find(&appointment, "id = ?", id)
+	if Seacher.Error != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to find appointment"})
+	}
+
+	Input := Struct.AppointmentUpdater{}
+	err = c.BodyParser(&Input)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to parse input"})
+	}
+
+	dataTime, err := time.Parse("01-02-2006 3:04PM", Input.DateTime)
+
+	if Input.DateTime != "" {
+		appointment.DateTime = dataTime
+	}
+
+	db.Save(&appointment)
+
+	response, err := Util.Serializer(appointment)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to Serialize"})
+	}
+
+	return c.Status(fiber.StatusOK).JSON(response)
+}
+
+// DeleteUser deletes a user based on a provided query parameter 'id' and returns a status message in JSON format.
+func DeleteAppointment(c *fiber.Ctx) error {
+	id := c.Query("id")
+	if id == "" {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "id is required"})
+	}
+	err := Util.ValidateUUIDs(id)
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "id is invalid"})
+	}
+
+	db := c.Locals("db").(*gorm.DB)
+	appointment := models.Appointment{}
+
+	deleter := db.Delete(&appointment, "id = ?", id)
+	if deleter.Error != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Appointment doesn't exist"})
+	}
+
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{"message": "Appointment deleted successfully"})
+}

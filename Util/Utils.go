@@ -64,6 +64,7 @@ func Serializer(data interface{}) (interface{}, error) {
 		}
 		formattedDateTime := v.DateTime.Format("2006-01-02 15:04")
 		return Struct.AppointmentSerializer{
+			ID:       v.ID,
 			Users:    userAppointmentSerializers,
 			Service:  v.ServiceID,
 			DateTime: formattedDateTime,

@@ -58,6 +58,7 @@ type UserAppointmentSerializer struct {
 Struct take information from the database and cuts out data
 */
 type AppointmentSerializer struct {
+	ID       uuid.UUID                   `json:"ID"`
 	Users    []UserAppointmentSerializer `json:"Users"`
 	Service  uuid.UUID                   `json:"service"`
 	DateTime string                      `json:"datetime"`
