@@ -28,6 +28,7 @@ func Serializer(data interface{}) (interface{}, error) {
 
 			// Create appointment with filtered participants
 			appointmentData := Struct.AppointmentSerializer{
+				ID:       appointment.ID,
 				Users:    userAppointmentSerializers,
 				Service:  appointment.ServiceID,
 				DateTime: formattedDateTime,
