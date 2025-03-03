@@ -18,8 +18,8 @@ func ConnectPostgresDB() *gorm.DB {
 	if err != nil {
 		log.Fatal("Failed to connect to database")
 	}
-	
-	if Global.Debug || Global.Devmode {
+
+	if Global.Devmode {
 		err = db.AutoMigrate(&models.User{}, &models.Animal{}, &models.Appointment{}, &models.Service{})
 		if err != nil {
 			log.Fatal("Failed to migrate database")
