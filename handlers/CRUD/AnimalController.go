@@ -28,10 +28,10 @@ func CreateAnimal(c *fiber.Ctx) error {
 
 	db := c.Locals("db").(*gorm.DB)
 	animal := models.Animal{
-		AnimalName:   input.AnimalName,
-		AnimalSpecie: input.AnimalSpecie,
-		AnimalAge:    input.AnimalAge,
-		OwnerID:      parsedID, // Use the parsed UUID here
+		AnimalName: input.AnimalName,
+		AnimalRace: input.AnimalRace,
+		AnimalAge:  input.AnimalAge,
+		OwnerID:    parsedID, // Use the parsed UUID here
 	}
 
 	Creator := db.Create(&animal)
@@ -104,8 +104,8 @@ func UpdateAnimal(c *fiber.Ctx) error {
 	if Input.AnimalAge != 0 {
 		animal.AnimalAge = Input.AnimalAge
 	}
-	if Input.AnimalSpecie != "" {
-		animal.AnimalSpecie = Input.AnimalSpecie
+	if Input.AnimalRace != "" {
+		animal.AnimalRace = Input.AnimalRace
 	}
 	if Input.AnimalName != "" {
 		animal.AnimalName = Input.AnimalName

@@ -86,6 +86,9 @@ func UpdateAppointment(c *fiber.Ctx) error {
 	}
 
 	dataTime, err := time.Parse("01-02-2006 3:04PM", Input.DateTime)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to parse date and time"})
+	}
 
 	if Input.DateTime != "" {
 		appointment.DateTime = dataTime
