@@ -13,7 +13,7 @@ import (
 
 func CreateAppointment(c *fiber.Ctx) error {
 	id := c.Queries()
-	if len(id) < 0 {
+	if len(id) == 0 {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "No ID given"})
 	}
 
