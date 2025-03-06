@@ -16,9 +16,9 @@ type UserUpdater struct {
 Struct that manages animal request for updating animals info.
 */
 type AnimalUpdater struct {
-	AnimalName   string `json:"animal-name"`
-	AnimalSpecie string `json:"animal-specie"`
-	AnimalAge    uint   `json:"animal-age"`
+	AnimalName string `json:"animal-name"`
+	AnimalRace string `json:"animal-race"`
+	AnimalAge  uint   `json:"animal-age"`
 }
 
 // ServiceUpdater
