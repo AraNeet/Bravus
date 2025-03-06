@@ -5,36 +5,13 @@ import (
 
 	"github.com/AramisAra/BravusBackend/Struct"
 	"github.com/AramisAra/BravusBackend/models"
-	"github.com/google/uuid"
 )
 
 func Serializer(data interface{}) (interface{}, error) {
 	switch v := data.(type) {
 	case models.User:
-		appointmentsData := make([]Struct.AppointmentSerializer, 0)
-		for _, appointment := range v.Appointments {
-			// Create filtered participants for each appointment
-			userAppointmentSerializers := make([]Struct.UserAppointmentSerializer, len(appointment.Users))
-			for i, user := range appointment.Users {
-				userAppointmentSerializers[i] = Struct.UserAppointmentSerializer{
-					FirstName: user.FirstName,
-					LastName:  user.LastName,
-					Phone:     user.Phone,
-					Career:    user.Career,
-				}
-			}
-
-			formattedDateTime := appointment.DateTime.Format("2006-01-02 15:04")
-
-			// Create appointment with filtered participants
-			appointmentData := Struct.AppointmentSerializer{
-				ID:       appointment.ID,
-				Users:    userAppointmentSerializers,
-				Service:  appointment.ServiceID,
-				DateTime: formattedDateTime,
-			}
-			appointmentsData = append(appointmentsData, appointmentData)
-		}
+		animalsData := animalFilter(v)
+		appointmentsData := appointmentFilter(v)
 
 		return Struct.UserSerializer{
 			FirstName:    v.FirstName,
@@ -43,15 +20,15 @@ func Serializer(data interface{}) (interface{}, error) {
 			Phone:        v.Phone,
 			Owner:        v.Owner,
 			Career:       v.Career,
-			Animals:      v.Animals,
+			Animals:      animalsData,
 			Appointments: appointmentsData,
 			Services:     v.Services,
 		}, nil
 	case models.Animal:
 		return Struct.AnimalSerializer{
-			AnimalName:   v.AnimalName,
-			AnimalSpecie: v.AnimalSpecie,
-			AnimalAge:    v.AnimalAge,
+			AnimalName: v.AnimalName,
+			AnimalRace: v.AnimalRace,
+			AnimalAge:  v.AnimalAge,
 		}, nil
 	case models.Appointment:
 		userAppointmentSerializers := make([]Struct.UserAppointmentSerializer, len(v.Users))
@@ -80,13 +57,4 @@ func Serializer(data interface{}) (interface{}, error) {
 	default:
 		return nil, errors.New("unsupported type for serialization")
 	}
-}
-
-func ValidateUUIDs(ids ...string) error {
-	for _, id := range ids {
-		if _, err := uuid.Parse(id); err != nil {
-			return errors.New("invalid UUID: " + id)
-		}
-	}
-	return nil
 }
