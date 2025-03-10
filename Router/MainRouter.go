@@ -1,9 +1,13 @@
-package Router
+package Main_Router
 
-import "github.com/gofiber/fiber/v2"
+import (
+	CRUD "github.com/AramisAra/BravusBackend/Router/CRUDRoutes"
+	"github.com/gofiber/fiber/v2"
+)
 
 func MainRouter(app *fiber.App) {
-	UserRoutes(app)
-	AnimalRoutes(app)
-	AppointmentRoutes(app)
+	CRUD.UserRoutes(app)
+	CRUD.AnimalRoutes(app)
+	CRUD.AppointmentRoutes(app)
+	CRUD.ServiceRoutes(app)
 }

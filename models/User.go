@@ -29,7 +29,7 @@ type User struct {
 	// Consistent join table name
 	Appointments []Appointment `gorm:"many2many:user_appointments;joinForeignKey:user_id;joinReferences:appointment_id" json:"appointments"`
 	Animals      []Animal      `gorm:"foreignKey:OwnerID;references:ID" json:"animals"`
-	Services     []Service     `gorm:"foreignKey:UserID" json:"services"`
+	Services     []Service     `gorm:"foreignKey:UserID;references:ID" json:"services"`
 }
 
 // Animal

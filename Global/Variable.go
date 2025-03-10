@@ -6,5 +6,5 @@ import (
 
 var (
 	DB      *gorm.DB
-	Devmode bool = true
+	Devmode bool = false
 )

@@ -4,7 +4,7 @@ import (
 	"log"
 
 	"github.com/AramisAra/BravusBackend/Global"
-	"github.com/AramisAra/BravusBackend/Router"
+	Main_Router "github.com/AramisAra/BravusBackend/Router"
 	"github.com/AramisAra/BravusBackend/config"
 	"github.com/AramisAra/BravusBackend/handlers"
 	middlewares "github.com/AramisAra/BravusBackend/middleware"
@@ -33,7 +33,7 @@ func main() {
 	app := fiber.New(config.Fb)
 	app.Use(middlewares.LocalPGMiddleware())
 
-	Router.MainRouter(app)
+	Main_Router.MainRouter(app)
 
 	app.Get("/health", HealthCheck)
 
