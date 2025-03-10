@@ -12,6 +12,7 @@ func Serializer(data interface{}) (interface{}, error) {
 	case models.User:
 		animalsData := animalFilter(v)
 		appointmentsData := appointmentFilter(v)
+		servicesData := serviceFilter(v)
 
 		return Struct.UserSerializer{
 			FirstName:    v.FirstName,
@@ -22,10 +23,11 @@ func Serializer(data interface{}) (interface{}, error) {
 			Career:       v.Career,
 			Animals:      animalsData,
 			Appointments: appointmentsData,
-			Services:     v.Services,
+			Services:     servicesData,
 		}, nil
 	case models.Animal:
 		return Struct.AnimalSerializer{
+			ID:         v.ID,
 			AnimalName: v.AnimalName,
 			AnimalRace: v.AnimalRace,
 			AnimalAge:  v.AnimalAge,
@@ -49,7 +51,8 @@ func Serializer(data interface{}) (interface{}, error) {
 		}, nil
 	case models.Service:
 		return Struct.ServiceSerializer{
-			NameService: v.ServiceName,
+			ID:          v.ID,
+			ServiceName: v.ServiceName,
 			ServiceDesc: v.ServiceDesc,
 			Price:       v.Price,
 		}, nil

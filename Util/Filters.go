@@ -21,6 +21,21 @@ func animalFilter(v models.User) []Struct.AnimalSerializer {
 }
 
 // Clean out. Important  data from the responses
+func serviceFilter(v models.User) []Struct.ServiceSerializer {
+	servicesData := make([]Struct.ServiceSerializer, 0)
+	for _, service := range v.Services {
+		serviceData := Struct.ServiceSerializer{
+			ID:          service.ID,
+			ServiceName: service.ServiceName,
+			ServiceDesc: service.ServiceDesc,
+			Price:       service.Price,
+		}
+		servicesData = append(servicesData, serviceData)
+	}
+	return servicesData
+}
+
+// Clean out. Important  data from the responses
 func appointmentFilter(v models.User) []Struct.AppointmentSerializer {
 	appointmentsData := make([]Struct.AppointmentSerializer, 0)
 	for _, appointment := range v.Appointments {

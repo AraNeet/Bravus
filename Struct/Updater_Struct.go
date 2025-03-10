@@ -26,7 +26,7 @@ type AnimalUpdater struct {
 Struct that manages service request for update a service.
 */
 type ServiceUpdater struct {
-	NameService string  `json:"name-service"`
+	ServiceName string  `json:"service-name"`
 	ServiceDesc string  `json:"service-desc"`
 	Price       float64 `json:"price"`
 }
