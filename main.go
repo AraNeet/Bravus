@@ -9,6 +9,7 @@ import (
 	"github.com/AramisAra/BravusBackend/handlers"
 	middlewares "github.com/AramisAra/BravusBackend/middleware"
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/joho/godotenv"
 )
 
@@ -31,6 +32,12 @@ func main() {
 	Global.DB = handlers.ConnectPostgresDB()
 
 	app := fiber.New(config.Fb)
+	app.Use(cors.New(cors.Config{
+		AllowOrigins:     "http://localhost:3000",
+		AllowHeaders:     "Origin, Content-Type, Accept, Authorization, Access-Control-Allow-Origin",
+		AllowCredentials: true,
+	}))
+
 	app.Use(middlewares.LocalPGMiddleware())
 
 	Main_Router.MainRouter(app)
