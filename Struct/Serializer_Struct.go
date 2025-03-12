@@ -4,6 +4,35 @@ import (
 	"github.com/google/uuid"
 )
 
+// RegisterUserSerializer
+/*
+Struct return would register a new user
+*/
+type AuthUserSerializer struct {
+	ID        uuid.UUID `json:"id"`
+	FirstName string    `json:"firstname"`
+	LastName  string    `json:"lastname"`
+	Email     string    `json:"email"`
+	Phone     string    `json:"phone"`
+	Owner     bool      `json:"owner"`
+	Career    string    `json:"career"`
+	Token     string    `json:"token"`
+}
+
+// Owners Serializer return all needed information for owners
+type OwnersSerializer struct {
+	ID        uuid.UUID `json:"id"`
+	FirstName string    `json:"firstname"`
+	LastName  string    `json:"lastname"`
+	Email     string    `json:"email"`
+	Phone     string    `json:"phone"`
+	Owner     bool      `json:"owner"`
+	Career    string    `json:"career"`
+
+	Appointments []AppointmentSerializer `json:"appointments"`
+	Services     []ServiceSerializer     `json:"services"`
+}
+
 // UserSerializer
 /*
 Struct take information from the database and cuts out Data

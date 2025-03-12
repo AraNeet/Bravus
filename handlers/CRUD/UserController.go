@@ -1,10 +1,15 @@
 package CRUD
 
 import (
+	"os"
+	"strings"
+	"time"
+
 	"github.com/AramisAra/BravusBackend/Struct"
 	"github.com/AramisAra/BravusBackend/Util"
 	"github.com/AramisAra/BravusBackend/models"
 	"github.com/gofiber/fiber/v2"
+	"github.com/golang-jwt/jwt/v4" // or your JWT library
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 )
@@ -14,14 +19,16 @@ func CreateUser(c *fiber.Ctx) error {
 	Input := Struct.RegisterRequestHandler{}
 	err := c.BodyParser(&Input)
 	if err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Failed Parsing the body"})
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Failed parsing the body"})
 	}
 
+	// Hash password
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(Input.Password), bcrypt.DefaultCost)
 	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed Hashing the password"})
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed hashing the password"})
 	}
 
+	// Create new user
 	NewUser := models.User{
 		FirstName: Input.FirstName,
 		LastName:  Input.LastName,
@@ -31,17 +38,38 @@ func CreateUser(c *fiber.Ctx) error {
 		Owner:     Input.Owner,
 		Career:    Input.Career,
 	}
-	db := c.Locals("db").(*gorm.DB)
 
+	db := c.Locals("db").(*gorm.DB)
 	createUser := db.Create(&NewUser)
 	if createUser.Error != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed Creating the user"})
+		// Check if it's a duplicate email error
+		if strings.Contains(createUser.Error.Error(), "duplicate") || strings.Contains(createUser.Error.Error(), "Duplicate") {
+			return c.Status(fiber.StatusConflict).JSON(fiber.Map{"error": "Email already in use"})
+		}
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed creating the user"})
 	}
 
-	response, err := Util.Serializer(NewUser)
+	// Generate JWT token
+	token := jwt.New(jwt.SigningMethodHS256)
+	claims := token.Claims.(jwt.MapClaims)
+	claims["user_id"] = NewUser.ID
+	claims["email"] = NewUser.Email
+	claims["exp"] = time.Now().Add(time.Hour * 72).Unix() // Token expires in 72 hours
+
+	// Sign the token with your secret key
+	secretKey := os.Getenv("JWT_SECRET")
+
+	tokenString, err := token.SignedString([]byte(secretKey))
 	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed Serializing the user"})
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to generate token"})
 	}
+
+	// Use the modified serializer with token
+	response, err := Util.Serializer(NewUser, tokenString)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed serializing the user"})
+	}
+
 	return c.Status(fiber.StatusOK).JSON(response)
 }
 
@@ -67,7 +95,22 @@ func LoginUser(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "Email or Password is invalid"})
 	}
 
-	response, err := Util.Serializer(user)
+	// Generate JWT token
+	token := jwt.New(jwt.SigningMethodHS256)
+	claims := token.Claims.(jwt.MapClaims)
+	claims["user_id"] = user.ID
+	claims["email"] = user.Email
+	claims["exp"] = time.Now().Add(time.Hour * 72).Unix() // Token expires in 72 hours
+
+	// Sign the token with your secret key
+	secretKey := os.Getenv("JWT_SECRET")
+
+	tokenString, err := token.SignedString([]byte(secretKey))
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to generate token"})
+	}
+
+	response, err := Util.Serializer(user, tokenString)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed Serializing the user"})
 	}
@@ -219,14 +262,14 @@ func ListAllBusiness(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed Fetching the users"})
 	}
 
-	var response []Struct.UserSerializer
+	var response []Struct.OwnersSerializer
 
 	for _, user := range users {
 		serializedUser, err := Util.Serializer(user)
 		if err != nil {
 			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed Serializing the user"})
 		}
-		smtUser := serializedUser.(Struct.UserSerializer)
+		smtUser := serializedUser.(Struct.OwnersSerializer)
 		response = append(response, smtUser)
 	}
 

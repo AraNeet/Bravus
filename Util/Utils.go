@@ -7,12 +7,44 @@ import (
 	"github.com/AramisAra/BravusBackend/models"
 )
 
-func Serializer(data interface{}) (interface{}, error) {
+// Serializer converts model data into serialized structs
+// Pass a token value to use the registration serializer
+func Serializer(data interface{}, token ...string) (interface{}, error) {
 	switch v := data.(type) {
 	case models.User:
 		animalsData := animalFilter(v)
 		appointmentsData := appointmentFilter(v)
 		servicesData := serviceFilter(v)
+		// If token is provided, use RegisterUserSerializer
+		if len(token) > 0 {
+			return Struct.AuthUserSerializer{
+				ID:        v.ID, // Assuming User model has an ID field of type uuid.UUID
+				FirstName: v.FirstName,
+				LastName:  v.LastName,
+				Email:     v.Email,
+				Phone:     v.Phone,
+				Owner:     v.Owner,
+				Career:    v.Career,
+				Token:     token[0],
+			}, nil
+		}
+
+		if v.Owner {
+			return Struct.OwnersSerializer{
+				ID:        v.ID,
+				FirstName: v.FirstName,
+				LastName:  v.LastName,
+				Email:     v.Email,
+				Phone:     v.Phone,
+				Owner:     v.Owner,
+				Career:    v.Career,
+
+				Appointments: appointmentsData,
+				Services:     servicesData,
+			}, nil
+		}
+
+		// Otherwise, use regular UserSerializer
 
 		return Struct.UserSerializer{
 			FirstName:    v.FirstName,
@@ -56,7 +88,6 @@ func Serializer(data interface{}) (interface{}, error) {
 			ServiceDesc: v.ServiceDesc,
 			Price:       v.Price,
 		}, nil
-
 	default:
 		return nil, errors.New("unsupported type for serialization")
 	}
