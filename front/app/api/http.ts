@@ -65,7 +65,7 @@ export const apiRequest = async <T>(
     // Handle error responses
     if (!response.ok) {
       throw new ApiError(
-        data.message || `Request failed with status ${response.status}`,
+        data.error || `Request failed with status ${response.status}`,
         response.status,
         data
       );

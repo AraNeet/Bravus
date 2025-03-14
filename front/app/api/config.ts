@@ -7,7 +7,7 @@
 
 // Base URL for API requests
 export const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api";
+  process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
 // Default request timeout in milliseconds
 export const DEFAULT_TIMEOUT = 30000;
@@ -31,7 +31,7 @@ export const getDefaultHeaders = (includeAuth = true) => {
   };
 
   // Add authorization header if token exists and includeAuth is true
-  if (includeAuth) {
+  if (includeAuth && typeof window !== "undefined") {
     const token = localStorage.getItem("auth_token");
     if (token) {
       headers["Authorization"] = `Bearer ${token}`;

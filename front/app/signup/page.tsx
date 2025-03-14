@@ -1,14 +1,21 @@
-"use client"
+"use client";
 
-import type React from "react"
+import type React from "react";
 
-import { useState } from "react"
-import { Calendar, Eye, EyeOff, ArrowRight, ArrowLeft, Check } from "lucide-react"
-import Link from "next/link"
-import { useAuth } from "../hooks/useAuth"
+import { useState } from "react";
+import {
+  Calendar,
+  Eye,
+  EyeOff,
+  ArrowRight,
+  ArrowLeft,
+  Check,
+} from "lucide-react";
+import Link from "next/link";
+import { useAuth } from "../hooks/useAuth";
 
 export default function SignupPage() {
-  const [showPassword, setShowPassword] = useState(false)
+  const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
     firstname: "",
     lastname: "",
@@ -19,51 +26,53 @@ export default function SignupPage() {
     owner: false,
     career: "",
     agreeToTerms: false,
-  })
-  const { signup, isLoading } = useAuth()
-  const [passwordStrength, setPasswordStrength] = useState(0)
-  const [passwordMatch, setPasswordMatch] = useState(true)
-  const [formError, setFormError] = useState<string | null>(null)
+  });
+  const { signup, isLoading } = useAuth();
+  const [passwordStrength, setPasswordStrength] = useState(0);
+  const [passwordMatch, setPasswordMatch] = useState(true);
+  const [formError, setFormError] = useState<string | null>(null);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    const { name, value, type } = e.target
-    const checked = (e.target as HTMLInputElement).checked
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => {
+    const { name, value, type } = e.target;
+    const checked = (e.target as HTMLInputElement).checked;
 
     setFormData((prev) => ({
       ...prev,
       [name]: type === "checkbox" ? checked : value,
-    }))
+    }));
 
     // Check password strength
     if (name === "password") {
-      let strength = 0
-      if (value.length >= 8) strength += 1
-      if (/[A-Z]/.test(value)) strength += 1
-      if (/[0-9]/.test(value)) strength += 1
-      if (/[^A-Za-z0-9]/.test(value)) strength += 1
-      setPasswordStrength(strength)
+      let strength = 0;
+      if (value.length >= 8) strength += 1;
+      if (/[A-Z]/.test(value)) strength += 1;
+      if (/[0-9]/.test(value)) strength += 1;
+      if (/[^A-Za-z0-9]/.test(value)) strength += 1;
+      setPasswordStrength(strength);
 
       // Check if passwords match when changing password
       if (formData.confirmPassword) {
-        setPasswordMatch(value === formData.confirmPassword)
+        setPasswordMatch(value === formData.confirmPassword);
       }
     }
 
     // Check if passwords match when changing confirm password
     if (name === "confirmPassword") {
-      setPasswordMatch(value === formData.password)
+      setPasswordMatch(value === formData.password);
     }
-  }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setFormError(null)
+    e.preventDefault();
+    setFormError(null);
 
     // Validate passwords match
     if (formData.password !== formData.confirmPassword) {
-      setPasswordMatch(false)
-      setFormError("Passwords don't match")
-      return
+      setPasswordMatch(false);
+      setFormError("Passwords don't match");
+      return;
     }
 
     try {
@@ -76,14 +85,14 @@ export default function SignupPage() {
         password: formData.password,
         owner: formData.owner,
         career: formData.career || "No Career", // Use default if empty
-      }
+      };
 
-      await signup(submissionData)
-      // Will redirect to login page in the useAuth hook
+      await signup(submissionData);
+      // Will redirect to dashboard in the useAuth hook
     } catch (err: any) {
-      setFormError(err.message || "Registration failed. Please try again.")
+      setFormError(err.message || "Registration failed. Please try again.");
     }
-  }
+  };
 
   return (
     <main className="min-h-screen bg-gradient-to-b from-[#1a0b2e] to-[#2c1250] text-white flex flex-col">
@@ -130,7 +139,10 @@ export default function SignupPage() {
               {/* Name Fields - Split into First and Last Name */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label htmlFor="firstname" className="block text-sm font-medium text-white/80 mb-1">
+                  <label
+                    htmlFor="firstname"
+                    className="block text-sm font-medium text-white/80 mb-1"
+                  >
                     First Name <span className="text-red-400">*</span>
                   </label>
                   <input
@@ -145,7 +157,10 @@ export default function SignupPage() {
                   />
                 </div>
                 <div>
-                  <label htmlFor="lastname" className="block text-sm font-medium text-white/80 mb-1">
+                  <label
+                    htmlFor="lastname"
+                    className="block text-sm font-medium text-white/80 mb-1"
+                  >
                     Last Name <span className="text-red-400">*</span>
                   </label>
                   <input
@@ -163,7 +178,10 @@ export default function SignupPage() {
 
               {/* Phone Number */}
               <div>
-                <label htmlFor="phone" className="block text-sm font-medium text-white/80 mb-1">
+                <label
+                  htmlFor="phone"
+                  className="block text-sm font-medium text-white/80 mb-1"
+                >
                   Phone Number
                 </label>
                 <input
@@ -179,7 +197,10 @@ export default function SignupPage() {
 
               {/* Email */}
               <div>
-                <label htmlFor="email" className="block text-sm font-medium text-white/80 mb-1">
+                <label
+                  htmlFor="email"
+                  className="block text-sm font-medium text-white/80 mb-1"
+                >
                   Email <span className="text-red-400">*</span>
                 </label>
                 <input
@@ -196,7 +217,10 @@ export default function SignupPage() {
 
               {/* Career Field */}
               <div>
-                <label htmlFor="career" className="block text-sm font-medium text-white/80 mb-1">
+                <label
+                  htmlFor="career"
+                  className="block text-sm font-medium text-white/80 mb-1"
+                >
                   Career
                 </label>
                 <select
@@ -228,12 +252,17 @@ export default function SignupPage() {
                     Other
                   </option>
                 </select>
-                <p className="mt-1 text-xs text-white/60">Defaults to "No Career" if left blank</p>
+                <p className="mt-1 text-xs text-white/60">
+                  Defaults to "No Career" if left blank
+                </p>
               </div>
 
               {/* Password */}
               <div>
-                <label htmlFor="password" className="block text-sm font-medium text-white/80 mb-1">
+                <label
+                  htmlFor="password"
+                  className="block text-sm font-medium text-white/80 mb-1"
+                >
                   Password <span className="text-red-400">*</span>
                 </label>
                 <div className="relative">
@@ -251,9 +280,15 @@ export default function SignupPage() {
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
                     className="absolute right-3 top-1/2 -translate-y-1/2 text-white/60 hover:text-white"
-                    aria-label={showPassword ? "Hide password" : "Show password"}
+                    aria-label={
+                      showPassword ? "Hide password" : "Show password"
+                    }
                   >
-                    {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                    {showPassword ? (
+                      <EyeOff className="w-5 h-5" />
+                    ) : (
+                      <Eye className="w-5 h-5" />
+                    )}
                   </button>
                 </div>
 
@@ -269,18 +304,20 @@ export default function SignupPage() {
                               ? passwordStrength === 1
                                 ? "bg-red-500"
                                 : passwordStrength === 2
-                                  ? "bg-yellow-500"
-                                  : passwordStrength === 3
-                                    ? "bg-green-400"
-                                    : "bg-green-500"
+                                ? "bg-yellow-500"
+                                : passwordStrength === 3
+                                ? "bg-green-400"
+                                : "bg-green-500"
                               : "bg-white/10"
                           }`}
                         />
                       ))}
                     </div>
                     <p className="text-xs text-white/60">
-                      {passwordStrength === 0 && "Use 8+ characters with letters, numbers & symbols"}
-                      {passwordStrength === 1 && "Weak - Add uppercase, numbers or symbols"}
+                      {passwordStrength === 0 &&
+                        "Use 8+ characters with letters, numbers & symbols"}
+                      {passwordStrength === 1 &&
+                        "Weak - Add uppercase, numbers or symbols"}
                       {passwordStrength === 2 && "Fair - Add more variety"}
                       {passwordStrength === 3 && "Good - Almost there"}
                       {passwordStrength === 4 && "Strong password"}
@@ -291,7 +328,10 @@ export default function SignupPage() {
 
               {/* Confirm Password */}
               <div>
-                <label htmlFor="confirmPassword" className="block text-sm font-medium text-white/80 mb-1">
+                <label
+                  htmlFor="confirmPassword"
+                  className="block text-sm font-medium text-white/80 mb-1"
+                >
                   Confirm Password <span className="text-red-400">*</span>
                 </label>
                 <div className="relative">
@@ -315,9 +355,15 @@ export default function SignupPage() {
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
                     className="absolute right-3 top-1/2 -translate-y-1/2 text-white/60 hover:text-white"
-                    aria-label={showPassword ? "Hide password" : "Show password"}
+                    aria-label={
+                      showPassword ? "Hide password" : "Show password"
+                    }
                   >
-                    {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                    {showPassword ? (
+                      <EyeOff className="w-5 h-5" />
+                    ) : (
+                      <Eye className="w-5 h-5" />
+                    )}
                   </button>
 
                   {formData.confirmPassword && passwordMatch && (
@@ -326,7 +372,9 @@ export default function SignupPage() {
                 </div>
 
                 {formData.confirmPassword && !passwordMatch && (
-                  <p className="mt-1 text-xs text-red-400">Passwords don't match</p>
+                  <p className="mt-1 text-xs text-red-400">
+                    Passwords don't match
+                  </p>
                 )}
               </div>
 
@@ -340,7 +388,10 @@ export default function SignupPage() {
                   onChange={handleChange}
                   className="h-4 w-4 rounded border-white/20 bg-white/5 text-[#9f6eff] focus:ring-[#9f6eff]/50"
                 />
-                <label htmlFor="owner" className="ml-2 block text-sm text-white/80">
+                <label
+                  htmlFor="owner"
+                  className="ml-2 block text-sm text-white/80"
+                >
                   I am a business owner
                 </label>
               </div>
@@ -356,13 +407,22 @@ export default function SignupPage() {
                   required
                   className="h-4 w-4 rounded border-white/20 bg-white/5 text-[#9f6eff] focus:ring-[#9f6eff]/50"
                 />
-                <label htmlFor="agreeToTerms" className="ml-2 block text-sm text-white/80">
+                <label
+                  htmlFor="agreeToTerms"
+                  className="ml-2 block text-sm text-white/80"
+                >
                   I agree to the{" "}
-                  <Link href="/terms" className="text-[#9f6eff] hover:text-[#c061f7] transition-colors">
+                  <Link
+                    href="/terms"
+                    className="text-[#9f6eff] hover:text-[#c061f7] transition-colors"
+                  >
                     Terms of Service
                   </Link>{" "}
                   and{" "}
-                  <Link href="/privacy" className="text-[#9f6eff] hover:text-[#c061f7] transition-colors">
+                  <Link
+                    href="/privacy"
+                    className="text-[#9f6eff] hover:text-[#c061f7] transition-colors"
+                  >
                     Privacy Policy
                   </Link>
                 </label>
@@ -410,7 +470,10 @@ export default function SignupPage() {
           <footer className="mt-8 text-center">
             <p className="text-white/60 text-sm">
               Already have an account?{" "}
-              <Link href="/login" className="text-[#9f6eff] hover:text-[#c061f7] transition-colors">
+              <Link
+                href="/login"
+                className="text-[#9f6eff] hover:text-[#c061f7] transition-colors"
+              >
                 Sign in
               </Link>
             </p>
@@ -429,6 +492,5 @@ export default function SignupPage() {
         </Link>
       </footer>
     </main>
-  )
+  );
 }
-

@@ -51,9 +51,14 @@ export interface User {
 // Animal (AnimalSerializer)
 export interface Animal {
   ID: UUID;
-  "animal-name": string;
-  "animal-race": string;
-  "animal-age": number;
+  animal_name: string;
+  animal_race: string;
+  animal_age: number;
+  species: string;
+  metadata?: string; // JSON string for additional fields
+  owner_id: UUID;
+  created_at: string;
+  updated_at: string;
 }
 
 // Service (ServiceSerializer)
@@ -78,8 +83,4 @@ export interface Appointment {
   Users: UserAppointment[];
   service: UUID;
   datetime: string;
-}
-
-export interface OwnerWithServices extends User {
-  id: string; // Adding ID field for owner identification
 }

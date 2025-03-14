@@ -7,7 +7,7 @@ import (
 	"gorm.io/gorm"
 )
 
-// Appointment
+// Appointment represents a scheduled service appointment
 /*
 Model for the appointment table
 */
@@ -17,9 +17,10 @@ type Appointment struct {
 	CreatedAt time.Time      `json:"created_at" gorm:"autoCreateTime"`
 	UpdatedAt time.Time      `json:"updated_at" gorm:"autoUpdateTime"`
 	DeletedAt gorm.DeletedAt `json:"deleted_at,omitempty" gorm:"index"`
-	DateTime  time.Time      `json:"DateTime" gorm:"not null"`
+	DateTime  time.Time      `json:"datetime" gorm:"not null"`
 
-	// Consistent join table name
-	Users     []User    `gorm:"many2many:user_appointments;joinForeignKey:appointment_id;joinReferences:user_id" json:"participants"`
-	ServiceID uuid.UUID `json:"service-id"`
+	// Relationships with cascade delete
+	Users     []User    `gorm:"many2many:user_appointments;joinForeignKey:appointment_id;joinReferences:user_id;constraint:OnDelete:CASCADE" json:"participants"`
+	ServiceID uuid.UUID `json:"service_id" gorm:"not null"`
+	Service   Service   `gorm:"foreignKey:ServiceID;references:ID;constraint:OnDelete:CASCADE" json:"-"`
 }

@@ -11,10 +11,11 @@ import (
 	"gorm.io/gorm"
 )
 
+// CreateAppointment creates a new appointment
 func CreateAppointment(c *fiber.Ctx) error {
 	id := c.Queries()
 	if len(id) == 0 {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "No ID given"})
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "No IDs provided"})
 	}
 
 	err := Util.ValidateUUIDs(id["Oid"], id["Uid"], id["Sid"])
@@ -24,106 +25,139 @@ func CreateAppointment(c *fiber.Ctx) error {
 
 	Sid, _ := uuid.Parse(id["Sid"])
 
-	Input := Struct.AppointmentRequestHandler{}
-	err = c.BodyParser(&Input)
-	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to parsed input body"})
+	input := Struct.AppointmentRequestHandler{}
+	if err := c.BodyParser(&input); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Failed to parse request body"})
 	}
 
-	dataTime, err := time.Parse("01-02-2006 3:04PM", Input.DateTime)
-	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to parse datetime"})
+	// Validate required fields
+	if input.DateTime == "" {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "DateTime is required"})
 	}
 
-	ids := []string{id["Oid"], id["Uid"]}
+	// Parse and validate datetime
+	dateTime, err := time.Parse("01-02-2006 3:04PM", input.DateTime)
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid datetime format"})
+	}
+
+	// Validate that the datetime is in the future
+	if dateTime.Before(time.Now()) {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Appointment datetime must be in the future"})
+	}
 
 	db := c.Locals("db").(*gorm.DB)
 	users := []models.User{}
 
-	Seacher := db.Where("id IN (?)", ids).Find(&users)
-	if Seacher.Error != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "One or more users don't exist"})
+	// Check if all users exist
+	if err := db.Where("id IN (?)", []string{id["Oid"], id["Uid"]}).Find(&users).Error; err != nil {
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "One or more users not found"})
 	}
+
+	// Check if service exists
+	var service models.Service
+	if err := db.First(&service, "id = ?", Sid).Error; err != nil {
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "Service not found"})
+	}
+
 	appointment := models.Appointment{
 		Users:     users,
-		DateTime:  dataTime,
+		DateTime:  dateTime,
 		ServiceID: Sid,
 	}
 
-	Creator := db.Create(&appointment)
-	if Creator.Error != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to Create Appointment"})
+	if err := db.Create(&appointment).Error; err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to create appointment"})
 	}
 
 	response, err := Util.Serializer(appointment)
 	if err != nil {
-		c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to Serialize Appointment"})
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to serialize appointment"})
 	}
 
-	return c.Status(fiber.StatusOK).JSON(response)
+	return c.Status(fiber.StatusCreated).JSON(response)
 }
 
+// UpdateAppointment updates an existing appointment
 func UpdateAppointment(c *fiber.Ctx) error {
 	id := c.Query("id")
 	if id == "" {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid ID"})
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Appointment ID is required"})
 	}
 
 	err := Util.ValidateUUIDs(id)
 	if err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid ID"})
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid appointment ID"})
 	}
 
 	db := c.Locals("db").(*gorm.DB)
 	appointment := models.Appointment{}
 
-	Seacher := db.Find(&appointment, "id = ?", id)
-	if Seacher.Error != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to find appointment"})
+	// Load appointment with related data
+	if err := db.Preload("Users").Preload("Service").First(&appointment, "id = ?", id).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "Appointment not found"})
+		}
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to retrieve appointment"})
 	}
 
-	Input := Struct.AppointmentUpdater{}
-	err = c.BodyParser(&Input)
-	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to parse input"})
+	input := Struct.AppointmentUpdater{}
+	if err := c.BodyParser(&input); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Failed to parse request body"})
 	}
 
-	dataTime, err := time.Parse("01-02-2006 3:04PM", Input.DateTime)
-	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to parse date and time"})
+	// Update datetime if provided
+	if input.DateTime != "" {
+		dateTime, err := time.Parse("01-02-2006 3:04PM", input.DateTime)
+		if err != nil {
+			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid datetime format"})
+		}
+
+		// Validate that the datetime is in the future
+		if dateTime.Before(time.Now()) {
+			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Appointment datetime must be in the future"})
+		}
+
+		appointment.DateTime = dateTime
 	}
 
-	if Input.DateTime != "" {
-		appointment.DateTime = dataTime
+	if err := db.Save(&appointment).Error; err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to update appointment"})
 	}
-
-	db.Save(&appointment)
 
 	response, err := Util.Serializer(appointment)
 	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to Serialize"})
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to serialize appointment"})
 	}
 
 	return c.Status(fiber.StatusOK).JSON(response)
 }
 
-// DeleteUser deletes a user based on a provided query parameter 'id' and returns a status message in JSON format.
+// DeleteAppointment deletes an existing appointment
 func DeleteAppointment(c *fiber.Ctx) error {
 	id := c.Query("id")
 	if id == "" {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "id is required"})
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Appointment ID is required"})
 	}
+
 	err := Util.ValidateUUIDs(id)
 	if err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "id is invalid"})
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid appointment ID"})
 	}
 
 	db := c.Locals("db").(*gorm.DB)
 	appointment := models.Appointment{}
 
-	deleter := db.Delete(&appointment, "id = ?", id)
-	if deleter.Error != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Appointment doesn't exist"})
+	// Check if appointment exists
+	if err := db.First(&appointment, "id = ?", id).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "Appointment not found"})
+		}
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to retrieve appointment"})
+	}
+
+	if err := db.Delete(&appointment).Error; err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to delete appointment"})
 	}
 
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{"message": "Appointment deleted successfully"})

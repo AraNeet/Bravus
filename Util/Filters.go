@@ -14,6 +14,9 @@ func animalFilter(v models.User) []Struct.AnimalSerializer {
 			AnimalName: animal.AnimalName,
 			AnimalRace: animal.AnimalRace,
 			AnimalAge:  animal.AnimalAge,
+			Species:    animal.Species,
+			Metadata:   animal.Metadata,
+			OwnerID:    animal.OwnerID,
 		}
 		animalsData = append(animalsData, animalData)
 	}

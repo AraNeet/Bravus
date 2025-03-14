@@ -19,6 +19,8 @@ type AnimalUpdater struct {
 	AnimalName string `json:"animal-name"`
 	AnimalRace string `json:"animal-race"`
 	AnimalAge  uint   `json:"animal-age"`
+	Species    string `json:"species"`
+	Metadata   string `json:"metadata"`
 }
 
 // ServiceUpdater

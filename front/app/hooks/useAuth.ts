@@ -45,9 +45,8 @@ export const useAuth = (): UseAuthReturn => {
     const loadUser = async () => {
       if (isAuthenticated()) {
         try {
-          let id = localStorage.getItem("ID");
           setIsLoading(true);
-          const userData = await getCurrentUser(id);
+          const userData = await getCurrentUser();
           setUser(userData);
           setIsLoggedIn(true);
         } catch (err: any) {
@@ -55,6 +54,7 @@ export const useAuth = (): UseAuthReturn => {
           // If token is invalid, clear it
           if (err.status === 401) {
             localStorage.removeItem("auth_token");
+            localStorage.removeItem("ID");
           }
         } finally {
           setIsLoading(false);
@@ -85,8 +85,7 @@ export const useAuth = (): UseAuthReturn => {
 
         // Try to fetch the full user profile
         try {
-          let id = localStorage.getItem("ID");
-          const userProfile = await getCurrentUser(id);
+          const userProfile = await getCurrentUser();
           setUser(userProfile);
         } catch (profileErr) {
           console.error(

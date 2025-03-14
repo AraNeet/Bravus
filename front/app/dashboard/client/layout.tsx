@@ -203,26 +203,15 @@ export default function ClientDashboardLayout({
               <span className="hidden md:inline">My Animals</span>
             </Link>
             <Link
-              href="/dashboard/client/browse"
+              href="/dashboard/client/providers"
               className={`flex items-center gap-3 p-3 rounded-lg text-white/70 hover:text-white transition-colors ${
-                window.location.pathname.includes("/dashboard/client/browse")
+                window.location.pathname.includes("/dashboard/client/providers")
                   ? "bg-white/10 text-white"
                   : "hover:bg-white/10"
               }`}
             >
               <Package className="w-5 h-5" />
               <span className="hidden md:inline">Browse Services</span>
-            </Link>
-            <Link
-              href="/dashboard/client/settings"
-              className={`flex items-center gap-3 p-3 rounded-lg text-white/70 hover:text-white transition-colors ${
-                window.location.pathname.includes("/dashboard/client/settings")
-                  ? "bg-white/10 text-white"
-                  : "hover:bg-white/10"
-              }`}
-            >
-              <Settings className="w-5 h-5" />
-              <span className="hidden md:inline">Settings</span>
             </Link>
           </nav>
         </aside>

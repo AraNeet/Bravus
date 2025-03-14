@@ -9,6 +9,7 @@ import (
 	"gorm.io/gorm"
 )
 
+// CreateService creates a new service for a user
 func CreateService(c *fiber.Ctx) error {
 	id := c.Query("id")
 	if id == "" {
@@ -26,7 +27,19 @@ func CreateService(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Failed to Parse Body"})
 	}
 
+	// Validate required fields
+	if input.ServiceName == "" || input.ServiceDesc == "" || input.Price <= 0 {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Required fields are missing"})
+	}
+
 	db := c.Locals("db").(*gorm.DB)
+
+	// Check if user exists
+	var user models.User
+	if err := db.First(&user, "id = ?", parsedID).Error; err != nil {
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "User not found"})
+	}
+
 	service := models.Service{
 		ServiceName: input.ServiceName,
 		ServiceDesc: input.ServiceDesc,
@@ -34,20 +47,19 @@ func CreateService(c *fiber.Ctx) error {
 		UserID:      parsedID,
 	}
 
-	Creator := db.Create(&service)
-	if Creator.Error != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to Create service"})
+	if err := db.Create(&service).Error; err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to create service"})
 	}
 
 	response, err := Util.Serializer(service)
 	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to Serialize service"})
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to serialize service"})
 	}
 
-	return c.Status(fiber.StatusOK).JSON(response)
+	return c.Status(fiber.StatusCreated).JSON(response)
 }
 
-// Getservice Retrieves an service based on the provided ID from the query parameters.
+// GetService retrieves a service based on the provided ID
 func GetService(c *fiber.Ctx) error {
 	id := c.Query("id")
 	if id == "" {
@@ -62,20 +74,22 @@ func GetService(c *fiber.Ctx) error {
 	db := c.Locals("db").(*gorm.DB)
 	service := models.Service{}
 
-	searcher := db.Find(&service, "id = ?", id)
-	if searcher.Error != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "service Doesn't exist"})
+	if err := db.Preload("User").First(&service, "id = ?", id).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "Service not found"})
+		}
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to retrieve service"})
 	}
 
 	response, err := Util.Serializer(service)
 	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed Serializing the user"})
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to serialize service"})
 	}
 
 	return c.Status(fiber.StatusOK).JSON(response)
 }
 
-// Updateservice
+// UpdateService updates an existing service
 func UpdateService(c *fiber.Ctx) error {
 	id := c.Query("id")
 	if id == "" {
@@ -90,40 +104,42 @@ func UpdateService(c *fiber.Ctx) error {
 	db := c.Locals("db").(*gorm.DB)
 	service := models.Service{}
 
-	searcher := db.Find(&service, "id = ?", id)
-	if searcher.Error != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "service doesn't exist"})
+	if err := db.First(&service, "id = ?", id).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "Service not found"})
+		}
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to retrieve service"})
 	}
 
-	Input := Struct.ServiceUpdater{}
-	err = c.BodyParser(&Input)
-	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed Parsing the body"})
+	input := Struct.ServiceUpdater{}
+	if err := c.BodyParser(&input); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Failed to parse request body"})
 	}
 
-	if Input.ServiceName != "" {
-		service.ServiceName = Input.ServiceName
+	// Update fields if provided
+	if input.ServiceName != "" {
+		service.ServiceName = input.ServiceName
 	}
-	if Input.ServiceDesc != "" {
-		service.ServiceDesc = Input.ServiceDesc
+	if input.ServiceDesc != "" {
+		service.ServiceDesc = input.ServiceDesc
 	}
-	if Input.Price != 0 {
-		service.Price = Input.Price
+	if input.Price > 0 {
+		service.Price = input.Price
 	}
 
-	Saver := db.Save(&service)
-	if Saver.Error != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to save updates"})
+	if err := db.Save(&service).Error; err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to update service"})
 	}
 
 	response, err := Util.Serializer(service)
 	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed Serializing the service"})
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to serialize service"})
 	}
 
 	return c.Status(fiber.StatusOK).JSON(response)
 }
 
+// DeleteService deletes an existing service
 func DeleteService(c *fiber.Ctx) error {
 	id := c.Query("id")
 	if id == "" {
@@ -138,10 +154,16 @@ func DeleteService(c *fiber.Ctx) error {
 	db := c.Locals("db").(*gorm.DB)
 	service := models.Service{}
 
-	deleter := db.Delete(&service, "id = ?", id)
-	if deleter.Error != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "service Doesn't exist"})
+	if err := db.First(&service, "id = ?", id).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "Service not found"})
+		}
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to retrieve service"})
 	}
 
-	return c.Status(fiber.StatusOK).JSON(fiber.Map{"message": "service deleted successfully"})
+	if err := db.Delete(&service).Error; err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to delete service"})
+	}
+
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{"message": "Service deleted successfully"})
 }

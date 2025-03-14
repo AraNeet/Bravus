@@ -49,16 +49,17 @@ func CreateUser(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed creating the user"})
 	}
 
-	// Generate JWT token
+	// Generate JWT token with enhanced claims
 	token := jwt.New(jwt.SigningMethodHS256)
 	claims := token.Claims.(jwt.MapClaims)
 	claims["user_id"] = NewUser.ID
 	claims["email"] = NewUser.Email
+	claims["owner"] = NewUser.Owner
 	claims["exp"] = time.Now().Add(time.Hour * 72).Unix() // Token expires in 72 hours
+	claims["iat"] = time.Now().Unix()                     // Token issued at
 
 	// Sign the token with your secret key
 	secretKey := os.Getenv("JWT_SECRET")
-
 	tokenString, err := token.SignedString([]byte(secretKey))
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to generate token"})
@@ -95,16 +96,17 @@ func LoginUser(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "Email or Password is invalid"})
 	}
 
-	// Generate JWT token
+	// Generate JWT token with enhanced claims
 	token := jwt.New(jwt.SigningMethodHS256)
 	claims := token.Claims.(jwt.MapClaims)
 	claims["user_id"] = user.ID
 	claims["email"] = user.Email
+	claims["owner"] = user.Owner
 	claims["exp"] = time.Now().Add(time.Hour * 72).Unix() // Token expires in 72 hours
+	claims["iat"] = time.Now().Unix()                     // Token issued at
 
 	// Sign the token with your secret key
 	secretKey := os.Getenv("JWT_SECRET")
-
 	tokenString, err := token.SignedString([]byte(secretKey))
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to generate token"})
@@ -301,6 +303,7 @@ func UpdateUser(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed Parsing the body"})
 	}
 
+	// Update basic user information
 	if Input.FirstName != "" {
 		user.FirstName = Input.FirstName
 	}

@@ -20,9 +20,37 @@ func ConnectPostgresDB() *gorm.DB {
 	}
 
 	if Global.Devmode {
-		err = db.AutoMigrate(&models.User{}, &models.Animal{}, &models.Appointment{}, &models.Service{})
+		// First, migrate without foreign key constraints
+		err = db.AutoMigrate(&models.User{}, &models.Animal{}, &models.Service{}, &models.Appointment{})
 		if err != nil {
 			log.Fatal("Failed to migrate database")
+		}
+
+		// Then, add foreign key constraints that aren't automatically created by GORM
+		sqlDB := db.Exec(`
+			-- Animals table constraints
+			ALTER TABLE "animals" 
+			ADD CONSTRAINT "fk_animals_users" 
+			FOREIGN KEY ("owner_id") 
+			REFERENCES "users"("id") 
+			ON DELETE CASCADE;
+
+			-- Services table constraints
+			ALTER TABLE "services" 
+			ADD CONSTRAINT "fk_services_users" 
+			FOREIGN KEY ("user_id") 
+			REFERENCES "users"("id") 
+			ON DELETE CASCADE;
+
+			-- Appointments table constraints
+			ALTER TABLE "appointments" 
+			ADD CONSTRAINT "fk_appointments_services" 
+			FOREIGN KEY ("service_id") 
+			REFERENCES "services"("id") 
+			ON DELETE CASCADE;
+		`)
+		if sqlDB.Error != nil {
+			log.Printf("Warning: Some foreign key constraints could not be added: %v", sqlDB.Error)
 		}
 	}
 

@@ -10,6 +10,15 @@ export * from "./auth";
 // Export all user functions
 export * from "./users";
 
+// Export all service functions
+export * from "./services";
+
+// Export all appointment functions
+export * from "./appointments";
+
+// Export all animal functions
+export * from "./animals";
+
 // Export HTTP utilities
 export { ApiError } from "./http";
 

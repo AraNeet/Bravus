@@ -17,8 +17,10 @@ type RegisterRequestHandler struct {
 // AnimalRequestHandler Struct that handles animal creations
 type AnimalRequestHandler struct {
 	AnimalName string `json:"animal-name"`
-	AnimalRace string `json:"animal-Race"`
+	AnimalRace string `json:"animal-race"`
 	AnimalAge  uint   `json:"animal-age"`
+	Species    string `json:"species"`
+	Metadata   string `json:"metadata"`
 }
 
 // ServiceRequestHandler Struct that handle service creations

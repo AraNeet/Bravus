@@ -66,10 +66,15 @@ type ServiceSerializer struct {
 Struct take information from the database and cuts out data
 */
 type AnimalSerializer struct {
-	ID         uuid.UUID `json:"ID"`
+	ID         uuid.UUID `json:"id"`
 	AnimalName string    `json:"animal-name"`
 	AnimalRace string    `json:"animal-race"`
 	AnimalAge  uint      `json:"animal-age"`
+	Species    string    `json:"species"`
+	Metadata   string    `json:"metadata"`
+	OwnerID    uuid.UUID `json:"owner-id"`
+	CreatedAt  string    `json:"created_at"`
+	UpdatedAt  string    `json:"updated_at"`
 }
 
 // UserSerializer for appointments
@@ -88,7 +93,7 @@ type UserAppointmentSerializer struct {
 Struct take information from the database and cuts out data
 */
 type AppointmentSerializer struct {
-	ID       uuid.UUID                   `json:"ID"`
+	ID       uuid.UUID                   `json:"id"`
 	Users    []UserAppointmentSerializer `json:"Users"`
 	Service  uuid.UUID                   `json:"service"`
 	DateTime string                      `json:"datetime"`
