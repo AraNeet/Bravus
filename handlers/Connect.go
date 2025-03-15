@@ -7,6 +7,7 @@ import (
 	"github.com/AramisAra/BravusBackend/Global"
 	"github.com/AramisAra/BravusBackend/config"
 	"github.com/AramisAra/BravusBackend/models"
+	googleModels "github.com/AramisAra/BravusBackend/models/google"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 
@@ -19,9 +20,20 @@ func ConnectPostgresDB() *gorm.DB {
 		log.Fatal("Failed to connect to database")
 	}
 
+	// Always migrate the GoogleTokenStorage model to ensure schema is up to date
+	err = db.AutoMigrate(&googleModels.GoogleTokenStorage{})
+	if err != nil {
+		log.Printf("Warning: Failed to migrate GoogleTokenStorage: %v", err)
+	}
+
 	if Global.Devmode {
 		// First, migrate without foreign key constraints
-		err = db.AutoMigrate(&models.User{}, &models.Animal{}, &models.Service{}, &models.Appointment{})
+		err = db.AutoMigrate(
+			&models.User{},
+			&models.Animal{},
+			&models.Service{},
+			&models.Appointment{},
+		)
 		if err != nil {
 			log.Fatal("Failed to migrate database")
 		}
@@ -47,6 +59,13 @@ func ConnectPostgresDB() *gorm.DB {
 			ADD CONSTRAINT "fk_appointments_services" 
 			FOREIGN KEY ("service_id") 
 			REFERENCES "services"("id") 
+			ON DELETE CASCADE;
+			
+			-- Google token storage constraints
+			ALTER TABLE "google_token_storages" 
+			ADD CONSTRAINT "fk_google_token_storages_users" 
+			FOREIGN KEY ("user_id") 
+			REFERENCES "users"("id") 
 			ON DELETE CASCADE;
 		`)
 		if sqlDB.Error != nil {

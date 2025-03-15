@@ -14,6 +14,7 @@ import {
   BarChart,
   Settings,
   Search,
+  FileSpreadsheet,
 } from "lucide-react";
 import { useAuth } from "@/app/hooks/useAuth";
 import { getUserServices } from "@/app/api/services";
@@ -40,12 +41,12 @@ export default function OwnerDashboard() {
       }
     }
   }, [isLoading, isLoggedIn, user, authUser, router]);
-  
+
   // Fetch services
   useEffect(() => {
     const fetchServices = async () => {
       if (!isLoggedIn) return;
-      
+
       try {
         setIsLoadingServices(true);
         const userId = getUserIdFromToken();
@@ -65,7 +66,7 @@ export default function OwnerDashboard() {
         setIsLoadingServices(false);
       }
     };
-    
+
     if (!isLoading && isLoggedIn) {
       fetchServices();
     }
@@ -173,6 +174,13 @@ export default function OwnerDashboard() {
               <Package className="w-5 h-5" />
               <span className="hidden md:inline">Service</span>
             </Link>
+            <Link
+              href="/dashboard/owner/sheets"
+              className="flex items-center gap-3 p-3 hover:bg-white/10 rounded-lg text-white/70 hover:text-white transition-colors"
+            >
+              <FileSpreadsheet className="w-5 h-5" />
+              <span className="hidden md:inline">Sheets</span>
+            </Link>
           </nav>
         </aside>
 
@@ -244,9 +252,7 @@ export default function OwnerDashboard() {
                 </div>
                 <div>
                   <h2 className="font-medium">Services</h2>
-                  <p className="text-2xl font-bold">
-                    {services.length || 0}
-                  </p>
+                  <p className="text-2xl font-bold">{services.length || 0}</p>
                 </div>
               </div>
               <Link
