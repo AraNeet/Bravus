@@ -15,15 +15,9 @@ import (
 )
 
 func ConnectPostgresDB() *gorm.DB {
-	db, err := gorm.Open(postgres.Open(os.Getenv("DevDB")), &config.Grm)
+	db, err := gorm.Open(postgres.Open(os.Getenv("DB")), &config.Grm)
 	if err != nil {
 		log.Fatal("Failed to connect to database")
-	}
-
-	// Always migrate the GoogleTokenStorage model to ensure schema is up to date
-	err = db.AutoMigrate(&googleModels.GoogleTokenStorage{})
-	if err != nil {
-		log.Printf("Warning: Failed to migrate GoogleTokenStorage: %v", err)
 	}
 
 	if Global.Devmode {
@@ -33,6 +27,7 @@ func ConnectPostgresDB() *gorm.DB {
 			&models.Animal{},
 			&models.Service{},
 			&models.Appointment{},
+			&googleModels.GoogleTokenStorage{},
 		)
 		if err != nil {
 			log.Fatal("Failed to migrate database")
