@@ -3,7 +3,7 @@ import type { ReactNode } from "react";
 
 export default function AnimalsLayout({ children }: { children: ReactNode }) {
   return (
-    <div className="container mx-auto py-6">
+    <>
       {children}
       <Toaster
         theme="dark"
@@ -22,6 +22,6 @@ export default function AnimalsLayout({ children }: { children: ReactNode }) {
           },
         }}
       />
-    </div>
+    </>
   );
 }

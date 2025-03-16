@@ -13,12 +13,16 @@ import {
   ChevronLeft,
   ChevronRight,
   Filter,
+  Calendar,
+  Plus,
 } from "lucide-react";
 import { toast, Toaster } from "sonner";
 import { useAuth } from "@/app/hooks/useAuth";
 import { deleteService, getUserServices } from "@/app/api/services";
 import { getUserIdFromToken } from "@/app/utils/jwt-utils";
 import type { Service } from "@/app/api/types";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 
 export default function ServicesPage() {
   const { user, authUser, isLoading: authLoading, isLoggedIn } = useAuth();
@@ -48,7 +52,7 @@ export default function ServicesPage() {
 
       try {
         setIsLoading(true);
-        
+
         // Get user ID from token
         const userId = getUserIdFromToken();
         if (!userId) {
@@ -58,44 +62,55 @@ export default function ServicesPage() {
         } else {
           console.log("Successfully retrieved userId:", userId);
         }
-        
+
         // Fetch services directly from API
         let userServices: Service[] = [];
         try {
           const result = await getUserServices(userId);
           console.log("Fetched services:", result);
-          console.log("Services type:", Array.isArray(result) ? "Array" : typeof result);
-          
+          console.log(
+            "Services type:",
+            Array.isArray(result) ? "Array" : typeof result
+          );
+
           // Show notification about service data source
-          if (result && result.length > 0 && result[0].id.startsWith('mock')) {
+          if (result && result.length > 0 && result[0].id.startsWith("mock")) {
             toast("Using mock services data for display", {
-              description: "Couldn't connect to the backend. Showing sample data for now."
+              description:
+                "Couldn't connect to the backend. Showing sample data for now.",
             });
           }
-          
+
           // Ensure we have an array
           userServices = Array.isArray(result) ? result : [];
-          
+
           if (userServices.length === 0) {
             toast("No services found", {
-              description: "You haven't created any services yet. Use the Add Service button to create your first service."
+              description:
+                "You haven't created any services yet. Use the Add Service button to create your first service.",
             });
           }
-          
+
           if (!Array.isArray(result)) {
             console.warn("Services result is not an array, received:", result);
           }
         } catch (apiError) {
           console.error("Error fetching services from API:", apiError);
-          toast.error("Failed to load services from API. Trying fallback method...");
-          
+          toast.error(
+            "Failed to load services from API. Trying fallback method..."
+          );
+
           // Fallback: If user data has services property
-          if (userData && 'services' in userData && Array.isArray(userData.services)) {
+          if (
+            userData &&
+            "services" in userData &&
+            Array.isArray(userData.services)
+          ) {
             userServices = userData.services;
             console.log("Using services from user data:", userServices);
           }
         }
-        
+
         setServices(userServices || []);
       } catch (error) {
         console.error("Error in fetch services flow:", error);
@@ -111,13 +126,15 @@ export default function ServicesPage() {
   }, [authLoading, isLoggedIn, userData, router]);
 
   // Filter services based on search query
-  const filteredServices = Array.isArray(services) 
+  const filteredServices = Array.isArray(services)
     ? services.filter((service) => {
         const matchesSearch =
           service["service-name"]
             .toLowerCase()
             .includes(searchQuery.toLowerCase()) ||
-          service["service-desc"].toLowerCase().includes(searchQuery.toLowerCase());
+          service["service-desc"]
+            .toLowerCase()
+            .includes(searchQuery.toLowerCase());
 
         return matchesSearch;
       })
@@ -183,153 +200,142 @@ export default function ServicesPage() {
   console.log("Current services:", services);
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#1a0b2e] to-[#2c1250] text-white">
-      <Toaster
-        position="top-right"
-        toastOptions={{
-          style: {
-            background: "rgba(30, 15, 60, 0.95)",
-            color: "white",
-            border: "1px solid rgba(159, 110, 255, 0.3)",
-            backdropFilter: "blur(8px)",
-          },
-        }}
-      />
-
-      {/* Header */}
-      <header className="bg-black/20 backdrop-blur-sm border-b border-white/10 sticky top-0 z-10">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center">
-            <Link href="/dashboard/owner" className="mr-4">
-              <ArrowLeft className="w-5 h-5 text-white/70 hover:text-white transition-colors" />
+    <main className="space-y-8">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <div className="flex items-center gap-2 mb-2">
+            <Link
+              href="/dashboard/owner"
+              className="text-white/70 hover:text-white flex items-center gap-1"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              Back to Dashboard
             </Link>
-            <h1 className="text-xl font-bold">Manage Services</h1>
           </div>
-        </div>
-      </header>
-
-      <main className="container mx-auto px-4 py-8">
-        {/* Action Bar */}
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
-          <div className="relative w-full md:w-auto">
-            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-white/40" />
-            <input
-              type="text"
-              placeholder="Search services..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full md:w-64 bg-white/5 border border-white/10 rounded-lg py-2 pl-10 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-[#9f6eff]/50"
-            />
-          </div>
-
-          <Link
-            href="/dashboard/owner/service/new"
-            className="flex items-center gap-1 text-sm bg-gradient-to-r from-[#9f6eff] to-[#c061f7] hover:from-[#8b4ff7] hover:to-[#b04fe7] px-4 py-2 rounded-lg transition-colors ml-auto"
-          >
-            <PlusCircle className="w-4 h-4" />
-            <span>Add Service</span>
-          </Link>
+          <h1 className="text-3xl font-bold mb-1">Services</h1>
+          <p className="text-white/70">Manage your veterinary services</p>
         </div>
 
-        {/* Services Grid */}
-        {currentServices.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-            {currentServices.map((service) => (
-              <div
-                key={service.id}
-                className="bg-gradient-to-br from-white/5 to-white/3 backdrop-blur-sm rounded-xl border border-[#9f6eff]/20 p-6 hover:shadow-lg hover:shadow-[#9f6eff]/10 transition-all duration-300"
-              >
-                <div className="flex justify-between items-start mb-4">
-                  <h3 className="font-medium text-lg">
-                    {service["service-name"]}
-                  </h3>
-                </div>
+        <Button
+          onClick={() => router.push("/dashboard/owner/service/new")}
+          className="w-full sm:w-auto bg-gradient-to-r from-[#9f6eff] to-[#c061f7] hover:from-[#8b4ff7] hover:to-[#b04fe3] border-none text-white"
+        >
+          <Plus className="w-4 h-4 mr-2" />
+          Add Service
+        </Button>
+      </div>
 
-                <p className="text-white/70 text-sm mb-4 line-clamp-3">
-                  {service["service-desc"]}
-                </p>
+      {/* Action Bar */}
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
+        <div className="relative flex-1 max-w-md">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-white/40 w-4 h-4" />
+          <Input
+            placeholder="Search services..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-10 bg-gradient-to-br from-white/5 to-white/3 border-[#9f6eff]/20 focus:border-[#9f6eff]/40 focus:ring-[#9f6eff]/30"
+          />
+        </div>
+      </div>
 
-                <div className="flex justify-between items-center">
-                  <p className="text-[#9f6eff] font-medium">
-                    ${service.price.toFixed(2)}
-                  </p>
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => confirmDelete(service.id)}
-                      className="p-2 text-red-400 hover:bg-red-500/20 rounded-lg transition-colors"
-                      aria-label="Delete service"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                    <Link
-                      href={`/dashboard/owner/service/${service.id}`}
-                      className="p-2 text-[#9f6eff] hover:bg-[#9f6eff]/20 rounded-lg transition-colors"
-                      aria-label="Edit service"
-                    >
-                      <Edit className="w-4 h-4" />
-                    </Link>
-                  </div>
-                </div>
+      {/* Services Grid */}
+      {filteredServices.length > 0 ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+          {filteredServices.map((service) => (
+            <div
+              key={service.id}
+              className="bg-gradient-to-br from-white/5 to-white/3 backdrop-blur-sm rounded-xl border border-[#9f6eff]/20 p-6 hover:shadow-lg hover:shadow-[#9f6eff]/10 transition-all duration-300"
+            >
+              <div className="flex justify-between items-start mb-4">
+                <h3 className="font-medium text-lg">
+                  {service["service-name"]}
+                </h3>
               </div>
-            ))}
-          </div>
-        ) : (
-          <div className="bg-white/5 backdrop-blur-sm rounded-xl border border-white/10 p-8 text-center">
-            {searchQuery ? (
-              <p className="text-white/60 mb-4">
-                No services match your search criteria
+
+              <p className="text-white/70 text-sm mb-4 line-clamp-3">
+                {service["service-desc"]}
               </p>
-            ) : (
-              <>
-                <div className="flex justify-center mb-4">
-                  <Package className="w-12 h-12 text-[#9f6eff]/50" />
-                </div>
-                <p className="text-white/60 mb-4">
-                  You haven't added any services yet
+
+              <div className="flex justify-between items-center">
+                <p className="text-[#9f6eff] font-medium">
+                  ${service.price.toFixed(2)}
                 </p>
-                <Link
-                  href="/dashboard/owner/service/new"
-                  className="inline-flex items-center gap-1 text-sm bg-gradient-to-r from-[#9f6eff] to-[#c061f7] hover:from-[#8b4ff7] hover:to-[#b04fe7] px-4 py-2 rounded-lg transition-colors"
-                >
-                  <PlusCircle className="w-4 h-4" />
-                  <span>Add your first service</span>
-                </Link>
-              </>
-            )}
-          </div>
-        )}
-
-        {/* Pagination */}
-        {filteredServices.length > servicesPerPage && (
-          <div className="flex justify-center mt-8">
-            <nav className="flex items-center gap-1">
-              <button
-                onClick={() => paginate(currentPage - 1)}
-                disabled={currentPage === 1}
-                className="p-2 rounded-lg bg-white/5 border border-white/10 disabled:opacity-50 disabled:cursor-not-allowed"
-                aria-label="Previous page"
-              >
-                <ChevronLeft className="w-4 h-4" />
-              </button>
-
-              <div className="px-4 py-2">
-                <span className="text-white/70">
-                  Page {currentPage} of {totalPages}
-                </span>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => confirmDelete(service.id)}
+                    className="p-2 text-red-400 hover:bg-red-500/20 rounded-lg transition-colors"
+                    aria-label="Delete service"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                  <Link
+                    href={`/dashboard/owner/service/${service.id}`}
+                    className="p-2 text-[#9f6eff] hover:bg-[#9f6eff]/20 rounded-lg transition-colors"
+                    aria-label="Edit service"
+                  >
+                    <Edit className="w-4 h-4" />
+                  </Link>
+                </div>
               </div>
-
-              <button
-                onClick={() => paginate(currentPage + 1)}
-                disabled={currentPage === totalPages}
-                className="p-2 rounded-lg bg-white/5 border border-white/10 disabled:opacity-50 disabled:cursor-not-allowed"
-                aria-label="Next page"
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className="bg-white/5 backdrop-blur-sm rounded-xl border border-white/10 p-8 text-center">
+          {searchQuery ? (
+            <p className="text-white/60 mb-4">
+              No services match your search criteria
+            </p>
+          ) : (
+            <>
+              <div className="flex justify-center mb-4">
+                <Package className="w-12 h-12 text-[#9f6eff]/50" />
+              </div>
+              <p className="text-white/60 mb-4">
+                You haven't added any services yet
+              </p>
+              <Link
+                href="/dashboard/owner/service/new"
+                className="inline-flex items-center gap-1 text-sm bg-gradient-to-r from-[#9f6eff] to-[#c061f7] hover:from-[#8b4ff7] hover:to-[#b04fe7] px-4 py-2 rounded-lg transition-colors"
               >
-                <ChevronRight className="w-4 h-4" />
-              </button>
-            </nav>
-          </div>
-        )}
-      </main>
+                <PlusCircle className="w-4 h-4" />
+                <span>Add your first service</span>
+              </Link>
+            </>
+          )}
+        </div>
+      )}
+
+      {/* Pagination */}
+      {filteredServices.length > servicesPerPage && (
+        <div className="flex justify-center mt-8">
+          <nav className="flex items-center gap-1">
+            <button
+              onClick={() => paginate(currentPage - 1)}
+              disabled={currentPage === 1}
+              className="p-2 rounded-lg bg-white/5 border border-white/10 disabled:opacity-50 disabled:cursor-not-allowed"
+              aria-label="Previous page"
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </button>
+
+            <div className="px-4 py-2">
+              <span className="text-white/70">
+                Page {currentPage} of {totalPages}
+              </span>
+            </div>
+
+            <button
+              onClick={() => paginate(currentPage + 1)}
+              disabled={currentPage === totalPages}
+              className="p-2 rounded-lg bg-white/5 border border-white/10 disabled:opacity-50 disabled:cursor-not-allowed"
+              aria-label="Next page"
+            >
+              <ChevronRight className="w-4 h-4" />
+            </button>
+          </nav>
+        </div>
+      )}
 
       {/* Delete Confirmation Modal */}
       {isDeleting && (
@@ -357,6 +363,6 @@ export default function ServicesPage() {
           </div>
         </div>
       )}
-    </div>
+    </main>
   );
 }

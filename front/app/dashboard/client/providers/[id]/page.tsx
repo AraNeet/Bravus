@@ -1,51 +1,72 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
-import { useRouter } from "next/navigation"
-import { ArrowLeft, MapPin, Mail, Phone, Calendar, Star, Clock, DollarSign } from "lucide-react"
-import { getUserById } from "@/app/api/users"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Badge } from "@/components/ui/badge"
-import { Separator } from "@/components/ui/separator"
-import { Skeleton } from "@/components/ui/skeleton"
-import type { OwnerWithServices } from "@/app/api/users"
-import type { Service } from "@/app/api/types"
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import {
+  ArrowLeft,
+  MapPin,
+  Mail,
+  Phone,
+  Calendar,
+  Star,
+  Clock,
+  DollarSign,
+} from "lucide-react";
+import { getUserById } from "@/app/api/users";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
+import { Skeleton } from "@/components/ui/skeleton";
+import type { OwnerWithServices } from "@/app/api/users";
+import type { Service } from "@/app/api/types";
 
-export default function ProviderDetailPage({ params }: { params: { id: string } }) {
-  const router = useRouter()
-  const [provider, setProvider] = useState<OwnerWithServices | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+export default function ProviderDetailPage({
+  params,
+}: {
+  params: { id: string };
+}) {
+  const router = useRouter();
+  const [provider, setProvider] = useState<OwnerWithServices | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchProvider = async () => {
       try {
-        setIsLoading(true)
-        const data = await getUserById(params.id)
-        setProvider(data as OwnerWithServices)
+        setIsLoading(true);
+        const data = await getUserById(params.id);
+        setProvider(data as OwnerWithServices);
       } catch (err) {
-        console.error("Failed to fetch provider:", err)
-        setError("Failed to load provider details. Please try again later.")
+        console.error("Failed to fetch provider:", err);
+        setError("Failed to load provider details. Please try again later.");
       } finally {
-        setIsLoading(false)
+        setIsLoading(false);
       }
-    }
+    };
 
     if (params.id) {
-      fetchProvider()
+      fetchProvider();
     }
-  }, [params.id])
+  }, [params.id]);
 
   const getInitials = (firstName?: string, lastName?: string) => {
-    return `${firstName?.charAt(0) || ""}${lastName?.charAt(0) || ""}`.toUpperCase()
-  }
+    return `${firstName?.charAt(0) || ""}${
+      lastName?.charAt(0) || ""
+    }`.toUpperCase();
+  };
 
   if (error) {
     return (
-      <div className="container mx-auto px-4 py-8 max-w-7xl">
+      <div>
         <Button
           variant="outline"
           className="mb-6 border-white/10 bg-white/5 text-white hover:bg-white/10"
@@ -55,17 +76,19 @@ export default function ProviderDetailPage({ params }: { params: { id: string } 
           Back to Providers
         </Button>
 
-        <div className="rounded-lg bg-red-500/20 border border-red-500/50 p-4 text-white">{error}</div>
+        <div className="rounded-lg bg-red-500/20 border border-red-500/50 p-4 text-white">
+          {error}
+        </div>
       </div>
-    )
+    );
   }
 
   if (isLoading) {
-    return <ProviderDetailSkeleton />
+    return <ProviderDetailSkeleton />;
   }
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-7xl">
+    <div>
       <Button
         variant="outline"
         className="mb-6 border-white/10 bg-white/5 text-white hover:bg-white/10"
@@ -105,7 +128,8 @@ export default function ProviderDetailPage({ params }: { params: { id: string } 
               <span className="text-white/60">(24 reviews)</span>
             </div>
             <CardDescription className="text-white/70 mt-4">
-              {provider?.career || "Professional pet care provider specializing in various animal services."}
+              {provider?.career ||
+                "Professional pet care provider specializing in various animal services."}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -116,7 +140,9 @@ export default function ProviderDetailPage({ params }: { params: { id: string } 
                 <Mail className="h-5 w-5 text-[#9f6eff] mr-3" />
                 <div>
                   <p className="text-white/60 text-sm">Email</p>
-                  <p className="text-white">{provider?.email || "Not provided"}</p>
+                  <p className="text-white">
+                    {provider?.email || "Not provided"}
+                  </p>
                 </div>
               </div>
 
@@ -124,7 +150,9 @@ export default function ProviderDetailPage({ params }: { params: { id: string } 
                 <Phone className="h-5 w-5 text-[#9f6eff] mr-3" />
                 <div>
                   <p className="text-white/60 text-sm">Phone</p>
-                  <p className="text-white">{provider?.phone || "Not provided"}</p>
+                  <p className="text-white">
+                    {provider?.phone || "Not provided"}
+                  </p>
                 </div>
               </div>
 
@@ -143,7 +171,9 @@ export default function ProviderDetailPage({ params }: { params: { id: string } 
               className="w-full bg-gradient-to-r from-[#9f6eff] to-[#c061f7] hover:from-[#8a5ee6] hover:to-[#a94fdb] text-white"
               asChild
             >
-              <a href={`/dashboard/client/appointments/book?providerId=${provider?.id}`}>
+              <a
+                href={`/dashboard/client/appointments/book?providerId=${provider?.id}`}
+              >
                 <Calendar className="mr-2 h-4 w-4" />
                 Book Appointment
               </a>
@@ -185,7 +215,9 @@ export default function ProviderDetailPage({ params }: { params: { id: string } 
                     >
                       <CardHeader className="pb-2">
                         <div className="flex justify-between items-start">
-                          <CardTitle className="text-lg text-white">{service["service-name"]}</CardTitle>
+                          <CardTitle className="text-lg text-white">
+                            {service["service-name"]}
+                          </CardTitle>
                           <div className="flex items-center text-white font-medium">
                             <DollarSign className="h-4 w-4 text-[#9f6eff]" />
                             {service.price?.toFixed(2)}
@@ -193,7 +225,9 @@ export default function ProviderDetailPage({ params }: { params: { id: string } 
                         </div>
                       </CardHeader>
                       <CardContent>
-                        <p className="text-white/70">{service["service-desc"]}</p>
+                        <p className="text-white/70">
+                          {service["service-desc"]}
+                        </p>
                         <div className="mt-4">
                           <Button
                             variant="outline"
@@ -213,7 +247,9 @@ export default function ProviderDetailPage({ params }: { params: { id: string } 
                   ))
                 ) : (
                   <div className="col-span-2 text-center py-12">
-                    <p className="text-white/70">No services listed for this provider.</p>
+                    <p className="text-white/70">
+                      No services listed for this provider.
+                    </p>
                   </div>
                 )}
               </div>
@@ -222,7 +258,9 @@ export default function ProviderDetailPage({ params }: { params: { id: string } 
             <TabsContent value="about" className="mt-6">
               <Card className="bg-gradient-to-br from-white/5 to-white/3 border-white/10">
                 <CardHeader>
-                  <CardTitle className="text-xl text-white">About {provider?.firstname}</CardTitle>
+                  <CardTitle className="text-xl text-white">
+                    About {provider?.firstname}
+                  </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <p className="text-white/70">
@@ -230,7 +268,9 @@ export default function ProviderDetailPage({ params }: { params: { id: string } 
                   </p>
 
                   <div className="mt-6">
-                    <h3 className="text-lg font-medium text-white mb-3">Specializations</h3>
+                    <h3 className="text-lg font-medium text-white mb-3">
+                      Specializations
+                    </h3>
                     <div className="flex flex-wrap gap-2">
                       {provider?.services?.map((service: Service) => (
                         <Badge
@@ -249,7 +289,9 @@ export default function ProviderDetailPage({ params }: { params: { id: string } 
             <TabsContent value="reviews" className="mt-6">
               <Card className="bg-gradient-to-br from-white/5 to-white/3 border-white/10">
                 <CardHeader>
-                  <CardTitle className="text-xl text-white">Client Reviews</CardTitle>
+                  <CardTitle className="text-xl text-white">
+                    Client Reviews
+                  </CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="text-center py-8">
@@ -262,13 +304,20 @@ export default function ProviderDetailPage({ params }: { params: { id: string } 
         </div>
       </div>
     </div>
-  )
+  );
 }
 
 function ProviderDetailSkeleton() {
   return (
-    <div className="container mx-auto px-4 py-8 max-w-7xl">
-      <Skeleton className="h-10 w-40 mb-6" />
+    <div>
+      <Button
+        variant="outline"
+        className="mb-6 border-white/10 bg-white/5 text-white hover:bg-white/10"
+        disabled
+      >
+        <ArrowLeft className="mr-2 h-4 w-4" />
+        Back to Providers
+      </Button>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Provider Profile Card Skeleton */}
@@ -309,7 +358,10 @@ function ProviderDetailSkeleton() {
           <div className="mt-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {[...Array(4)].map((_, i) => (
-                <Card key={i} className="bg-gradient-to-br from-white/5 to-white/3 border-white/10">
+                <Card
+                  key={i}
+                  className="bg-gradient-to-br from-white/5 to-white/3 border-white/10"
+                >
                   <CardHeader className="pb-2">
                     <div className="flex justify-between items-start">
                       <Skeleton className="h-6 w-32" />
@@ -328,6 +380,5 @@ function ProviderDetailSkeleton() {
         </div>
       </div>
     </div>
-  )
+  );
 }
-

@@ -11,6 +11,13 @@ import { useAuth } from "@/app/hooks/useAuth";
 import { createService } from "@/app/api/services";
 import type { CreateServiceRequest } from "@/app/api/services";
 import { getUserIdFromToken } from "@/app/utils/jwt-utils";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
 
 export default function NewServicePage() {
   const { user, authUser, isLoading } = useAuth();
@@ -125,264 +132,254 @@ export default function NewServicePage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#1a0b2e] to-[#2c1250] text-white">
-      <Toaster
-        position="top-right"
-        toastOptions={{
-          style: {
-            background: "rgba(30, 15, 60, 0.95)",
-            color: "white",
-            border: "1px solid rgba(159, 110, 255, 0.3)",
-            backdropFilter: "blur(8px)",
-          },
-        }}
-      />
+    <div className="space-y-6">
+      <div className="flex items-center gap-2 mb-4">
+        <Button
+          variant="outline"
+          className="border-white/10 bg-white/5 text-white hover:bg-white/10"
+          onClick={() => router.back()}
+        >
+          <ArrowLeft className="mr-2 h-4 w-4" />
+          Back
+        </Button>
+      </div>
 
-      {/* Header */}
-      <header className="bg-black/20 backdrop-blur-sm border-b border-white/10 sticky top-0 z-10">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center">
-            <Link href="/dashboard/owner/service" className="mr-4">
-              <ArrowLeft className="w-5 h-5 text-white/70 hover:text-white transition-colors" />
-            </Link>
-            <h1 className="text-xl font-bold">Add New Service</h1>
-          </div>
-        </div>
-      </header>
+      <div>
+        <h1 className="text-3xl font-bold mb-2">Add New Service</h1>
+        <p className="text-white/70">
+          Create a new service offering for your clients
+        </p>
+      </div>
 
-      <main className="container mx-auto px-4 py-8 max-w-3xl">
-        <div className="bg-gradient-to-br from-white/5 to-white/3 backdrop-blur-sm rounded-xl border border-[#9f6eff]/20 p-6 md:p-8">
-          <form onSubmit={handleSubmit}>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-              {/* Left Column - Service Details */}
-              <div className="space-y-6">
-                <div>
-                  <label
-                    htmlFor="serviceName"
-                    className="block text-sm font-medium text-white/70 mb-2"
-                  >
-                    Service Name*
-                  </label>
-                  <input
-                    id="serviceName"
-                    type="text"
-                    value={serviceName}
-                    onChange={(e) => setServiceName(e.target.value)}
-                    className={`w-full bg-white/5 border ${
-                      errors.serviceName ? "border-red-500" : "border-white/10"
-                    } rounded-lg py-2 px-4 text-white focus:outline-none focus:ring-2 focus:ring-[#9f6eff]/50`}
-                    placeholder="e.g., Pet Grooming"
-                  />
-                  {errors.serviceName && (
-                    <p className="mt-1 text-sm text-red-400">
-                      {errors.serviceName}
-                    </p>
-                  )}
-                </div>
-
-                <div>
-                  <label
-                    htmlFor="price"
-                    className="block text-sm font-medium text-white/70 mb-2"
-                  >
-                    Price ($)*
-                  </label>
-                  <input
-                    id="price"
-                    type="text"
-                    value={price}
-                    onChange={(e) => setPrice(e.target.value)}
-                    className={`w-full bg-white/5 border ${
-                      errors.price ? "border-red-500" : "border-white/10"
-                    } rounded-lg py-2 px-4 text-white focus:outline-none focus:ring-2 focus:ring-[#9f6eff]/50`}
-                    placeholder="e.g., 49.99"
-                  />
-                  {errors.price && (
-                    <p className="mt-1 text-sm text-red-400">{errors.price}</p>
-                  )}
-                </div>
-
-                <div>
-                  <label
-                    htmlFor="duration"
-                    className="block text-sm font-medium text-white/70 mb-2"
-                  >
-                    Duration (minutes)
-                  </label>
-                  <select
-                    id="duration"
-                    value={duration}
-                    onChange={(e) => setDuration(e.target.value)}
-                    className="w-full bg-white/5 border border-white/10 rounded-lg py-2 px-4 text-white focus:outline-none focus:ring-2 focus:ring-[#9f6eff]/50"
-                  >
-                    <option value="15" className="bg-[#1a0b2e] text-white">
-                      15 minutes
-                    </option>
-                    <option value="30" className="bg-[#1a0b2e] text-white">
-                      30 minutes
-                    </option>
-                    <option value="45" className="bg-[#1a0b2e] text-white">
-                      45 minutes
-                    </option>
-                    <option value="60" className="bg-[#1a0b2e] text-white">
-                      1 hour
-                    </option>
-                    <option value="90" className="bg-[#1a0b2e] text-white">
-                      1.5 hours
-                    </option>
-                    <option value="120" className="bg-[#1a0b2e] text-white">
-                      2 hours
-                    </option>
-                  </select>
-                </div>
-
-                <div>
-                  <label
-                    htmlFor="category"
-                    className="block text-sm font-medium text-white/70 mb-2"
-                  >
-                    Category
-                  </label>
-                  <select
-                    id="category"
-                    value={category}
-                    onChange={(e) => setCategory(e.target.value)}
-                    className="w-full bg-white/5 border border-white/10 rounded-lg py-2 px-4 text-white focus:outline-none focus:ring-2 focus:ring-[#9f6eff]/50"
-                  >
-                    <option value="" className="bg-[#1a0b2e] text-white">
-                      Select a category
-                    </option>
-                    <option
-                      value="grooming"
-                      className="bg-[#1a0b2e] text-white"
-                    >
-                      Grooming
-                    </option>
-                    <option value="medical" className="bg-[#1a0b2e] text-white">
-                      Medical
-                    </option>
-                    <option
-                      value="training"
-                      className="bg-[#1a0b2e] text-white"
-                    >
-                      Training
-                    </option>
-                    <option
-                      value="boarding"
-                      className="bg-[#1a0b2e] text-white"
-                    >
-                      Boarding
-                    </option>
-                    <option value="daycare" className="bg-[#1a0b2e] text-white">
-                      Daycare
-                    </option>
-                  </select>
-                </div>
-              </div>
-
-              {/* Right Column - Image Upload & Description */}
-              <div className="space-y-6">
-                <div>
-                  <label className="block text-sm font-medium text-white/70 mb-2">
-                    Service Image
-                  </label>
-                  <div className="border border-dashed border-white/20 rounded-lg p-4">
-                    {imagePreview ? (
-                      <div className="relative">
-                        <img
-                          src={imagePreview || "/placeholder.svg"}
-                          alt="Service preview"
-                          className="w-full h-48 object-cover rounded-lg"
-                        />
-                        <button
-                          type="button"
-                          onClick={removeImage}
-                          className="absolute top-2 right-2 p-1 bg-black/50 rounded-full hover:bg-black/70 transition-colors"
-                        >
-                          <X className="w-4 h-4" />
-                        </button>
-                      </div>
-                    ) : (
-                      <div
-                        onClick={() => fileInputRef.current?.click()}
-                        className="flex flex-col items-center justify-center h-48 cursor-pointer bg-white/5 rounded-lg hover:bg-white/10 transition-colors"
-                      >
-                        <Upload className="w-8 h-8 text-white/40 mb-2" />
-                        <p className="text-sm text-white/60">
-                          Click to upload image
-                        </p>
-                        <p className="text-xs text-white/40 mt-1">
-                          PNG, JPG or WEBP (max. 5MB)
-                        </p>
-                      </div>
-                    )}
-                    <input
-                      ref={fileInputRef}
-                      type="file"
-                      accept="image/*"
-                      onChange={handleImageChange}
-                      className="hidden"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label
-                    htmlFor="serviceDesc"
-                    className="block text-sm font-medium text-white/70 mb-2"
-                  >
-                    Service Description*
-                  </label>
-                  <textarea
-                    id="serviceDesc"
-                    value={serviceDesc}
-                    onChange={(e) => setServiceDesc(e.target.value)}
-                    rows={5}
-                    className={`w-full bg-white/5 border ${
-                      errors.serviceDesc ? "border-red-500" : "border-white/10"
-                    } rounded-lg py-2 px-4 text-white focus:outline-none focus:ring-2 focus:ring-[#9f6eff]/50`}
-                    placeholder="Describe your service..."
-                  />
-                  {errors.serviceDesc && (
-                    <p className="mt-1 text-sm text-red-400">
-                      {errors.serviceDesc}
-                    </p>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            {/* Additional Info */}
-            <div className="bg-[#9f6eff]/10 border border-[#9f6eff]/20 rounded-lg p-4 mb-8 flex items-start gap-3">
-              <Info className="w-5 h-5 text-[#9f6eff] mt-0.5 flex-shrink-0" />
+      {/* Form */}
+      <Card className="bg-gradient-to-br from-white/5 to-white/3 border-white/10">
+        <CardHeader>
+          <CardTitle>Service Information</CardTitle>
+          <CardDescription>
+            Enter the details of your new service
+          </CardDescription>
+        </CardHeader>
+        <form onSubmit={handleSubmit}>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+            {/* Left Column - Service Details */}
+            <div className="space-y-6">
               <div>
-                <p className="text-sm text-white/80">
-                  Services you create will be visible to clients who can book
-                  appointments for them. Make sure to provide clear descriptions
-                  and accurate pricing.
-                </p>
+                <label
+                  htmlFor="serviceName"
+                  className="block text-sm font-medium text-white/70 mb-2"
+                >
+                  Service Name*
+                </label>
+                <input
+                  id="serviceName"
+                  type="text"
+                  value={serviceName}
+                  onChange={(e) => setServiceName(e.target.value)}
+                  className={`w-full bg-white/5 border ${
+                    errors.serviceName ? "border-red-500" : "border-white/10"
+                  } rounded-lg py-2 px-4 text-white focus:outline-none focus:ring-2 focus:ring-[#9f6eff]/50`}
+                  placeholder="e.g., Pet Grooming"
+                />
+                {errors.serviceName && (
+                  <p className="mt-1 text-sm text-red-400">
+                    {errors.serviceName}
+                  </p>
+                )}
+              </div>
+
+              <div>
+                <label
+                  htmlFor="price"
+                  className="block text-sm font-medium text-white/70 mb-2"
+                >
+                  Price ($)*
+                </label>
+                <input
+                  id="price"
+                  type="text"
+                  value={price}
+                  onChange={(e) => setPrice(e.target.value)}
+                  className={`w-full bg-white/5 border ${
+                    errors.price ? "border-red-500" : "border-white/10"
+                  } rounded-lg py-2 px-4 text-white focus:outline-none focus:ring-2 focus:ring-[#9f6eff]/50`}
+                  placeholder="e.g., 49.99"
+                />
+                {errors.price && (
+                  <p className="mt-1 text-sm text-red-400">{errors.price}</p>
+                )}
+              </div>
+
+              <div>
+                <label
+                  htmlFor="duration"
+                  className="block text-sm font-medium text-white/70 mb-2"
+                >
+                  Duration (minutes)
+                </label>
+                <select
+                  id="duration"
+                  value={duration}
+                  onChange={(e) => setDuration(e.target.value)}
+                  className="w-full bg-white/5 border border-white/10 rounded-lg py-2 px-4 text-white focus:outline-none focus:ring-2 focus:ring-[#9f6eff]/50"
+                >
+                  <option value="15" className="bg-[#1a0b2e] text-white">
+                    15 minutes
+                  </option>
+                  <option value="30" className="bg-[#1a0b2e] text-white">
+                    30 minutes
+                  </option>
+                  <option value="45" className="bg-[#1a0b2e] text-white">
+                    45 minutes
+                  </option>
+                  <option value="60" className="bg-[#1a0b2e] text-white">
+                    1 hour
+                  </option>
+                  <option value="90" className="bg-[#1a0b2e] text-white">
+                    1.5 hours
+                  </option>
+                  <option value="120" className="bg-[#1a0b2e] text-white">
+                    2 hours
+                  </option>
+                </select>
+              </div>
+
+              <div>
+                <label
+                  htmlFor="category"
+                  className="block text-sm font-medium text-white/70 mb-2"
+                >
+                  Category
+                </label>
+                <select
+                  id="category"
+                  value={category}
+                  onChange={(e) => setCategory(e.target.value)}
+                  className="w-full bg-white/5 border border-white/10 rounded-lg py-2 px-4 text-white focus:outline-none focus:ring-2 focus:ring-[#9f6eff]/50"
+                >
+                  <option value="" className="bg-[#1a0b2e] text-white">
+                    Select a category
+                  </option>
+                  <option value="grooming" className="bg-[#1a0b2e] text-white">
+                    Grooming
+                  </option>
+                  <option value="medical" className="bg-[#1a0b2e] text-white">
+                    Medical
+                  </option>
+                  <option value="training" className="bg-[#1a0b2e] text-white">
+                    Training
+                  </option>
+                  <option value="boarding" className="bg-[#1a0b2e] text-white">
+                    Boarding
+                  </option>
+                  <option value="daycare" className="bg-[#1a0b2e] text-white">
+                    Daycare
+                  </option>
+                </select>
               </div>
             </div>
 
-            {/* Form Actions */}
-            <div className="flex justify-end gap-4">
-              <Link
-                href="/dashboard/owner/services"
-                className="px-6 py-2 rounded-lg bg-white/10 hover:bg-white/20 transition-colors"
-              >
-                Cancel
-              </Link>
-              <button
-                type="submit"
-                disabled={isSubmitting}
-                className="px-6 py-2 rounded-lg bg-gradient-to-r from-[#9f6eff] to-[#c061f7] hover:from-[#8b4ff7] hover:to-[#b04fe7] transition-colors"
-              >
-                {isSubmitting ? "Creating..." : "Create Service"}
-              </button>
+            {/* Right Column - Image Upload & Description */}
+            <div className="space-y-6">
+              <div>
+                <label className="block text-sm font-medium text-white/70 mb-2">
+                  Service Image
+                </label>
+                <div className="border border-dashed border-white/20 rounded-lg p-4">
+                  {imagePreview ? (
+                    <div className="relative">
+                      <img
+                        src={imagePreview || "/placeholder.svg"}
+                        alt="Service preview"
+                        className="w-full h-48 object-cover rounded-lg"
+                      />
+                      <button
+                        type="button"
+                        onClick={removeImage}
+                        className="absolute top-2 right-2 p-1 bg-black/50 rounded-full hover:bg-black/70 transition-colors"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                  ) : (
+                    <div
+                      onClick={() => fileInputRef.current?.click()}
+                      className="flex flex-col items-center justify-center h-48 cursor-pointer bg-white/5 rounded-lg hover:bg-white/10 transition-colors"
+                    >
+                      <Upload className="w-8 h-8 text-white/40 mb-2" />
+                      <p className="text-sm text-white/60">
+                        Click to upload image
+                      </p>
+                      <p className="text-xs text-white/40 mt-1">
+                        PNG, JPG or WEBP (max. 5MB)
+                      </p>
+                    </div>
+                  )}
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageChange}
+                    className="hidden"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label
+                  htmlFor="serviceDesc"
+                  className="block text-sm font-medium text-white/70 mb-2"
+                >
+                  Service Description*
+                </label>
+                <textarea
+                  id="serviceDesc"
+                  value={serviceDesc}
+                  onChange={(e) => setServiceDesc(e.target.value)}
+                  rows={5}
+                  className={`w-full bg-white/5 border ${
+                    errors.serviceDesc ? "border-red-500" : "border-white/10"
+                  } rounded-lg py-2 px-4 text-white focus:outline-none focus:ring-2 focus:ring-[#9f6eff]/50`}
+                  placeholder="Describe your service..."
+                />
+                {errors.serviceDesc && (
+                  <p className="mt-1 text-sm text-red-400">
+                    {errors.serviceDesc}
+                  </p>
+                )}
+              </div>
             </div>
-          </form>
-        </div>
-      </main>
+          </div>
+
+          {/* Additional Info */}
+          <div className="bg-[#9f6eff]/10 border border-[#9f6eff]/20 rounded-lg p-4 mb-8 flex items-start gap-3">
+            <Info className="w-5 h-5 text-[#9f6eff] mt-0.5 flex-shrink-0" />
+            <div>
+              <p className="text-sm text-white/80">
+                Services you create will be visible to clients who can book
+                appointments for them. Make sure to provide clear descriptions
+                and accurate pricing.
+              </p>
+            </div>
+          </div>
+
+          {/* Form Actions */}
+          <div className="flex justify-end gap-4">
+            <Link
+              href="/dashboard/owner/services"
+              className="px-6 py-2 rounded-lg bg-white/10 hover:bg-white/20 transition-colors"
+            >
+              Cancel
+            </Link>
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className="px-6 py-2 rounded-lg bg-gradient-to-r from-[#9f6eff] to-[#c061f7] hover:from-[#8b4ff7] hover:to-[#b04fe7] transition-colors"
+            >
+              {isSubmitting ? "Creating..." : "Create Service"}
+            </button>
+          </div>
+        </form>
+      </Card>
     </div>
   );
 }

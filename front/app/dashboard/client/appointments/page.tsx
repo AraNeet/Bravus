@@ -11,6 +11,7 @@ import {
   ChevronRight,
   CheckCircle2,
   XCircle,
+  ArrowLeft,
 } from "lucide-react";
 import { useAuth } from "@/app/hooks/useAuth";
 import type { Appointment } from "@/app/api/types";
@@ -149,12 +150,24 @@ export default function ClientAppointmentsPage() {
   }
 
   return (
-    <>
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-2">My Appointments</h1>
-        <p className="text-white/70">
-          View and manage all your scheduled appointments
-        </p>
+    <div className="space-y-6">
+      <div className="flex items-center gap-2 mb-4">
+        <Link
+          href="/dashboard/client"
+          className="text-white/70 hover:text-white flex items-center gap-1"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          Back to Dashboard
+        </Link>
+      </div>
+
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold mb-1">My Appointments</h1>
+          <p className="text-white/70">
+            Manage your upcoming and past appointments
+          </p>
+        </div>
       </div>
 
       {/* Filters and Search */}
@@ -359,6 +372,6 @@ export default function ClientAppointmentsPage() {
           </button>
         </div>
       )}
-    </>
+    </div>
   );
 }

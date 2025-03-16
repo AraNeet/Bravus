@@ -20,12 +20,14 @@ import {
   Turtle,
   HelpCircle,
   AlertCircle,
+  ArrowLeft,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/app/hooks/useAuth";
 import type { Animal } from "@/app/api/types";
 import { createAnimal, updateAnimal, deleteAnimal } from "@/app/api/animals";
 import { getUserIdFromToken } from "@/app/utils/jwt-utils";
+import Link from "next/link";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -463,6 +465,15 @@ export default function AnimalsPage() {
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
+          <div className="flex items-center gap-2 mb-2">
+            <Link
+              href="/dashboard/client"
+              className="text-white/70 hover:text-white flex items-center gap-1"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              Back to Dashboard
+            </Link>
+          </div>
           <h1 className="text-3xl font-bold mb-1">My Animals</h1>
           <p className="text-white/70">Manage your animal profiles</p>
         </div>

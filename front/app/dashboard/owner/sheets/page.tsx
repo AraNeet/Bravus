@@ -1,362 +1,415 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   FileSpreadsheet,
+  Download,
+  Search,
   Plus,
   Trash2,
+  Edit,
+  History,
+  ArrowLeft,
+  Loader2,
   ExternalLink,
-  Calendar,
-  Search,
-  LogOut,
-  BarChart,
-  Clock,
-  Package,
   AlertCircle,
 } from "lucide-react";
 import { useAuth } from "@/app/hooks/useAuth";
+import { toast } from "sonner";
 import {
-  checkGoogleAuthStatus,
-  initiateGoogleAuth,
   listSpreadsheets,
   deleteSpreadsheet,
-  SpreadsheetListItem,
+  checkGoogleAuthStatus,
+  initiateGoogleAuth,
+  type SpreadsheetListItem,
 } from "@/app/api/google";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 export default function SheetsDashboard() {
-  const { user, authUser, isLoading, isLoggedIn, logout } = useAuth();
   const router = useRouter();
-  const [searchQuery, setSearchQuery] = useState("");
-  const [spreadsheets, setSpreadsheets] = useState<SpreadsheetListItem[]>([]);
-  const [isLoadingSheets, setIsLoadingSheets] = useState(false);
-  const [isGoogleAuthenticated, setIsGoogleAuthenticated] = useState(false);
-  const [isAuthenticating, setIsAuthenticating] = useState(false);
+  const { isLoading: authLoading } = useAuth();
+
+  // State for sheets data and loading
+  const [sheets, setSheets] = useState<SpreadsheetListItem[]>([]);
+  const [isLoadingSheets, setIsLoadingSheets] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Redirect to login if not authenticated or to client dashboard if not an owner
+  // Google authentication state
+  const [isGoogleAuthenticated, setIsGoogleAuthenticated] = useState(false);
+  const [isAuthenticating, setIsAuthenticating] = useState(false);
+
+  // Filter and search state
+  const [searchQuery, setSearchQuery] = useState("");
+  const [filterType, setFilterType] = useState("all");
+  const [selectedTab, setSelectedTab] = useState("sheets");
+
+  // Delete confirmation dialog
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [sheetToDelete, setSheetToDelete] =
+    useState<SpreadsheetListItem | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  // Fetch Google auth status and spreadsheets
   useEffect(() => {
-    if (!isLoading) {
-      if (!isLoggedIn) {
-        router.push("/login");
-      } else {
-        const userData = user || authUser;
-        if (userData && !userData.owner) {
-          router.push("/dashboard/client");
+    const fetchData = async () => {
+      if (authLoading) return;
+
+      setIsLoadingSheets(true);
+      setError(null);
+
+      try {
+        // Check if user is authenticated with Google
+        const authStatus = await checkGoogleAuthStatus();
+        setIsGoogleAuthenticated(authStatus.authenticated);
+
+        if (authStatus.authenticated) {
+          // Fetch spreadsheets
+          const sheetsData = await listSpreadsheets();
+          setSheets(sheetsData);
         }
-      }
-    }
-  }, [isLoading, isLoggedIn, user, authUser, router]);
-
-  // Check Google authentication status
-  useEffect(() => {
-    const checkGoogleAuth = async () => {
-      try {
-        const status = await checkGoogleAuthStatus();
-        setIsGoogleAuthenticated(status.authenticated);
-      } catch (error) {
-        console.error("Error checking Google auth status:", error);
-        setIsGoogleAuthenticated(false);
-      }
-    };
-
-    if (isLoggedIn && !isLoading) {
-      checkGoogleAuth();
-    }
-  }, [isLoggedIn, isLoading]);
-
-  // Fetch spreadsheets if authenticated with Google
-  useEffect(() => {
-    const fetchSpreadsheets = async () => {
-      if (!isGoogleAuthenticated) return;
-
-      try {
-        setIsLoadingSheets(true);
-        setError(null);
-        const sheets = await listSpreadsheets();
-        setSpreadsheets(sheets);
-      } catch (error) {
-        console.error("Error fetching spreadsheets:", error);
-        setError("Failed to load spreadsheets. Please try again.");
+      } catch (err) {
+        console.error("Error fetching data:", err);
+        setError("Failed to fetch spreadsheets. Please try again later.");
       } finally {
         setIsLoadingSheets(false);
       }
     };
 
-    if (isGoogleAuthenticated) {
-      fetchSpreadsheets();
-    }
-  }, [isGoogleAuthenticated]);
+    fetchData();
+  }, [authLoading]);
 
   // Handle Google authentication
-  const handleConnectGoogle = async () => {
+  const handleGoogleAuth = async () => {
+    setIsAuthenticating(true);
     try {
-      setIsAuthenticating(true);
-      setError(null);
       const response = await initiateGoogleAuth();
+      // Redirect to Google OAuth URL
       window.location.href = response.redirectUrl;
-    } catch (error) {
-      console.error("Error initiating Google auth:", error);
-      setError("Failed to connect to Google. Please try again.");
+    } catch (err) {
+      console.error("Error initiating Google auth:", err);
+      toast.error("Failed to connect to Google", {
+        description: "Please try again later.",
+      });
       setIsAuthenticating(false);
     }
   };
 
-  // Handle spreadsheet deletion
-  const handleDeleteSpreadsheet = async (id: string, name: string) => {
-    if (!confirm(`Are you sure you want to delete "${name}"?`)) {
-      return;
-    }
+  // Handle delete spreadsheet
+  const handleDeleteSpreadsheet = async () => {
+    if (!sheetToDelete) return;
 
+    setIsDeleting(true);
     try {
-      await deleteSpreadsheet(id);
-      setSpreadsheets(spreadsheets.filter((sheet) => sheet.id !== id));
-    } catch (error) {
-      console.error("Error deleting spreadsheet:", error);
-      setError("Failed to delete spreadsheet. Please try again.");
+      await deleteSpreadsheet(sheetToDelete.id);
+
+      // Update local state
+      setSheets((prevSheets) =>
+        prevSheets.filter((sheet) => sheet.id !== sheetToDelete.id)
+      );
+
+      toast.success("Spreadsheet deleted", {
+        description: `${sheetToDelete.name} has been deleted.`,
+      });
+
+      setIsDeleteDialogOpen(false);
+      setSheetToDelete(null);
+    } catch (err) {
+      console.error("Error deleting spreadsheet:", err);
+      toast.error("Failed to delete spreadsheet", {
+        description: "Please try again later.",
+      });
+    } finally {
+      setIsDeleting(false);
     }
   };
 
-  // Handle logout
-  const handleLogout = async () => {
-    try {
-      await logout();
-    } catch (error) {
-      console.error("Logout failed:", error);
-    }
+  // Open spreadsheet in Google Sheets
+  const handleOpenSpreadsheet = (sheet: SpreadsheetListItem) => {
+    window.open(sheet.url, "_blank");
   };
 
-  // Filter spreadsheets by search query
-  const filteredSpreadsheets = spreadsheets.filter((sheet) =>
+  // Handle edit spreadsheet (navigate to editor)
+  const handleEditSpreadsheet = (sheet: SpreadsheetListItem) => {
+    router.push(`/dashboard/owner/sheets/${sheet.id}`);
+  };
+
+  // Filter sheets based on search query
+  const filteredSheets = sheets.filter((sheet) =>
     sheet.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  // If still loading, show loading state
-  if (isLoading) {
+  // Format date for display
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    });
+  };
+
+  // Auth loading state handled by parent
+  if (authLoading) return null;
+
+  // Google authentication required
+  if (!isGoogleAuthenticated && !isLoadingSheets) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-[#1a0b2e] to-[#2c1250] text-white flex items-center justify-center">
-        <div className="animate-spin w-12 h-12 border-4 border-[#9f6eff] border-t-transparent rounded-full"></div>
+      <div className="space-y-6">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div>
+            <div className="flex items-center gap-2 mb-2">
+              <Link
+                href="/dashboard/owner"
+                className="text-white/70 hover:text-white flex items-center gap-1"
+              >
+                <ArrowLeft className="w-4 h-4" />
+                Back to Dashboard
+              </Link>
+            </div>
+            <h1 className="text-3xl font-bold mb-1">Spreadsheet Management</h1>
+            <p className="text-white/70">
+              Connect with Google Sheets to manage your data
+            </p>
+          </div>
+        </div>
+
+        <div className="bg-white/5 backdrop-blur-sm rounded-lg border border-white/10 p-8 text-center">
+          <FileSpreadsheet className="w-16 h-16 text-white/40 mx-auto mb-4" />
+          <h2 className="text-xl font-semibold mb-2">Connect with Google</h2>
+          <p className="text-white/70 mb-6 max-w-md mx-auto">
+            To manage your spreadsheets, you need to connect your Google
+            account. This allows Bravus to securely access your Google Sheets.
+          </p>
+          <Button
+            onClick={handleGoogleAuth}
+            disabled={isAuthenticating}
+            className="bg-gradient-to-r from-[#4285F4] to-[#34A853] hover:from-[#3b76d9] hover:to-[#2e9549] border-none"
+          >
+            {isAuthenticating ? (
+              <>
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                Connecting...
+              </>
+            ) : (
+              <>
+                <FileSpreadsheet className="w-4 h-4 mr-2" />
+                Connect with Google
+              </>
+            )}
+          </Button>
+        </div>
       </div>
     );
   }
 
-  // Get user data from either full profile or auth response
-  const userData = user || authUser;
-
-  // If no user data, redirect to login (should be handled by useEffect, but just in case)
-  if (!userData) {
-    router.push("/login");
-    return null;
-  }
-
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#1a0b2e] to-[#2c1250] text-white">
-      {/* Header */}
-      <header className="bg-black/20 backdrop-blur-sm border-b border-white/10 sticky top-0 z-10">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex justify-between items-center">
-            <Link href="/" className="flex items-center gap-2 group">
-              <div className="bg-white/10 p-1.5 rounded-lg group-hover:bg-white/20 transition-colors">
-                <Calendar className="w-5 h-5 text-[#9f6eff]" />
-              </div>
-              <span className="text-xl font-bold bg-gradient-to-r from-[#9f6eff] to-[#c061f7] text-transparent bg-clip-text">
-                Bravus
-              </span>
-            </Link>
-
-            <div className="flex items-center gap-4">
-              <div className="relative hidden md:block">
-                <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-white/40" />
-                <input
-                  type="text"
-                  placeholder="Search spreadsheets..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-64 bg-white/5 border border-white/10 rounded-lg py-2 pl-10 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-[#9f6eff]/50"
-                />
-              </div>
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-[#9f6eff]/20 flex items-center justify-center">
-                  {userData.firstname.charAt(0)}
-                  {userData.lastname.charAt(0)}
-                </div>
-                <div className="hidden md:block">
-                  <p className="font-medium">
-                    {userData.firstname} {userData.lastname}
-                  </p>
-                  <p className="text-sm text-white/60">Business Owner</p>
-                </div>
-              </div>
-              <button
-                onClick={handleLogout}
-                className="p-2 hover:bg-white/10 rounded-lg transition-colors"
-                aria-label="Logout"
-              >
-                <LogOut className="w-5 h-5 text-white/70" />
-              </button>
-            </div>
-          </div>
-        </div>
-      </header>
-
-      <div className="flex min-h-[calc(100vh-73px)]">
-        {/* Sidebar */}
-        <aside className="w-20 md:w-64 bg-black/10 border-r border-white/10 p-4 hidden md:block">
-          <nav className="space-y-2">
+    <div className="space-y-6">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <div className="flex items-center gap-2 mb-2">
             <Link
               href="/dashboard/owner"
-              className="flex items-center gap-3 p-3 hover:bg-white/10 rounded-lg text-white/70 hover:text-white transition-colors"
+              className="text-white/70 hover:text-white flex items-center gap-1"
             >
-              <BarChart className="w-5 h-5" />
-              <span className="hidden md:inline">Dashboard</span>
+              <ArrowLeft className="w-4 h-4" />
+              Back to Dashboard
             </Link>
-            <Link
-              href="/dashboard/owner/appointments"
-              className="flex items-center gap-3 p-3 hover:bg-white/10 rounded-lg text-white/70 hover:text-white transition-colors"
-            >
-              <Clock className="w-5 h-5" />
-              <span className="hidden md:inline">Appointments</span>
-            </Link>
-            <Link
-              href="/dashboard/owner/service"
-              className="flex items-center gap-3 p-3 hover:bg-white/10 rounded-lg text-white/70 hover:text-white transition-colors"
-            >
-              <Package className="w-5 h-5" />
-              <span className="hidden md:inline">Service</span>
-            </Link>
-            <Link
-              href="/dashboard/owner/sheets"
-              className="flex items-center gap-3 p-3 bg-white/10 rounded-lg text-white"
-            >
-              <FileSpreadsheet className="w-5 h-5" />
-              <span className="hidden md:inline">Sheets</span>
-            </Link>
-          </nav>
-        </aside>
-
-        {/* Main Content */}
-        <main className="flex-1 p-6 overflow-auto">
-          <div className="max-w-6xl mx-auto">
-            <div className="flex justify-between items-center mb-8">
-              <h1 className="text-2xl font-bold">Google Sheets</h1>
-              {isGoogleAuthenticated && (
-                <Link
-                  href="/dashboard/owner/sheets/create"
-                  className="flex items-center gap-2 bg-[#9f6eff] hover:bg-[#8a5de8] text-white px-4 py-2 rounded-lg transition-colors"
-                >
-                  <Plus className="w-5 h-5" />
-                  <span>Create Spreadsheet</span>
-                </Link>
-              )}
-            </div>
-
-            {error && (
-              <div className="bg-red-500/20 border border-red-500/50 rounded-lg p-4 mb-6 flex items-start gap-3">
-                <AlertCircle className="w-5 h-5 text-red-400 shrink-0 mt-0.5" />
-                <p>{error}</p>
-              </div>
-            )}
-
-            {!isGoogleAuthenticated ? (
-              <div className="bg-black/20 rounded-xl p-8 text-center">
-                <FileSpreadsheet className="w-16 h-16 text-[#9f6eff] mx-auto mb-4" />
-                <h2 className="text-xl font-bold mb-2">
-                  Connect to Google Sheets
-                </h2>
-                <p className="text-white/70 mb-6 max-w-md mx-auto">
-                  Connect your Google account to create, view, and manage
-                  spreadsheets directly from your dashboard.
-                </p>
-                <button
-                  onClick={handleConnectGoogle}
-                  disabled={isAuthenticating}
-                  className="bg-[#9f6eff] hover:bg-[#8a5de8] text-white px-6 py-3 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {isAuthenticating
-                    ? "Connecting..."
-                    : "Connect Google Account"}
-                </button>
-              </div>
-            ) : isLoadingSheets ? (
-              <div className="flex justify-center py-12">
-                <div className="animate-spin w-10 h-10 border-4 border-[#9f6eff] border-t-transparent rounded-full"></div>
-              </div>
-            ) : filteredSpreadsheets.length === 0 ? (
-              <div className="bg-black/20 rounded-xl p-8 text-center">
-                <FileSpreadsheet className="w-16 h-16 text-[#9f6eff] mx-auto mb-4" />
-                <h2 className="text-xl font-bold mb-2">
-                  No spreadsheets found
-                </h2>
-                <p className="text-white/70 mb-6 max-w-md mx-auto">
-                  {searchQuery
-                    ? `No spreadsheets match "${searchQuery}". Try a different search term.`
-                    : "You haven't created any spreadsheets yet. Create your first spreadsheet to get started."}
-                </p>
-                <Link
-                  href="/dashboard/owner/sheets/create"
-                  className="bg-[#9f6eff] hover:bg-[#8a5de8] text-white px-6 py-3 rounded-lg transition-colors inline-flex items-center gap-2"
-                >
-                  <Plus className="w-5 h-5" />
-                  <span>Create Spreadsheet</span>
-                </Link>
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {filteredSpreadsheets.map((sheet) => (
-                  <div
-                    key={sheet.id}
-                    className="bg-black/20 border border-white/10 rounded-lg overflow-hidden hover:border-[#9f6eff]/50 transition-colors group"
-                  >
-                    <div className="p-4">
-                      <div className="flex items-start justify-between">
-                        <Link
-                          href={`/dashboard/owner/sheets/${sheet.id}`}
-                          className="flex-1"
-                        >
-                          <h3 className="font-medium text-lg truncate group-hover:text-[#9f6eff] transition-colors">
-                            {sheet.name}
-                          </h3>
-                        </Link>
-                        <div className="flex gap-1">
-                          <a
-                            href={sheet.url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="p-1.5 text-white/60 hover:text-white hover:bg-white/10 rounded transition-colors"
-                            title="Open in Google Sheets"
-                          >
-                            <ExternalLink className="w-4 h-4" />
-                          </a>
-                          <button
-                            onClick={() =>
-                              handleDeleteSpreadsheet(sheet.id, sheet.name)
-                            }
-                            className="p-1.5 text-white/60 hover:text-red-400 hover:bg-red-400/10 rounded transition-colors"
-                            title="Delete spreadsheet"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
-                        </div>
-                      </div>
-                      <p className="text-white/60 text-sm mt-1">
-                        Last modified:{" "}
-                        {new Date(sheet.lastModified).toLocaleDateString()}
-                      </p>
-                    </div>
-                    <Link
-                      href={`/dashboard/owner/sheets/${sheet.id}`}
-                      className="block border-t border-white/10 py-2 px-4 text-center text-sm text-white/70 hover:bg-white/5 transition-colors"
-                    >
-                      View & Edit
-                    </Link>
-                  </div>
-                ))}
-              </div>
-            )}
           </div>
-        </main>
+          <h1 className="text-3xl font-bold mb-1">Spreadsheet Management</h1>
+          <p className="text-white/70">Manage your data and exports</p>
+        </div>
+
+        <Button
+          onClick={() =>
+            (window.location.href = "/dashboard/owner/sheets/create")
+          }
+          className="w-full md:w-auto bg-gradient-to-r from-[#9f6eff] to-[#c061f7] hover:from-[#8b4ff7] hover:to-[#b04fe3] border-none"
+        >
+          <Plus className="w-4 h-4 mr-2" />
+          New Spreadsheet
+        </Button>
       </div>
+
+      {/* Error message */}
+      {error && (
+        <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-4 flex items-start gap-3">
+          <AlertCircle className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
+          <div>
+            <h3 className="font-medium text-white">Error</h3>
+            <p className="text-white/70">{error}</p>
+          </div>
+        </div>
+      )}
+
+      {/* Search */}
+      <div className="flex flex-col md:flex-row gap-4">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-white/40 w-4 h-4" />
+          <Input
+            placeholder="Search spreadsheets..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-10 bg-white/5 border-white/10 text-white"
+          />
+        </div>
+      </div>
+
+      {/* Loading state */}
+      {isLoadingSheets ? (
+        <div className="flex flex-col items-center justify-center py-12">
+          <Loader2 className="w-12 h-12 text-[#9f6eff] animate-spin mb-4" />
+          <p className="text-white/70">Loading your spreadsheets...</p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {filteredSheets.length > 0 ? (
+            filteredSheets.map((sheet) => (
+              <Card
+                key={sheet.id}
+                className="bg-white/5 backdrop-blur-sm border-white/10 hover:border-[#9f6eff]/40 transition-colors"
+              >
+                <CardHeader className="pb-2">
+                  <div className="flex justify-between items-start">
+                    <CardTitle className="text-lg">{sheet.name}</CardTitle>
+                    <div className="bg-[#9f6eff]/20 p-2 rounded-full">
+                      <FileSpreadsheet className="w-5 h-5 text-[#9f6eff]" />
+                    </div>
+                  </div>
+                  <CardDescription className="text-white/60">
+                    Google Spreadsheet
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="pb-2">
+                  <div className="text-sm text-white/60">
+                    Last modified on {formatDate(sheet.lastModified)}
+                  </div>
+                </CardContent>
+                <CardFooter className="pt-2 border-t border-white/10 flex justify-between">
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleEditSpreadsheet(sheet)}
+                      className="text-white/70 hover:text-white hover:bg-white/10"
+                    >
+                      <Edit className="w-4 h-4 mr-1" /> Edit
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleOpenSpreadsheet(sheet)}
+                      className="text-white/70 hover:text-white hover:bg-white/10"
+                    >
+                      <ExternalLink className="w-4 h-4 mr-1" /> Open
+                    </Button>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      setSheetToDelete(sheet);
+                      setIsDeleteDialogOpen(true);
+                    }}
+                    className="text-red-400 hover:text-red-300 hover:bg-red-500/10"
+                  >
+                    <Trash2 className="w-4 h-4 mr-1" /> Delete
+                  </Button>
+                </CardFooter>
+              </Card>
+            ))
+          ) : (
+            <div className="col-span-full bg-white/5 backdrop-blur-sm rounded-lg border border-white/10 p-8 text-center">
+              <FileSpreadsheet className="w-12 h-12 text-white/40 mx-auto mb-4" />
+              <h3 className="text-lg font-medium mb-2">
+                No spreadsheets found
+              </h3>
+              <p className="text-white/60 mb-4">
+                {searchQuery
+                  ? "No spreadsheets match your search criteria."
+                  : "You haven't created any spreadsheets yet."}
+              </p>
+              <Button
+                onClick={() =>
+                  (window.location.href = "/dashboard/owner/sheets/create")
+                }
+                className="bg-gradient-to-r from-[#9f6eff] to-[#c061f7] hover:from-[#8b4ff7] hover:to-[#b04fe3] border-none"
+              >
+                <Plus className="w-4 h-4 mr-2" /> Create your first spreadsheet
+              </Button>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog
+        open={isDeleteDialogOpen}
+        onOpenChange={setIsDeleteDialogOpen}
+      >
+        <AlertDialogContent className="bg-gradient-to-br from-[#1a0b2e] to-[#2c1250] border-[#9f6eff]/20 text-white">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Spreadsheet</AlertDialogTitle>
+            <AlertDialogDescription className="text-white/60">
+              Are you sure you want to delete "{sheetToDelete?.name}"? This will
+              permanently remove the spreadsheet and cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel
+              className="bg-white/5 border-[#9f6eff]/20 text-white hover:bg-white/10 hover:text-white hover:border-[#9f6eff]/40"
+              onClick={() => setIsDeleteDialogOpen(false)}
+            >
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-gradient-to-r from-red-500/80 to-red-600/80 hover:from-red-500 hover:to-red-600 text-white border-none"
+              onClick={handleDeleteSpreadsheet}
+              disabled={isDeleting}
+            >
+              {isDeleting ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Deleting...
+                </>
+              ) : (
+                <>
+                  <Trash2 className="w-4 h-4 mr-2" />
+                  Delete Spreadsheet
+                </>
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
