@@ -78,6 +78,37 @@ func CreateAppointment(c *fiber.Ctx) error {
 	return c.Status(fiber.StatusCreated).JSON(response)
 }
 
+// GetAppointment retrieves an appointment by ID
+func GetAppointment(c *fiber.Ctx) error {
+	id := c.Query("id")
+	if id == "" {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Appointment ID is required"})
+	}
+
+	err := Util.ValidateUUIDs(id)
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid appointment ID"})
+	}
+
+	db := c.Locals("db").(*gorm.DB)
+	appointment := models.Appointment{}
+
+	// Load appointment with related data
+	if err := db.Preload("Users").Preload("Service").First(&appointment, "id = ?", id).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "Appointment not found"})
+		}
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to retrieve appointment"})
+	}
+
+	response, err := Util.Serializer(appointment)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to serialize appointment"})
+	}
+
+	return c.Status(fiber.StatusOK).JSON(response)
+}
+
 // UpdateAppointment updates an existing appointment
 func UpdateAppointment(c *fiber.Ctx) error {
 	id := c.Query("id")
@@ -119,6 +150,23 @@ func UpdateAppointment(c *fiber.Ctx) error {
 		}
 
 		appointment.DateTime = dateTime
+	}
+
+	// Update service if provided
+	if input.Service != "" {
+		// Validate service ID
+		serviceID, err := uuid.Parse(input.Service)
+		if err != nil {
+			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid service ID"})
+		}
+
+		// Check if service exists
+		var service models.Service
+		if err := db.First(&service, "id = ?", serviceID).Error; err != nil {
+			return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "Service not found"})
+		}
+
+		appointment.ServiceID = serviceID
 	}
 
 	if err := db.Save(&appointment).Error; err != nil {

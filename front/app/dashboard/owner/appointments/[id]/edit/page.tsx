@@ -248,141 +248,129 @@ export default function EditAppointment() {
 
       <div>
         <h1 className="text-3xl font-bold mb-2">Edit Appointment</h1>
-        <p className="text-white/70">Update appointment details</p>
+        <p className="text-white/70">
+          Update the appointment details and save your changes
+        </p>
       </div>
 
-      {/* Form */}
-      <Card className="bg-gradient-to-br from-white/5 to-white/3 border-white/10">
-        <form onSubmit={handleSubmit}>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-            {/* Date Selection */}
-            <div>
-              <label htmlFor="date" className="block text-sm font-medium mb-2">
-                Date
+      <Card className="bg-gradient-to-br from-white/5 to-white/3 backdrop-blur-sm border-white/10">
+        <form onSubmit={handleSubmit} className="space-y-6 p-6">
+          {/* Date Input */}
+          <div className="space-y-2">
+            <div className="flex items-center gap-2">
+              <Calendar className="w-5 h-5 text-[#9f6eff]" />
+              <label htmlFor="date" className="font-medium">
+                Appointment Date
               </label>
-              <div className="relative">
-                <Calendar className="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-white/40" />
-                <input
-                  type="date"
-                  id="date"
-                  value={date}
-                  onChange={(e) => setDate(e.target.value)}
-                  className={`w-full bg-white/5 border ${
-                    errors.date ? "border-red-500/50" : "border-white/10"
-                  } rounded-lg py-2 pl-10 pr-4 focus:outline-none focus:ring-2 focus:ring-[#9f6eff]/50`}
-                />
-              </div>
-              {errors.date && (
-                <p className="mt-1 text-sm text-red-400">{errors.date}</p>
-              )}
             </div>
-
-            {/* Time Selection */}
-            <div>
-              <label htmlFor="time" className="block text-sm font-medium mb-2">
-                Time
-              </label>
-              <div className="relative">
-                <Clock className="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-white/40" />
-                <input
-                  type="time"
-                  id="time"
-                  value={time}
-                  onChange={(e) => setTime(e.target.value)}
-                  className={`w-full bg-white/5 border ${
-                    errors.time ? "border-red-500/50" : "border-white/10"
-                  } rounded-lg py-2 pl-10 pr-4 focus:outline-none focus:ring-2 focus:ring-[#9f6eff]/50`}
-                />
-              </div>
-              {errors.time && (
-                <p className="mt-1 text-sm text-red-400">{errors.time}</p>
-              )}
-            </div>
-
-            {/* Client Information (Read-only) */}
-            <div>
-              <label className="block text-sm font-medium mb-2">Client</label>
-              <div className="relative">
-                <Users className="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-white/40" />
-                <input
-                  type="text"
-                  value={
-                    getAppointment()
-                      ?.Users.map((u) => `${u.firstname} ${u.lastname}`)
-                      .join(", ") || ""
-                  }
-                  readOnly
-                  className="w-full bg-white/5 border border-white/10 rounded-lg py-2 pl-10 pr-4 focus:outline-none cursor-not-allowed opacity-70"
-                />
-              </div>
-              <p className="mt-1 text-xs text-white/50">
-                Client cannot be changed. Create a new appointment instead.
-              </p>
-            </div>
-
-            {/* Service Selection */}
-            <div>
-              <label
-                htmlFor="service"
-                className="block text-sm font-medium mb-2"
-              >
-                Service
-              </label>
-              <div className="relative">
-                <Package className="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-white/40" />
-                <select
-                  id="service"
-                  value={selectedService}
-                  onChange={(e) => setSelectedService(e.target.value)}
-                  className={`w-full bg-white/5 border ${
-                    errors.service ? "border-red-500/50" : "border-white/10"
-                  } rounded-lg py-2 pl-10 pr-4 appearance-none focus:outline-none focus:ring-2 focus:ring-[#9f6eff]/50`}
-                >
-                  <option value="">Select a service</option>
-                  {userData &&
-                  hasServices(userData) &&
-                  userData.services.length > 0 ? (
-                    userData.services.map((service: Service) => (
-                      <option key={service.id} value={service.id}>
-                        {service["service-name"]} (${service.price.toFixed(2)})
-                      </option>
-                    ))
-                  ) : (
-                    <option disabled>No services available</option>
-                  )}
-                </select>
-              </div>
-              {errors.service && (
-                <p className="mt-1 text-sm text-red-400">{errors.service}</p>
-              )}
-            </div>
+            <input
+              id="date"
+              type="date"
+              value={date}
+              onChange={(e) => {
+                setDate(e.target.value);
+                setErrors({ ...errors, date: "" });
+              }}
+              className="w-full px-4 py-2 rounded-lg bg-white/5 border border-white/10 focus:border-[#9f6eff]/50 focus:ring-1 focus:ring-[#9f6eff]/30 text-white"
+            />
+            {errors.date && (
+              <p className="text-red-400 text-sm">{errors.date}</p>
+            )}
           </div>
 
-          {/* Form Actions */}
-          <div className="flex justify-end gap-3 mt-8">
-            <Link
-              href={`/dashboard/owner/appointments/${appointmentId}`}
-              className="px-4 py-2 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 transition-colors"
+          {/* Time Input */}
+          <div className="space-y-2">
+            <div className="flex items-center gap-2">
+              <Clock className="w-5 h-5 text-[#9f6eff]" />
+              <label htmlFor="time" className="font-medium">
+                Appointment Time
+              </label>
+            </div>
+            <input
+              id="time"
+              type="time"
+              value={time}
+              onChange={(e) => {
+                setTime(e.target.value);
+                setErrors({ ...errors, time: "" });
+              }}
+              className="w-full px-4 py-2 rounded-lg bg-white/5 border border-white/10 focus:border-[#9f6eff]/50 focus:ring-1 focus:ring-[#9f6eff]/30 text-white"
+            />
+            {errors.time && (
+              <p className="text-red-400 text-sm">{errors.time}</p>
+            )}
+          </div>
+
+          {/* Service Selection */}
+          <div className="space-y-2">
+            <div className="flex items-center gap-2">
+              <Package className="w-5 h-5 text-[#9f6eff]" />
+              <label htmlFor="service" className="font-medium">
+                Service
+              </label>
+            </div>
+            <select
+              id="service"
+              value={selectedService}
+              onChange={(e) => {
+                setSelectedService(e.target.value);
+                setErrors({ ...errors, service: "" });
+              }}
+              className="w-full px-4 py-2 rounded-lg bg-white/5 border border-white/10 focus:border-[#9f6eff]/50 focus:ring-1 focus:ring-[#9f6eff]/30 text-white"
             >
-              Cancel
-            </Link>
-            <button
+              <option value="">Select a service</option>
+              {hasServices(userData) &&
+                userData.services.map((service) => (
+                  <option key={service.id} value={service.id}>
+                    {service["service-name"]} - ${service.price.toFixed(2)}
+                  </option>
+                ))}
+            </select>
+            {errors.service && (
+              <p className="text-red-400 text-sm">{errors.service}</p>
+            )}
+          </div>
+
+          {/* Client Selection (Read-Only) */}
+          <div className="space-y-2">
+            <div className="flex items-center gap-2">
+              <Users className="w-5 h-5 text-[#9f6eff]" />
+              <label htmlFor="client" className="font-medium">
+                Client
+              </label>
+            </div>
+            <input
+              id="client"
+              type="text"
+              value={selectedClient}
+              readOnly
+              className="w-full px-4 py-2 rounded-lg bg-white/5 border border-white/10 text-white/70 cursor-not-allowed"
+            />
+            <p className="text-white/50 text-sm">
+              Client information cannot be changed for existing appointments
+            </p>
+          </div>
+
+          {/* Submit Button */}
+          <div className="pt-4">
+            <Button
               type="submit"
+              className="w-full bg-gradient-to-r from-[#9f6eff] to-[#7764e5] hover:opacity-90 transition-opacity text-white border-none"
               disabled={isSubmitting}
-              className="px-4 py-2 bg-gradient-to-r from-[#9f6eff] to-[#c061f7] hover:from-[#8b4ff7] hover:to-[#b04fe3] rounded-lg transition-colors flex items-center gap-2 disabled:opacity-70"
             >
               {isSubmitting ? (
                 <>
-                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                  <span>Updating...</span>
+                  <div className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full mr-2"></div>
+                  Updating...
                 </>
               ) : (
-                <span>Update Appointment</span>
+                "Update Appointment"
               )}
-            </button>
+            </Button>
           </div>
         </form>
       </Card>
+      <Toaster />
     </div>
   );
 }

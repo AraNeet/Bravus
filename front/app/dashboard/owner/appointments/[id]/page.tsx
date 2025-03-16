@@ -57,11 +57,9 @@ export default function AppointmentDetailPage() {
         setAppointment(appointmentData);
 
         // Fetch service if available
-        if (appointmentData.service_id) {
+        if (appointmentData.service) {
           try {
-            const serviceData = await getServiceById(
-              appointmentData.service_id
-            );
+            const serviceData = await getServiceById(appointmentData.service);
             setService(serviceData);
           } catch (serviceError) {
             console.error("Failed to fetch service:", serviceError);
@@ -101,6 +99,46 @@ export default function AppointmentDetailPage() {
     setIsDeleting(false);
   };
 
+  // Confirmation dialog component
+  const ConfirmationDialog = ({
+    isOpen,
+    onClose,
+    onConfirm,
+    title,
+    message,
+  }: {
+    isOpen: boolean;
+    onClose: () => void;
+    onConfirm: () => void;
+    title: string;
+    message: string;
+  }) => {
+    if (!isOpen) return null;
+
+    return (
+      <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div className="bg-gradient-to-b from-[#2a1347] to-[#1a0b2e] rounded-xl border border-[#9f6eff]/20 shadow-lg p-6 max-w-md w-full">
+          <h3 className="text-xl font-bold mb-2">{title}</h3>
+          <p className="text-white/70 mb-6">{message}</p>
+          <div className="flex justify-end gap-3">
+            <button
+              onClick={onClose}
+              className="px-4 py-2 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={onConfirm}
+              className="px-4 py-2 rounded-lg bg-red-500/80 hover:bg-red-500 transition-colors"
+            >
+              Confirm
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center p-12">
@@ -124,14 +162,17 @@ export default function AppointmentDetailPage() {
         {appointment && (
           <div className="flex items-center gap-2">
             <Link href={`/dashboard/owner/appointments/${appointmentId}/edit`}>
-              <Button variant="outline" className="border-white/10 bg-white/5">
+              <Button
+                variant="outline"
+                className="border-white/10 bg-white/5 hover:bg-white/10 text-white"
+              >
                 <Edit className="mr-2 h-4 w-4" />
                 Edit
               </Button>
             </Link>
             <Button
               variant="destructive"
-              className="bg-red-500/20 hover:bg-red-500/30 border-red-500/30"
+              className="bg-red-500/20 hover:bg-red-500/30 border-red-500/30 text-white"
               onClick={handleDeleteClick}
             >
               <Trash2 className="mr-2 h-4 w-4" />
@@ -258,55 +299,23 @@ export default function AppointmentDetailPage() {
           </div>
         </div>
       ) : (
-        <div className="bg-gradient-to-br from-white/5 to-white/3 backdrop-blur-sm rounded-xl border border-white/10 p-6 text-center py-12">
-          <p className="text-white/70">
-            Appointment not found or failed to load appointment details.
+        <div className="bg-white/5 rounded-xl border border-white/10 p-8 text-center">
+          <p className="text-white/60">
+            {notFound
+              ? "Appointment not found"
+              : "Loading appointment details..."}
           </p>
-          {notFound && (
-            <div className="mt-4">
-              <Button
-                variant="default"
-                onClick={() => router.push("/dashboard/owner/appointments")}
-              >
-                Return to Appointments
-              </Button>
-            </div>
-          )}
         </div>
       )}
-
-      {/* Notes Section (Placeholder) */}
-      <div className="bg-gradient-to-br from-white/5 to-white/3 backdrop-blur-sm rounded-xl border border-white/10 p-6 mb-8">
-        <h2 className="font-medium text-lg mb-4">Notes</h2>
-        <p className="text-white/70">
-          No notes have been added to this appointment.
-        </p>
-      </div>
 
       {/* Delete Confirmation Dialog */}
-      {isDeleting && (
-        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50">
-          <div className="bg-gradient-to-br from-[#1a0b2e] to-[#2c1250] border border-white/10 rounded-xl p-6 max-w-md w-full mx-4">
-            <h2 className="text-xl font-bold mb-4">Delete Appointment</h2>
-            <p className="text-white/70 mb-6">
-              Are you sure you want to delete this appointment? This action
-              cannot be undone.
-            </p>
-            <div className="flex justify-end gap-4">
-              <Button
-                variant="outline"
-                className="border-white/10 bg-white/5"
-                onClick={handleDeleteCancel}
-              >
-                Cancel
-              </Button>
-              <Button variant="destructive" onClick={handleDelete}>
-                Delete
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
+      <ConfirmationDialog
+        isOpen={isDeleting}
+        onClose={handleDeleteCancel}
+        onConfirm={handleDelete}
+        title="Delete Appointment"
+        message="Are you sure you want to delete this appointment? This action cannot be undone."
+      />
     </div>
   );
 }

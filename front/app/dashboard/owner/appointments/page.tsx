@@ -6,7 +6,6 @@ import Link from "next/link";
 // Temporary solution - use our own date utilities until date-fns is installed
 import { useAuth } from "@/app/hooks/useAuth";
 import { deleteAppointment } from "@/app/api/appointments";
-import { getUserIdFromToken } from "@/app/utils/jwt-utils";
 import {
   Calendar,
   Clock,
@@ -20,7 +19,6 @@ import {
   Edit,
   X,
   CheckCircle,
-  AlertCircle,
   ArrowLeft,
 } from "lucide-react";
 import { toast, Toaster } from "sonner";
@@ -32,7 +30,6 @@ import type {
   UserAppointment,
 } from "@/app/api/types";
 import { getServiceById } from "@/app/api/services";
-import { Button } from "@/components/ui/button";
 
 // Date utility functions to replace date-fns
 const formatDateForDisplay = (date: Date): string => {

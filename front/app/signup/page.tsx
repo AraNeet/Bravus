@@ -248,6 +248,9 @@ export default function SignupPage() {
                   <option value="Receptionist" className="bg-[#1a0b2e]">
                     Receptionist
                   </option>
+                  <option value="Groomer" className="bg-[#1a0b2e]">
+                    Groomer
+                  </option>
                   <option value="Other" className="bg-[#1a0b2e]">
                     Other
                   </option>

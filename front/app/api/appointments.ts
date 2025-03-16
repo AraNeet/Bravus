@@ -4,7 +4,7 @@
  * This file contains functions for appointment-related API requests.
  */
 
-import { post, put, del } from "./http";
+import { get, post, put, del } from "./http";
 import type { Appointment } from "./types";
 
 // Types
@@ -16,6 +16,17 @@ export interface UpdateAppointmentRequest {
   DateTime: string;
   Service?: string; // Added Service field to match what's being used in the edit page
 }
+
+/**
+ * Get appointment by ID
+ */
+export const getAppointmentById = async (
+  appointmentId: string
+): Promise<Appointment> => {
+  return await get<Appointment>(
+    `/appointment/get-appointment?id=${appointmentId}`
+  );
+};
 
 /**
  * Create a new appointment
