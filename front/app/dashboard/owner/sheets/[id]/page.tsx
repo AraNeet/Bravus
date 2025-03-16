@@ -2,9 +2,8 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
 import { ArrowLeft, FileSpreadsheet } from "lucide-react";
-import SpreadsheetEditor from "../components/SpreadsheetEditor";
+import SpreadsheetEditor from "../../../../components/SpreadsheetEditor";
 import { Button } from "@/components/ui/button";
 
 interface SpreadsheetEditProps {

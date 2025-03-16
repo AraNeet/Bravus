@@ -143,31 +143,11 @@ export default function ProvidersPage() {
       </div>
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
         <div>
-          <h1 className="text-3xl font-bold mb-1">Veterinarians</h1>
+          <h1 className="text-3xl font-bold mb-1">Providers</h1>
           <p className="text-white/70">
-            Find and connect with our expert veterinarians
+            Find and connect with our expert Service Providers
           </p>
         </div>
-      </div>
-
-      {/* Search and Filter Section */}
-      <div className="flex flex-col space-y-4 md:flex-row md:space-y-0 md:space-x-4">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/60" />
-          <Input
-            placeholder="Search by name or service..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10 bg-white/5 border-white/10 text-white placeholder:text-white/60 focus:border-[#9f6eff]/70 focus:ring-[#9f6eff]/20"
-          />
-        </div>
-        <Button
-          variant="outline"
-          className="border-white/10 bg-white/5 text-white hover:bg-white/10 hover:text-white"
-        >
-          <Filter className="mr-2 h-4 w-4" />
-          Advanced Filters
-        </Button>
       </div>
 
       {/* Service Filter Tabs */}
