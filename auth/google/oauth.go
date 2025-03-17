@@ -41,7 +41,7 @@ func (s *OAuthService) GetAuthURL(state string) string {
 }
 
 // HandleCallback processes OAuth callback and stores token
-func (s *OAuthService) HandleCallback(ctx context.Context, code string, userID uuid.UUID) error {
+func (s *OAuthService) HandleCallback(ctx context.Context, code string, ownerID uuid.UUID) error {
 	oauthConfig := s.config.GetOAuthConfig()
 
 	token, err := oauthConfig.Exchange(ctx, code)
@@ -49,12 +49,12 @@ func (s *OAuthService) HandleCallback(ctx context.Context, code string, userID u
 		return err
 	}
 
-	return googleModels.StoreToken(s.db, userID, token)
+	return googleModels.StoreToken(s.db, ownerID, token)
 }
 
 // GetClient returns an HTTP client with token authentication
-func (s *OAuthService) GetClient(ctx context.Context, userID uuid.UUID) (*http.Client, error) {
-	token, err := googleModels.GetToken(s.db, userID)
+func (s *OAuthService) GetClient(ctx context.Context, ownerID uuid.UUID) (*http.Client, error) {
+	token, err := googleModels.GetToken(s.db, ownerID)
 	if err != nil {
 		return nil, err
 	}
@@ -78,7 +78,7 @@ func (s *OAuthService) GetClient(ctx context.Context, userID uuid.UUID) (*http.C
 		}
 
 		// Store the new token
-		if err := googleModels.StoreToken(s.db, userID, newToken); err != nil {
+		if err := googleModels.StoreToken(s.db, ownerID, newToken); err != nil {
 			return nil, err
 		}
 
@@ -90,8 +90,8 @@ func (s *OAuthService) GetClient(ctx context.Context, userID uuid.UUID) (*http.C
 }
 
 // GetSheetsService returns a Google Sheets service client
-func (s *OAuthService) GetSheetsService(ctx context.Context, userID uuid.UUID) (*sheets.Service, error) {
-	client, err := s.GetClient(ctx, userID)
+func (s *OAuthService) GetSheetsService(ctx context.Context, ownerID uuid.UUID) (*sheets.Service, error) {
+	client, err := s.GetClient(ctx, ownerID)
 	if err != nil {
 		return nil, err
 	}
@@ -100,8 +100,8 @@ func (s *OAuthService) GetSheetsService(ctx context.Context, userID uuid.UUID) (
 }
 
 // GetDriveService returns a Google Drive service client
-func (s *OAuthService) GetDriveService(ctx context.Context, userID uuid.UUID) (*drive.Service, error) {
-	client, err := s.GetClient(ctx, userID)
+func (s *OAuthService) GetDriveService(ctx context.Context, ownerID uuid.UUID) (*drive.Service, error) {
+	client, err := s.GetClient(ctx, ownerID)
 	if err != nil {
 		return nil, err
 	}
@@ -109,12 +109,12 @@ func (s *OAuthService) GetDriveService(ctx context.Context, userID uuid.UUID) (*
 	return googleConfig.GetDriveService(ctx, nil, nil, client)
 }
 
-// IsAuthenticated checks if a user has a valid Google token
-func (s *OAuthService) IsAuthenticated(userID uuid.UUID) bool {
-	return googleModels.IsTokenValid(s.db, userID)
+// IsAuthenticated checks if an owner has a valid Google token
+func (s *OAuthService) IsAuthenticated(ownerID uuid.UUID) bool {
+	return googleModels.IsTokenValid(s.db, ownerID)
 }
 
-// RevokeAccess removes Google token for a user
-func (s *OAuthService) RevokeAccess(userID uuid.UUID) error {
-	return googleModels.DeleteToken(s.db, userID)
+// RevokeAccess removes Google token for an owner
+func (s *OAuthService) RevokeAccess(ownerID uuid.UUID) error {
+	return googleModels.DeleteToken(s.db, ownerID)
 }

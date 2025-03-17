@@ -23,7 +23,9 @@ func CreateAppointment(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err.Error()})
 	}
 
-	Sid, _ := uuid.Parse(id["Sid"])
+	clientID, _ := uuid.Parse(id["Uid"])
+	ownerID, _ := uuid.Parse(id["Oid"])
+	serviceID, _ := uuid.Parse(id["Sid"])
 
 	input := Struct.AppointmentRequestHandler{}
 	if err := c.BodyParser(&input); err != nil {
@@ -47,27 +49,74 @@ func CreateAppointment(c *fiber.Ctx) error {
 	}
 
 	db := c.Locals("db").(*gorm.DB)
-	users := []models.User{}
 
-	// Check if all users exist
-	if err := db.Where("id IN (?)", []string{id["Oid"], id["Uid"]}).Find(&users).Error; err != nil {
-		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "One or more users not found"})
+	// Check if client exists
+	var client models.Client
+	if err := db.First(&client, "id = ?", clientID).Error; err != nil {
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "Client not found"})
+	}
+
+	// Check if owner exists
+	var owner models.Owner
+	if err := db.First(&owner, "id = ?", ownerID).Error; err != nil {
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "Owner not found"})
 	}
 
 	// Check if service exists
 	var service models.Service
-	if err := db.First(&service, "id = ?", Sid).Error; err != nil {
+	if err := db.First(&service, "id = ?", serviceID).Error; err != nil {
 		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "Service not found"})
 	}
 
+	// Create appointment
 	appointment := models.Appointment{
-		Users:     users,
-		DateTime:  dateTime,
-		ServiceID: Sid,
+		DateTime: dateTime,
+		Notes:    input.Notes,
 	}
 
+	// Save the appointment first
 	if err := db.Create(&appointment).Error; err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to create appointment"})
+	}
+
+	// Associate client, owner and service with the appointment
+	if err := db.Model(&appointment).Association("Clients").Append(&client); err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to associate client with appointment"})
+	}
+
+	if err := db.Model(&appointment).Association("Owners").Append(&owner); err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to associate owner with appointment"})
+	}
+
+	if err := db.Model(&appointment).Association("Services").Append(&service); err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to associate service with appointment"})
+	}
+
+	// Associate animals if provided
+	if len(input.AnimalIDs) > 0 {
+		for _, animalIDStr := range input.AnimalIDs {
+			animalID, err := uuid.Parse(animalIDStr)
+			if err != nil {
+				return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid animal ID format"})
+			}
+
+			var animal models.Animal
+			if err := db.First(&animal, "id = ?", animalID).Error; err != nil {
+				if err == gorm.ErrRecordNotFound {
+					return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "Animal not found: " + animalIDStr})
+				}
+				return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to retrieve animal"})
+			}
+
+			if err := db.Model(&appointment).Association("Animals").Append(&animal); err != nil {
+				return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to associate animal with appointment"})
+			}
+		}
+	}
+
+	// Reload the appointment with all associations
+	if err := db.Preload("Clients").Preload("Owners").Preload("Services").Preload("Animals").First(&appointment, appointment.ID).Error; err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to reload appointment"})
 	}
 
 	response, err := Util.Serializer(appointment)
@@ -94,7 +143,7 @@ func GetAppointment(c *fiber.Ctx) error {
 	appointment := models.Appointment{}
 
 	// Load appointment with related data
-	if err := db.Preload("Users").Preload("Service").First(&appointment, "id = ?", id).Error; err != nil {
+	if err := db.Preload("Clients").Preload("Owners").Preload("Services").Preload("Animals").First(&appointment, "id = ?", id).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "Appointment not found"})
 		}
@@ -125,7 +174,7 @@ func UpdateAppointment(c *fiber.Ctx) error {
 	appointment := models.Appointment{}
 
 	// Load appointment with related data
-	if err := db.Preload("Users").Preload("Service").First(&appointment, "id = ?", id).Error; err != nil {
+	if err := db.Preload("Clients").Preload("Owners").Preload("Services").Preload("Animals").First(&appointment, "id = ?", id).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "Appointment not found"})
 		}
@@ -166,7 +215,42 @@ func UpdateAppointment(c *fiber.Ctx) error {
 			return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "Service not found"})
 		}
 
-		appointment.ServiceID = serviceID
+		// Replace existing service association with the new one
+		if err := db.Model(&appointment).Association("Services").Clear(); err != nil {
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to clear service association"})
+		}
+
+		if err := db.Model(&appointment).Association("Services").Append(&service); err != nil {
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to associate service with appointment"})
+		}
+	}
+
+	// Update animals if provided
+	if len(input.AnimalIDs) > 0 {
+		// Clear existing animal associations
+		if err := db.Model(&appointment).Association("Animals").Clear(); err != nil {
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to clear animal associations"})
+		}
+
+		// Add new animal associations
+		for _, animalIDStr := range input.AnimalIDs {
+			animalID, err := uuid.Parse(animalIDStr)
+			if err != nil {
+				return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid animal ID format"})
+			}
+
+			var animal models.Animal
+			if err := db.First(&animal, "id = ?", animalID).Error; err != nil {
+				if err == gorm.ErrRecordNotFound {
+					return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "Animal not found: " + animalIDStr})
+				}
+				return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to retrieve animal"})
+			}
+
+			if err := db.Model(&appointment).Association("Animals").Append(&animal); err != nil {
+				return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to associate animal with appointment"})
+			}
+		}
 	}
 
 	if err := db.Save(&appointment).Error; err != nil {

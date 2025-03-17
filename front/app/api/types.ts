@@ -13,74 +13,148 @@ export interface LoginRequest {
   password: string;
 }
 
-export interface SignupRequest {
-  firstname: string;
-  lastname: string;
-  phone: string;
+// Client registration
+export interface ClientSignupRequest {
+  name: string;
   email: string;
   password: string;
-  owner: boolean;
-  career: string;
-}
-
-// Response from login/register (AuthUserSerializer)
-export interface AuthResponse {
-  id: UUID;
-  firstname: string;
-  lastname: string;
-  email: string;
   phone: string;
-  owner: boolean;
-  career: string;
-  token: string;
+  location: string;
 }
 
-// User profile (UserSerializer)
-export interface User {
-  firstname: string;
-  lastname: string;
+// Owner registration
+export interface OwnerSignupRequest {
+  name: string;
   email: string;
+  password: string;
   phone: string;
-  owner: boolean;
-  career: string;
-  animals: Animal[];
-  appointments: Appointment[];
-  services: Service[];
+  location: string;
+  bio?: string;
 }
 
-// Animal (AnimalSerializer)
-export interface Animal {
-  ID: UUID;
+// Animal registration
+export interface AnimalRequest {
   animal_name: string;
   animal_race: string;
   animal_age: number;
   species: string;
-  metadata?: string; // JSON string for additional fields
-  owner_id: UUID;
+}
+
+// Service registration
+export interface ServiceRequest {
+  service_name: string;
+  service_desc: string;
+  price: number;
+  duration: number;
+}
+
+// Response from client login/register
+export interface AuthClientResponse {
+  id: UUID;
+  name: string;
+  email: string;
+  phone: string;
+  location: string;
+  token: string;
+}
+
+// Response from owner login/register
+export interface AuthOwnerResponse {
+  id: UUID;
+  name: string;
+  email: string;
+  phone: string;
+  location: string;
+  token: string;
+}
+
+// Client profile
+export interface Client {
+  id: UUID;
+  name: string;
+  email: string;
+  phone: string;
+  location: string;
+  animals: Animal[];
+  appointments: Appointment[];
+}
+
+// Owner profile
+export interface Owner {
+  id: UUID;
+  name: string;
+  email: string;
+  phone: string;
+  location: string;
+  bio?: string;
+  services: Service[];
+  appointments: Appointment[];
+}
+
+// Animal
+export interface Animal {
+  id: UUID;
+  animal_name: string;
+  animal_race: string;
+  animal_age: number;
+  species: string;
+  metadata?: string;
+  client_id: UUID;
   created_at: string;
   updated_at: string;
 }
 
-// Service (ServiceSerializer)
+// Service
 export interface Service {
   id: UUID;
-  "service-name": string;
-  "service-desc": string;
+  service_name: string;
+  service_desc: string;
   price: number;
+  duration: number;
+  owner_id: UUID;
 }
 
-// User for appointments (UserAppointmentSerializer)
-export interface UserAppointment {
-  firstname: string;
-  lastname: string;
+// Client Appointment (minimal info for appointments)
+export interface ClientAppointment {
+  id: UUID;
+  name: string;
   phone: string;
-  career: string;
+  location: string;
 }
 
-// Appointment (AppointmentSerializer)
+// Owner Appointment (minimal info for appointments)
+export interface OwnerAppointment {
+  id: UUID;
+  name: string;
+  phone: string;
+  location: string;
+}
+
+// Appointment
 export interface Appointment {
-  ID: UUID;
-  Users: UserAppointment[];
-  service: UUID;
+  id: UUID;
   datetime: string;
+  notes: string;
+  clients: ClientAppointment[];
+  owners: OwnerAppointment[];
+  animals: Animal[];
+  services: Service[];
+}
+
+// Review
+export interface Review {
+  id: UUID;
+  content: string;
+  created_at: string;
+  client_id: UUID;
+  owner_id: UUID;
+  client: Client;
+}
+
+// Rating
+export interface Rating {
+  id: UUID;
+  score: number;
+  client_id: UUID;
+  owner_id: UUID;
 }

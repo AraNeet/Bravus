@@ -23,11 +23,14 @@ import {
 } from "lucide-react";
 import { toast, Toaster } from "sonner";
 import type {
-  User,
-  AuthResponse,
+  Owner,
+  Client,
+  AuthOwnerResponse,
+  AuthClientResponse,
   Appointment,
   Service,
-  UserAppointment,
+  ClientAppointment,
+  OwnerAppointment,
 } from "@/app/api/types";
 import { getServiceById } from "@/app/api/services";
 
@@ -182,7 +185,7 @@ const ConfirmationDialog = ({
 };
 
 export default function OwnerAppointments() {
-  const { user, authUser, isLoading, isLoggedIn } = useAuth();
+  const { user, authUser, isLoading, isLoggedIn, userType } = useAuth();
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState("");
   const [dateFilter, setDateFilter] = useState<string>("all");
@@ -201,14 +204,11 @@ export default function OwnerAppointments() {
     if (!isLoading) {
       if (!isLoggedIn) {
         router.push("/login");
-      } else {
-        const userData = user || authUser;
-        if (userData && !userData.owner) {
-          router.push("/dashboard/client");
-        }
+      } else if (userType !== "owner") {
+        router.push("/dashboard/client");
       }
     }
-  }, [isLoading, isLoggedIn, user, authUser, router]);
+  }, [isLoading, isLoggedIn, userType, router]);
 
   // If still loading, show loading state
   if (isLoading) {
@@ -220,7 +220,7 @@ export default function OwnerAppointments() {
   }
 
   // Get user data from either full profile or auth response
-  const userData = user || authUser;
+  const userData = (user as Owner) || (authUser as AuthOwnerResponse);
 
   // If no user data, redirect to login (should be handled by useEffect, but just in case)
   if (!userData) {
@@ -229,12 +229,12 @@ export default function OwnerAppointments() {
   }
 
   // Type guard function to check if the user data has appointments
-  const hasAppointments = (data: User | AuthResponse): data is User => {
+  const hasAppointments = (data: any): data is Owner => {
     return "appointments" in data && Array.isArray(data.appointments);
   };
 
   // Type guard function to check if the user data has services
-  const hasServices = (data: User | AuthResponse): data is User => {
+  const hasServices = (data: any): data is Owner => {
     return "services" in data && Array.isArray(data.services);
   };
 
@@ -242,18 +242,18 @@ export default function OwnerAppointments() {
   const filteredAppointments = hasAppointments(userData)
     ? userData.appointments.filter((appointment: Appointment) => {
         const appointmentDate = new Date(appointment.datetime);
-        const clientNames = appointment.Users.map((u: UserAppointment) =>
-          `${u.firstname} ${u.lastname}`.toLowerCase()
-        ).join(" ");
+        const clientNames = appointment.clients
+          .map((client: ClientAppointment) => `${client.name}`.toLowerCase())
+          .join(" ");
 
         // Try to find service name
         let serviceName = "";
         if (hasServices(userData)) {
           const service = userData.services.find(
-            (s: Service) => s.id === appointment.service
+            (s: Service) => s.id === appointment.services[0]?.id
           );
           if (service) {
-            serviceName = service["service-name"].toLowerCase();
+            serviceName = service.service_name.toLowerCase();
           }
         }
 
@@ -331,10 +331,12 @@ export default function OwnerAppointments() {
   };
 
   // Find service name by ID
-  const getServiceName = (serviceId: string): string => {
+  const getServiceName = (serviceId: string | undefined): string => {
+    if (!serviceId) return "No service";
+
     // Check if we already have this service in our cache
     if (serviceCache[serviceId]) {
-      return serviceCache[serviceId]["service-name"];
+      return serviceCache[serviceId].service_name;
     }
 
     // Try to find in user's services first (for performance)
@@ -345,7 +347,7 @@ export default function OwnerAppointments() {
       if (service) {
         // Add to cache for future reference
         setServiceCache((prev) => ({ ...prev, [serviceId]: service }));
-        return service["service-name"];
+        return service.service_name;
       }
     }
 
@@ -361,7 +363,7 @@ export default function OwnerAppointments() {
 
     // Return placeholder while loading
     return serviceCache[serviceId]
-      ? serviceCache[serviceId]["service-name"]
+      ? (serviceCache[serviceId] as Service).service_name
       : "Loading...";
   };
 
@@ -479,7 +481,7 @@ export default function OwnerAppointments() {
               <tbody>
                 {currentAppointments.map((appointment: Appointment) => (
                   <tr
-                    key={appointment.ID}
+                    key={appointment.id}
                     className="border-b border-white/5 hover:bg-white/5"
                   >
                     <td className="px-6 py-4 whitespace-nowrap">
@@ -503,15 +505,13 @@ export default function OwnerAppointments() {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div>
-                        {appointment.Users.map(
-                          (user: UserAppointment, index: number) => (
+                        {appointment.clients.map(
+                          (client: ClientAppointment, index: number) => (
                             <div key={index}>
-                              <p className="font-medium">
-                                {user.firstname} {user.lastname}
-                              </p>
-                              {user.phone && (
+                              <p className="font-medium">{client.name}</p>
+                              {client.phone && (
                                 <p className="text-sm text-white/60">
-                                  {user.phone}
+                                  {client.phone}
                                 </p>
                               )}
                             </div>
@@ -521,7 +521,7 @@ export default function OwnerAppointments() {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <p className="font-medium">
-                        {getServiceName(appointment.service)}
+                        {getServiceName(appointment.services[0]?.id)}
                       </p>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
@@ -530,21 +530,21 @@ export default function OwnerAppointments() {
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center gap-2">
                         <Link
-                          href={`/dashboard/owner/appointments/${appointment.ID}`}
+                          href={`/dashboard/owner/appointments/${appointment.id}`}
                           className="p-1.5 rounded-lg bg-white/5 hover:bg-white/10 transition-colors"
                           aria-label="View appointment details"
                         >
                           <MoreHorizontal className="w-4 h-4 text-white/70" />
                         </Link>
                         <Link
-                          href={`/dashboard/owner/appointments/${appointment.ID}/edit`}
+                          href={`/dashboard/owner/appointments/${appointment.id}/edit`}
                           className="p-1.5 rounded-lg bg-white/5 hover:bg-white/10 transition-colors"
                           aria-label="Edit appointment"
                         >
                           <Edit className="w-4 h-4 text-white/70" />
                         </Link>
                         <button
-                          onClick={() => handleDeleteClick(appointment.ID)}
+                          onClick={() => handleDeleteClick(appointment.id)}
                           className="p-1.5 rounded-lg bg-white/5 hover:bg-red-500/20 transition-colors"
                           aria-label="Delete appointment"
                         >

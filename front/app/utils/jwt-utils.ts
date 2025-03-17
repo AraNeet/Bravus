@@ -51,7 +51,7 @@ export function getUserIdFromToken(): string | null {
 
   const decoded = decodeToken(token);
   console.log("Decoded token payload:", decoded);
-  
+
   // Look for user_id in the payload
   const userId = decoded?.user_id || null;
   console.log("Extracted user_id from token:", userId);
@@ -95,21 +95,55 @@ export function debugToken(): {
       hasStoredId: false,
       tokenInfo: null,
       storedId: null,
-      isExpired: null
+      isExpired: null,
     };
   }
-  
+
   const token = localStorage.getItem("auth_token");
   const storedId = localStorage.getItem("ID");
-  
+
   const tokenInfo = token ? decodeToken(token) : null;
   const isExpired = token ? isTokenExpired(token) : null;
-  
+
   return {
     hasToken: !!token,
     hasStoredId: !!storedId,
     tokenInfo,
     storedId,
-    isExpired
+    isExpired,
   };
 }
+
+/**
+ * Get user type from JWT token
+ */
+export const getUserTypeFromToken = (): string | null => {
+  if (typeof window === "undefined") {
+    return null;
+  }
+
+  const token = localStorage.getItem("auth_token");
+  if (!token) {
+    return null;
+  }
+
+  try {
+    const decoded = decodeToken(token);
+    // Check if the token contains user_type claim
+    if (decoded?.user_type) {
+      return decoded.user_type;
+    }
+
+    // If user_type is not in the token, try to infer from other fields
+    if (decoded?.is_owner === true) {
+      return "owner";
+    } else if (decoded?.is_owner === false) {
+      return "client";
+    }
+
+    return null;
+  } catch (e) {
+    console.error("Error getting user type from token:", e);
+    return null;
+  }
+};

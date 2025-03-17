@@ -31,13 +31,7 @@ export const createAnimal = async (
   ownerId: string,
   animalData: CreateAnimalRequest
 ): Promise<Animal> => {
-  console.log("Creating animal with data:", animalData);
-  const response = await post<Animal>(
-    `/animal/create?id=${ownerId}`,
-    animalData
-  );
-  console.log("Create animal response:", response);
-  return response;
+  return await post<Animal>(`/animal/create?id=${ownerId}`, animalData);
 };
 
 /**
@@ -62,4 +56,13 @@ export const updateAnimal = async (
  */
 export const deleteAnimal = async (animalId: string): Promise<void> => {
   await del(`/animal/delete?id=${animalId}`);
+};
+
+/**
+ * Create a new animal without authentication
+ */
+export const createAnimalNoAuth = async (
+  animalData: CreateAnimalRequest
+): Promise<Animal> => {
+  return await post<Animal>(`/animal/create-no-auth`, animalData);
 };

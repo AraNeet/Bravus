@@ -12,7 +12,7 @@ import {
   Clock,
   DollarSign,
 } from "lucide-react";
-import { getUserById } from "@/app/api/users";
+import { getUserWithAllData } from "@/app/api/users";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -43,7 +43,9 @@ export default function ProviderDetailPage({
     const fetchProvider = async () => {
       try {
         setIsLoading(true);
-        const data = await getUserById(params.id);
+        console.log("Fetching provider data for ID:", params.id);
+        const data = await getUserWithAllData(params.id);
+        console.log("Provider data fetched:", data);
         setProvider(data as OwnerWithServices);
       } catch (err) {
         console.error("Failed to fetch provider:", err);
@@ -216,7 +218,7 @@ export default function ProviderDetailPage({
                       <CardHeader className="pb-2">
                         <div className="flex justify-between items-start">
                           <CardTitle className="text-lg text-white">
-                            {service["service-name"]}
+                            {service.service_name}
                           </CardTitle>
                           <div className="flex items-center text-white font-medium">
                             <DollarSign className="h-4 w-4 text-[#9f6eff]" />
@@ -225,9 +227,7 @@ export default function ProviderDetailPage({
                         </div>
                       </CardHeader>
                       <CardContent>
-                        <p className="text-white/70">
-                          {service["service-desc"]}
-                        </p>
+                        <p className="text-white/70">{service.service_desc}</p>
                         <div className="mt-4">
                           <Button
                             variant="outline"
@@ -277,7 +277,7 @@ export default function ProviderDetailPage({
                           key={service.id}
                           className="bg-gradient-to-r from-[#9f6eff]/20 to-[#c061f7]/20 hover:from-[#9f6eff]/30 hover:to-[#c061f7]/30 text-white border-[#9f6eff]/30"
                         >
-                          {service["service-name"]}
+                          {service.service_name}
                         </Badge>
                       ))}
                     </div>

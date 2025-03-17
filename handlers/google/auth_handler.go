@@ -43,8 +43,8 @@ func generateState() (string, error) {
 
 // InitiateAuth starts the Google OAuth flow
 func (h *AuthHandler) InitiateAuth(c *fiber.Ctx) error {
-	// Get user ID from token
-	userID, err := GetUserID(c)
+	// Get owner ID from token
+	ownerID, err := GetOwnerID(c)
 	if err != nil {
 		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
 			"error": "Unauthorized: " + err.Error(),
@@ -67,11 +67,11 @@ func (h *AuthHandler) InitiateAuth(c *fiber.Ctx) error {
 		})
 	}
 
-	// Store state in DB or session (example uses user_ID as key in state)
-	stateWithUserID := fmt.Sprintf("%s:%s", state, userID.String())
+	// Store state in DB or session (uses owner ID as key in state)
+	stateWithOwnerID := fmt.Sprintf("%s:%s", state, ownerID.String())
 
 	// Get authorization URL
-	authURL := h.oauthService.GetAuthURL(stateWithUserID)
+	authURL := h.oauthService.GetAuthURL(stateWithOwnerID)
 
 	return c.Status(fiber.StatusOK).JSON(googleStructs.GoogleAuthResponse{
 		RedirectURL: authURL,
@@ -90,7 +90,7 @@ func (h *AuthHandler) HandleCallback(c *fiber.Ctx) error {
 		})
 	}
 
-	// Parse state to extract user ID
+	// Parse state to extract owner ID
 	stateParts := make([]string, 0)
 	for i, part := range receivedState {
 		if part == ':' && i < len(receivedState)-1 {
@@ -105,16 +105,16 @@ func (h *AuthHandler) HandleCallback(c *fiber.Ctx) error {
 		})
 	}
 
-	// Parse user ID
-	userID, err := uuid.Parse(stateParts[1])
+	// Parse owner ID
+	ownerID, err := uuid.Parse(stateParts[1])
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "Invalid user ID in state parameter",
+			"error": "Invalid owner ID in state parameter",
 		})
 	}
 
 	// Exchange code for token
-	err = h.oauthService.HandleCallback(context.Background(), code, userID)
+	err = h.oauthService.HandleCallback(context.Background(), code, ownerID)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error": "Failed to exchange code for token: " + err.Error(),
@@ -125,10 +125,10 @@ func (h *AuthHandler) HandleCallback(c *fiber.Ctx) error {
 	return c.Redirect("http://localhost:3000/dashboard/owner/sheets")
 }
 
-// CheckAuthStatus checks if a user is authenticated with Google
+// CheckAuthStatus checks if an owner is authenticated with Google
 func (h *AuthHandler) CheckAuthStatus(c *fiber.Ctx) error {
-	// Get user ID from token
-	userID, err := GetUserID(c)
+	// Get owner ID from token
+	ownerID, err := GetOwnerID(c)
 	if err != nil {
 		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
 			"error": "Unauthorized: " + err.Error(),
@@ -143,8 +143,8 @@ func (h *AuthHandler) CheckAuthStatus(c *fiber.Ctx) error {
 		})
 	}
 
-	// Check if user is authenticated with Google
-	authenticated := h.oauthService.IsAuthenticated(userID)
+	// Check if owner is authenticated with Google
+	authenticated := h.oauthService.IsAuthenticated(ownerID)
 
 	response := googleStructs.GoogleAuthStatusResponse{
 		Authenticated: authenticated,
@@ -172,8 +172,8 @@ func (h *AuthHandler) RevokeAccess(c *fiber.Ctx) error {
 		})
 	}
 
-	// Get user ID from token
-	userID, err := GetUserID(c)
+	// Get owner ID from token
+	ownerID, err := GetOwnerID(c)
 	if err != nil {
 		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
 			"error": "Unauthorized: " + err.Error(),
@@ -189,7 +189,7 @@ func (h *AuthHandler) RevokeAccess(c *fiber.Ctx) error {
 	}
 
 	// Revoke access
-	err = h.oauthService.RevokeAccess(userID)
+	err = h.oauthService.RevokeAccess(ownerID)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error": "Failed to revoke access: " + err.Error(),

@@ -14,7 +14,7 @@ export interface CreateAppointmentRequest {
 
 export interface UpdateAppointmentRequest {
   DateTime: string;
-  Service?: string; // Added Service field to match what's being used in the edit page
+  Service?: string;
 }
 
 /**

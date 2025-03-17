@@ -1,33 +1,49 @@
-"use client"
+"use client";
 
-import type React from "react"
+import type React from "react";
 
-import { useState } from "react"
-import { Calendar, Eye, EyeOff, ArrowRight, ArrowLeft } from "lucide-react"
-import Link from "next/link"
-import { useAuth } from "../hooks/useAuth"
+import { useState, useEffect } from "react";
+import { Calendar, Eye, EyeOff, ArrowRight, ArrowLeft } from "lucide-react";
+import Link from "next/link";
+import { useAuth } from "../hooks/useAuth";
+import { useSearchParams } from "next/navigation";
 
 export default function LoginPage() {
-  const [showPassword, setShowPassword] = useState(false)
-  const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
-  const [rememberMe, setRememberMe] = useState(false)
-  const { login, isLoading, error } = useAuth()
-  const [formError, setFormError] = useState<string | null>(null)
+  const [showPassword, setShowPassword] = useState(false);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [rememberMe, setRememberMe] = useState(false);
+  const { login, isLoading, error } = useAuth();
+  const [formError, setFormError] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const searchParams = useSearchParams();
+
+  useEffect(() => {
+    // Check if user was redirected from signup
+    const registered = searchParams.get("registered");
+    if (registered === "true") {
+      setSuccessMessage("Account created successfully! Please log in.");
+    }
+  }, [searchParams]);
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setFormError(null)
+    e.preventDefault();
+    setFormError(null);
 
     try {
-      await login({ email, password })
-      // Successful login will redirect in the useAuth hook
-      console.log("Login successful")
+      await login({
+        email: email,
+        password: password,
+      });
+
+      // Store email in localStorage for fallback purposes
+      localStorage.setItem("email", email);
+
+      // Router push is handled by the useAuth hook
     } catch (err: any) {
-      console.error("Login error:", err)
-      setFormError(err.message || "Login failed. Please check your credentials and try again.")
+      setFormError(err.message || "Login failed. Please try again.");
     }
-  }
+  };
 
   return (
     <main className="min-h-screen bg-gradient-to-b from-[#1a0b2e] to-[#2c1250] text-white flex flex-col">
@@ -54,25 +70,34 @@ export default function LoginPage() {
       </section>
 
       {/* Login Form */}
-      <section className="flex-1 flex items-center justify-center p-4 relative z-10">
+      <section className="flex-1 flex items-center justify-center p-4 relative z-10 py-12">
         <article className="w-full max-w-md bg-white/5 backdrop-blur-md rounded-2xl border border-white/10 p-8 shadow-xl">
           <header className="text-center mb-8">
-            <h1 className="text-3xl font-bold mb-2 bg-gradient-to-r from-[#9f6eff] to-[#c061f7] text-transparent bg-clip-text">
+            <h1 className="text-2xl font-bold bg-gradient-to-r from-[#9f6eff] to-[#c061f7] text-transparent bg-clip-text mb-2">
               Welcome Back
             </h1>
-            <p className="text-white/60">Sign in to your Bravus account</p>
+            <p className="text-white/60">Log in to your account</p>
           </header>
 
           {formError && (
-            <div className="mb-6 p-4 bg-red-500/20 border border-red-500/50 rounded-lg text-white text-sm">
+            <div className="mb-6 p-3 bg-red-500/20 border border-red-500/50 rounded-lg text-sm text-white">
               {formError}
+            </div>
+          )}
+
+          {successMessage && (
+            <div className="mb-6 p-3 bg-green-500/20 border border-green-500/50 rounded-lg text-sm text-white">
+              {successMessage}
             </div>
           )}
 
           <form onSubmit={handleSubmit} className="space-y-6">
             <fieldset className="space-y-4">
               <div>
-                <label htmlFor="email" className="block text-sm font-medium text-white/80 mb-1">
+                <label
+                  htmlFor="email"
+                  className="block text-sm font-medium text-white/80 mb-1"
+                >
                   Email
                 </label>
                 <input
@@ -88,7 +113,10 @@ export default function LoginPage() {
 
               <div>
                 <div className="flex justify-between items-center mb-1">
-                  <label htmlFor="password" className="block text-sm font-medium text-white/80">
+                  <label
+                    htmlFor="password"
+                    className="block text-sm font-medium text-white/80"
+                  >
                     Password
                   </label>
                   <Link
@@ -105,16 +133,22 @@ export default function LoginPage() {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
-                    placeholder="••��•••••"
+                    placeholder="•••••••"
                     className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#9f6eff]/50 text-white placeholder:text-white/40"
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
                     className="absolute right-3 top-1/2 -translate-y-1/2 text-white/60 hover:text-white"
-                    aria-label={showPassword ? "Hide password" : "Show password"}
+                    aria-label={
+                      showPassword ? "Hide password" : "Show password"
+                    }
                   >
-                    {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                    {showPassword ? (
+                      <EyeOff className="w-5 h-5" />
+                    ) : (
+                      <Eye className="w-5 h-5" />
+                    )}
                   </button>
                 </div>
               </div>
@@ -127,7 +161,10 @@ export default function LoginPage() {
                   onChange={(e) => setRememberMe(e.target.checked)}
                   className="h-4 w-4 rounded border-white/20 bg-white/5 text-[#9f6eff] focus:ring-[#9f6eff]/50"
                 />
-                <label htmlFor="remember-me" className="ml-2 block text-sm text-white/80">
+                <label
+                  htmlFor="remember-me"
+                  className="ml-2 block text-sm text-white/80"
+                >
                   Remember me
                 </label>
               </div>
@@ -174,7 +211,10 @@ export default function LoginPage() {
           <footer className="mt-8 text-center">
             <p className="text-white/60 text-sm">
               Don't have an account?{" "}
-              <Link href="/signup" className="text-[#9f6eff] hover:text-[#c061f7] transition-colors">
+              <Link
+                href="/signup"
+                className="text-[#9f6eff] hover:text-[#c061f7] transition-colors"
+              >
                 Sign up
               </Link>
             </p>
@@ -193,6 +233,5 @@ export default function LoginPage() {
         </Link>
       </footer>
     </main>
-  )
+  );
 }
-

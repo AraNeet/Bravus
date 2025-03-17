@@ -8,13 +8,19 @@ import (
 )
 
 func MainRouter(app *fiber.App) {
-	CRUD.UserRoutes(app)
+	// CRUD Routes
+	CRUD.ClientRoutes(app)
+	CRUD.OwnerRoutes(app)
 	CRUD.AnimalRoutes(app)
-	CRUD.AppointmentRoutes(app)
 	CRUD.ServiceRoutes(app)
+	CRUD.AppointmentRoutes(app)
+	CRUD.ReviewRoutes(app)
+	CRUD.RatingRoutes(app)
+
+	// Auth Routes
 	Auth.AuthRoutes(app)
 
-	// Add Google API routes
+	// Google API Routes
 	Google.SheetsRoutes(app)
 	Google.AuthRoutes(app)
 }

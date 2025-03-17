@@ -33,23 +33,24 @@ func NewSheetsHandler(db *gorm.DB) (*SheetsHandler, error) {
 	}, nil
 }
 
-// GetUserID extracts the user ID from the JWT token
-func GetUserID(c *fiber.Ctx) (uuid.UUID, error) {
+// GetOwnerID extracts the owner ID from the JWT token
+// Note: For backward compatibility, this still uses the "user_id" field from the token
+func GetOwnerID(c *fiber.Ctx) (uuid.UUID, error) {
 	// Get user ID from context (set by JWT middleware)
 	userID := c.Locals("user_id")
 	if userID == nil {
-		return uuid.Nil, fmt.Errorf("user ID not found in token")
+		return uuid.Nil, fmt.Errorf("owner ID not found in token")
 	}
 
 	// Convert to string and parse UUID
 	userIDStr, ok := userID.(string)
 	if !ok {
-		return uuid.Nil, fmt.Errorf("user ID is not a string")
+		return uuid.Nil, fmt.Errorf("owner ID is not a string")
 	}
 
 	parsedID, err := uuid.Parse(userIDStr)
 	if err != nil {
-		return uuid.Nil, fmt.Errorf("invalid user ID format")
+		return uuid.Nil, fmt.Errorf("invalid owner ID format")
 	}
 
 	return parsedID, nil
@@ -57,11 +58,12 @@ func GetUserID(c *fiber.Ctx) (uuid.UUID, error) {
 
 // ListSpreadsheets returns a list of user's spreadsheets
 func (h *SheetsHandler) ListSpreadsheets(c *fiber.Ctx) error {
-	// Get user ID from token
-	userID, err := GetUserID(c)
+	// Get owner ID from token
+	ownerID, err := GetOwnerID(c)
 	if err != nil {
 		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
-			"error": "Unauthorized: " + err.Error(),
+			"success": false,
+			"message": err.Error(),
 		})
 	}
 
@@ -74,7 +76,7 @@ func (h *SheetsHandler) ListSpreadsheets(c *fiber.Ctx) error {
 	}
 
 	// Check if user has authenticated with Google
-	if !h.oauthService.IsAuthenticated(userID) {
+	if !h.oauthService.IsAuthenticated(ownerID) {
 		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
 			"error":   "Not authenticated with Google",
 			"message": "Please connect your Google account first",
@@ -82,7 +84,7 @@ func (h *SheetsHandler) ListSpreadsheets(c *fiber.Ctx) error {
 	}
 
 	// Get Google Drive service
-	driveService, err := h.oauthService.GetDriveService(context.Background(), userID)
+	driveService, err := h.oauthService.GetDriveService(context.Background(), ownerID)
 	if err != nil {
 		fmt.Printf("Error getting Drive service: %v\n", err)
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
@@ -92,7 +94,7 @@ func (h *SheetsHandler) ListSpreadsheets(c *fiber.Ctx) error {
 
 	// Query for spreadsheets
 	query := "mimeType='application/vnd.google-apps.spreadsheet' and trashed=false"
-	fmt.Printf("Executing Drive API query for user %s: %s\n", userID, query)
+	fmt.Printf("Executing Drive API query for user %s: %s\n", ownerID, query)
 
 	// Try a simpler query first to test API connectivity
 	try, err := driveService.Files.List().Fields("files(id, name)").PageSize(10).Do()
@@ -120,7 +122,7 @@ func (h *SheetsHandler) ListSpreadsheets(c *fiber.Ctx) error {
 
 	// Convert to response format
 	spreadsheets := make([]googleStructs.SpreadsheetListItem, 0, len(files.Files))
-	fmt.Printf("Found %d spreadsheets for user %s\n", len(files.Files), userID)
+	fmt.Printf("Found %d spreadsheets for user %s\n", len(files.Files), ownerID)
 
 	for _, file := range files.Files {
 		modTime, _ := time.Parse(time.RFC3339, file.ModifiedTime)
@@ -146,8 +148,8 @@ func (h *SheetsHandler) GetSpreadsheet(c *fiber.Ctx) error {
 		})
 	}
 
-	// Get user ID from token
-	userID, err := GetUserID(c)
+	// Get owner ID from token
+	ownerID, err := GetOwnerID(c)
 	if err != nil {
 		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
 			"error": "Unauthorized: " + err.Error(),
@@ -163,7 +165,7 @@ func (h *SheetsHandler) GetSpreadsheet(c *fiber.Ctx) error {
 	}
 
 	// Get Google Sheets service
-	sheetsService, err := h.oauthService.GetSheetsService(context.Background(), userID)
+	sheetsService, err := h.oauthService.GetSheetsService(context.Background(), ownerID)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error": "Failed to connect to Google Sheets: " + err.Error(),
@@ -248,8 +250,8 @@ func (h *SheetsHandler) CreateSpreadsheet(c *fiber.Ctx) error {
 		})
 	}
 
-	// Get user ID from token
-	userID, err := GetUserID(c)
+	// Get owner ID from token
+	ownerID, err := GetOwnerID(c)
 	if err != nil {
 		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
 			"error": "Unauthorized: " + err.Error(),
@@ -265,7 +267,7 @@ func (h *SheetsHandler) CreateSpreadsheet(c *fiber.Ctx) error {
 	}
 
 	// Get Google Sheets service
-	sheetsService, err := h.oauthService.GetSheetsService(context.Background(), userID)
+	sheetsService, err := h.oauthService.GetSheetsService(context.Background(), ownerID)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error": "Failed to connect to Google Sheets: " + err.Error(),
@@ -302,7 +304,7 @@ func (h *SheetsHandler) CreateSpreadsheet(c *fiber.Ctx) error {
 
 	// Set metadata if description is provided
 	if request.Description != "" {
-		driveService, err := h.oauthService.GetDriveService(context.Background(), userID)
+		driveService, err := h.oauthService.GetDriveService(context.Background(), ownerID)
 		if err == nil {
 			file := &drive.File{
 				Description: request.Description,
@@ -346,8 +348,8 @@ func (h *SheetsHandler) UpdateSpreadsheet(c *fiber.Ctx) error {
 		})
 	}
 
-	// Get user ID from token
-	userID, err := GetUserID(c)
+	// Get owner ID from token
+	ownerID, err := GetOwnerID(c)
 	if err != nil {
 		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
 			"error": "Unauthorized: " + err.Error(),
@@ -363,7 +365,7 @@ func (h *SheetsHandler) UpdateSpreadsheet(c *fiber.Ctx) error {
 	}
 
 	// Get Google Sheets service
-	sheetsService, err := h.oauthService.GetSheetsService(context.Background(), userID)
+	sheetsService, err := h.oauthService.GetSheetsService(context.Background(), ownerID)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error": "Failed to connect to Google Sheets: " + err.Error(),
@@ -413,8 +415,8 @@ func (h *SheetsHandler) DeleteSpreadsheet(c *fiber.Ctx) error {
 		})
 	}
 
-	// Get user ID from token
-	userID, err := GetUserID(c)
+	// Get owner ID from token
+	ownerID, err := GetOwnerID(c)
 	if err != nil {
 		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
 			"error": "Unauthorized: " + err.Error(),
@@ -430,7 +432,7 @@ func (h *SheetsHandler) DeleteSpreadsheet(c *fiber.Ctx) error {
 	}
 
 	// Get Google Drive service (used to delete files)
-	driveService, err := h.oauthService.GetDriveService(context.Background(), userID)
+	driveService, err := h.oauthService.GetDriveService(context.Background(), ownerID)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error": "Failed to connect to Google Drive: " + err.Error(),

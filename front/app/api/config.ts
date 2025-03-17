@@ -9,6 +9,9 @@
 export const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
+// Commented version for debugging
+// export const API_BASE_URL = "http://localhost:8000";
+
 // Default request timeout in milliseconds
 export const DEFAULT_TIMEOUT = 30000;
 

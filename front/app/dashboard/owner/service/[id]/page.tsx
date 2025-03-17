@@ -5,7 +5,7 @@ import type React from "react";
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, Upload, X, Loader2 } from "lucide-react";
+import { ArrowLeft, Upload, X, Loader2, Check, Package } from "lucide-react";
 import { toast, Toaster } from "sonner";
 import { useAuth } from "@/app/hooks/useAuth";
 import { getServiceById, updateService } from "@/app/api/services";
@@ -57,16 +57,30 @@ export default function EditServicePage({ params }: EditServicePageProps) {
 
       try {
         setIsLoading(true);
+        console.log("Fetching service with ID:", params.id);
         const serviceData = await getServiceById(params.id);
+        console.log("Service data received:", serviceData);
         setService(serviceData);
 
-        // Populate form fields
-        setServiceName(serviceData["service-name"]);
-        setServiceDesc(serviceData["service-desc"]);
-        setPrice(serviceData.price.toString());
+        // Handle different service data formats
+        const name =
+          serviceData.service_name ||
+          (serviceData as any)["service-name"] ||
+          "";
+        const desc =
+          serviceData.service_desc ||
+          (serviceData as any)["service-desc"] ||
+          "";
+        const servicePrice = serviceData.price?.toString() || "0";
+        const serviceDuration = serviceData.duration?.toString() || "60";
 
-        // These fields would come from the API in a real app
-        setDuration("60");
+        // Populate form fields
+        setServiceName(name);
+        setServiceDesc(desc);
+        setPrice(servicePrice);
+        setDuration(serviceDuration);
+
+        // Default values if not provided by API
         setCategory("");
         setActive(true);
 
@@ -74,8 +88,8 @@ export default function EditServicePage({ params }: EditServicePageProps) {
         setImagePreview(null);
       } catch (error) {
         console.error("Error fetching service:", error);
-        toast.error("Failed to load service details");
-        router.push("/dashboard/owner/services");
+        toast.error("Failed to load service details. Please try again.");
+        router.push("/dashboard/owner/service");
       } finally {
         setIsLoading(false);
       }
@@ -146,11 +160,18 @@ export default function EditServicePage({ params }: EditServicePageProps) {
     try {
       setIsSubmitting(true);
 
-      const serviceData: UpdateServiceRequest = {
+      // Support both kebab-case and snake_case property names to handle
+      // potential API inconsistencies
+      const serviceData = {
         "service-name": serviceName,
         "service-desc": serviceDesc,
+        service_name: serviceName,
+        service_desc: serviceDesc,
         price: Number.parseFloat(price),
+        duration: Number.parseInt(duration),
       };
+
+      console.log("Updating service with data:", serviceData);
 
       // In a real app, you would upload the image to a storage service
       // and include the URL in the service data
@@ -208,15 +229,21 @@ export default function EditServicePage({ params }: EditServicePageProps) {
 
       <div>
         <h1 className="text-3xl font-bold mb-2">Edit Service</h1>
-        <p className="text-white/70">Update your service details</p>
+        <p className="text-white/70">
+          Update your service information and availability
+        </p>
       </div>
 
       {/* Form */}
-      <Card className="bg-gradient-to-br from-white/5 to-white/3 border-white/10">
-        <CardHeader>
-          <CardTitle>Service Information</CardTitle>
+      <Card className="bg-gradient-to-br from-white/5 to-white/3 border-[#9f6eff]/20 shadow-lg shadow-[#9f6eff]/5">
+        <CardHeader className="pb-4">
+          <CardTitle className="text-xl flex items-center gap-2">
+            <Package className="w-5 h-5 text-[#9f6eff]" />
+            Service Information
+          </CardTitle>
           <CardDescription>
-            Make changes to your service information below
+            Make changes to your service details and click Update when you're
+            done
           </CardDescription>
         </CardHeader>
         <form onSubmit={handleSubmit}>
@@ -442,17 +469,20 @@ export default function EditServicePage({ params }: EditServicePageProps) {
           </div>
 
           {/* Form Actions */}
-          <div className="flex justify-end gap-4">
-            <Link
-              href="/dashboard/owner/services"
-              className="px-6 py-2 rounded-lg bg-white/10 hover:bg-white/20 transition-colors"
+          <div className="flex sm:flex-row flex-col justify-end gap-3 mt-6">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => router.push("/dashboard/owner/service")}
+              className="border-white/10 bg-white/5 hover:bg-white/10 flex items-center"
             >
+              <X className="w-4 h-4 mr-2" />
               Cancel
-            </Link>
-            <button
+            </Button>
+            <Button
               type="submit"
               disabled={isSubmitting}
-              className="px-6 py-2 rounded-lg bg-gradient-to-r from-[#9f6eff] to-[#c061f7] hover:from-[#8b4ff7] hover:to-[#b04fe7] transition-colors"
+              className="bg-gradient-to-r from-[#9f6eff] to-[#c061f7] hover:from-[#8b4ff7] hover:to-[#b04fe7] transition-colors"
             >
               {isSubmitting ? (
                 <span className="flex items-center gap-2">
@@ -460,9 +490,12 @@ export default function EditServicePage({ params }: EditServicePageProps) {
                   Updating...
                 </span>
               ) : (
-                "Update Service"
+                <>
+                  <Check className="w-4 h-4 mr-2" />
+                  Update Service
+                </>
               )}
-            </button>
+            </Button>
           </div>
         </form>
       </Card>

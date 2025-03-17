@@ -16,7 +16,7 @@ type GoogleTokenStorage struct {
 	CreatedAt    time.Time      `json:"created_at" gorm:"autoCreateTime"`
 	UpdatedAt    time.Time      `json:"updated_at" gorm:"autoUpdateTime"`
 	DeletedAt    gorm.DeletedAt `json:"deleted_at,omitempty" gorm:"index"`
-	UserID       uuid.UUID      `json:"user_id" gorm:"type:uuid;not null;uniqueIndex"`
+	OwnerID      uuid.UUID      `json:"owner_id" gorm:"type:uuid;not null;uniqueIndex"`
 	AccessToken  string         `json:"access_token" gorm:"not null;type:text"`
 	RefreshToken string         `json:"refresh_token" gorm:"type:text"`
 	TokenExpiry  time.Time      `json:"token_expiry" gorm:"not null"`
@@ -24,17 +24,17 @@ type GoogleTokenStorage struct {
 	Scopes       string         `json:"scopes" gorm:"type:text"`
 }
 
-// StoreToken stores an OAuth2 token for a user without encryption
-func StoreToken(db *gorm.DB, userID uuid.UUID, token *oauth2.Token) error {
+// StoreToken stores an OAuth2 token for an owner without encryption
+func StoreToken(db *gorm.DB, ownerID uuid.UUID, token *oauth2.Token) error {
 	// Serialize scopes
 	scopesJSON, err := json.Marshal(token.Extra("scope"))
 	if err != nil {
 		return err
 	}
 
-	// Check if token already exists for this user
+	// Check if token already exists for this owner
 	var existingToken GoogleTokenStorage
-	result := db.Where("user_id = ?", userID).First(&existingToken)
+	result := db.Where("owner_id = ?", ownerID).First(&existingToken)
 
 	if result.Error == nil {
 		// Update existing token
@@ -49,7 +49,7 @@ func StoreToken(db *gorm.DB, userID uuid.UUID, token *oauth2.Token) error {
 	} else if errors.Is(result.Error, gorm.ErrRecordNotFound) {
 		// Create new token
 		tokenStorage := GoogleTokenStorage{
-			UserID:       userID,
+			OwnerID:      ownerID,
 			AccessToken:  token.AccessToken,
 			RefreshToken: token.RefreshToken,
 			TokenExpiry:  token.Expiry,
@@ -63,10 +63,10 @@ func StoreToken(db *gorm.DB, userID uuid.UUID, token *oauth2.Token) error {
 	}
 }
 
-// GetToken retrieves a stored OAuth2 token for a user
-func GetToken(db *gorm.DB, userID uuid.UUID) (*oauth2.Token, error) {
+// GetToken retrieves a stored OAuth2 token for an owner
+func GetToken(db *gorm.DB, ownerID uuid.UUID) (*oauth2.Token, error) {
 	var tokenStorage GoogleTokenStorage
-	if err := db.Where("user_id = ?", userID).First(&tokenStorage).Error; err != nil {
+	if err := db.Where("owner_id = ?", ownerID).First(&tokenStorage).Error; err != nil {
 		return nil, err
 	}
 
@@ -110,9 +110,9 @@ func GetToken(db *gorm.DB, userID uuid.UUID) (*oauth2.Token, error) {
 }
 
 // IsTokenValid checks if a token exists and is not expired
-func IsTokenValid(db *gorm.DB, userID uuid.UUID) bool {
+func IsTokenValid(db *gorm.DB, ownerID uuid.UUID) bool {
 	var tokenStorage GoogleTokenStorage
-	if err := db.Where("user_id = ?", userID).First(&tokenStorage).Error; err != nil {
+	if err := db.Where("owner_id = ?", ownerID).First(&tokenStorage).Error; err != nil {
 		return false
 	}
 
@@ -120,7 +120,7 @@ func IsTokenValid(db *gorm.DB, userID uuid.UUID) bool {
 	return tokenStorage.TokenExpiry.After(time.Now())
 }
 
-// DeleteToken removes a token for a user
-func DeleteToken(db *gorm.DB, userID uuid.UUID) error {
-	return db.Where("user_id = ?", userID).Delete(&GoogleTokenStorage{}).Error
+// DeleteToken removes a token for an owner
+func DeleteToken(db *gorm.DB, ownerID uuid.UUID) error {
+	return db.Where("owner_id = ?", ownerID).Delete(&GoogleTokenStorage{}).Error
 }

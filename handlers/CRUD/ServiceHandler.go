@@ -1,6 +1,8 @@
 package CRUD
 
 import (
+	"fmt"
+
 	"github.com/AramisAra/BravusBackend/Struct"
 	"github.com/AramisAra/BravusBackend/Util"
 	"github.com/AramisAra/BravusBackend/models"
@@ -24,33 +26,55 @@ func CreateService(c *fiber.Ctx) error {
 	input := Struct.ServiceRequestHandler{}
 	err = c.BodyParser(&input)
 	if err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Failed to Parse Body"})
+		fmt.Println("Error parsing request body:", err)
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Failed to Parse Body", "details": err.Error()})
 	}
+
+	// Log received data for debugging
+	fmt.Printf("Received service data: Name='%s', Desc='%s', Price=%.2f, Duration=%d\n",
+		input.ServiceName, input.ServiceDesc, input.Price, input.Duration)
 
 	// Validate required fields
 	if input.ServiceName == "" || input.ServiceDesc == "" || input.Price <= 0 {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Required fields are missing"})
 	}
 
+	// Set default duration to 60 minutes if not provided
+	if input.Duration <= 0 {
+		input.Duration = 60
+		fmt.Println("Using default duration: 60 minutes")
+	}
+
 	db := c.Locals("db").(*gorm.DB)
 
 	// Check if user exists
-	var user models.User
-	if err := db.First(&user, "id = ?", parsedID).Error; err != nil {
-		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "User not found"})
+	var owner models.Owner
+	if err := db.First(&owner, "id = ?", parsedID).Error; err != nil {
+		fmt.Println("Owner not found:", err)
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+			"error":   "Owner not found",
+			"details": err.Error(),
+		})
 	}
 
+	// Create service with all required fields
 	service := models.Service{
 		ServiceName: input.ServiceName,
 		ServiceDesc: input.ServiceDesc,
 		Price:       input.Price,
-		UserID:      parsedID,
+		Duration:    input.Duration,
+		OwnerID:     parsedID,
 	}
 
 	if err := db.Create(&service).Error; err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to create service"})
+		fmt.Println("Error creating service:", err)
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error":   "Failed to create service",
+			"message": err.Error(),
+		})
 	}
 
+	fmt.Printf("Service created successfully: ID=%s\n", service.ID)
 	response, err := Util.Serializer(service)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to serialize service"})
@@ -74,7 +98,7 @@ func GetService(c *fiber.Ctx) error {
 	db := c.Locals("db").(*gorm.DB)
 	service := models.Service{}
 
-	if err := db.Preload("User").First(&service, "id = ?", id).Error; err != nil {
+	if err := db.Preload("Owner").First(&service, "id = ?", id).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "Service not found"})
 		}
@@ -108,7 +132,10 @@ func UpdateService(c *fiber.Ctx) error {
 		if err == gorm.ErrRecordNotFound {
 			return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "Service not found"})
 		}
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to retrieve service"})
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error":   "Failed to retrieve service",
+			"details": err.Error(),
+		})
 	}
 
 	input := Struct.ServiceUpdater{}
@@ -126,9 +153,13 @@ func UpdateService(c *fiber.Ctx) error {
 	if input.Price > 0 {
 		service.Price = input.Price
 	}
+	// Note: Duration remains unchanged during updates
 
 	if err := db.Save(&service).Error; err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to update service"})
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error":   "Failed to update service",
+			"details": err.Error(),
+		})
 	}
 
 	response, err := Util.Serializer(service)
@@ -158,11 +189,17 @@ func DeleteService(c *fiber.Ctx) error {
 		if err == gorm.ErrRecordNotFound {
 			return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "Service not found"})
 		}
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to retrieve service"})
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error":   "Failed to retrieve service",
+			"details": err.Error(),
+		})
 	}
 
 	if err := db.Delete(&service).Error; err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to delete service"})
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error":   "Failed to delete service",
+			"details": err.Error(),
+		})
 	}
 
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{"message": "Service deleted successfully"})

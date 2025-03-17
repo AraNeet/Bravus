@@ -5,11 +5,19 @@ import type React from "react";
 import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, Upload, X, Info } from "lucide-react";
+import {
+  ArrowLeft,
+  Upload,
+  X,
+  Info,
+  Package,
+  PlusCircle,
+  Loader2,
+} from "lucide-react";
 import { toast, Toaster } from "sonner";
 import { useAuth } from "@/app/hooks/useAuth";
 import { createService } from "@/app/api/services";
-import type { CreateServiceRequest } from "@/app/api/services";
+import type { ServiceRequest } from "@/app/api/services";
 import { getUserIdFromToken } from "@/app/utils/jwt-utils";
 import { Button } from "@/components/ui/button";
 import {
@@ -101,22 +109,49 @@ export default function NewServicePage() {
         return;
       }
 
-      const serviceData: CreateServiceRequest = {
+      // Structure service data exactly as expected by the backend
+      // Backend expects ServiceName, ServiceDesc, Price and Duration in the ServiceRequestHandler struct
+      const serviceData = {
         "service-name": serviceName,
         "service-desc": serviceDesc,
         price: Number.parseFloat(price),
+        duration: Number.parseInt(duration),
+        ServiceName: serviceName, // Add these fields as backup
+        ServiceDesc: serviceDesc,
+        Price: Number.parseFloat(price),
+        Duration: Number.parseInt(duration),
       };
 
-      // In a real app, you would upload the image to a storage service
-      // and include the URL in the service data
+      // Add detailed debug logging
+      console.log(
+        "Creating service with data:",
+        JSON.stringify(serviceData, null, 2)
+      );
+      console.log("Sending to endpoint:", `/service/create?id=${userId}`);
 
-      await createService(userId, serviceData);
+      try {
+        const response = await createService(userId, serviceData);
+        console.log("Service creation response:", response);
+        toast.success("Service created successfully");
+        router.push("/dashboard/owner/service");
+      } catch (error) {
+        console.error("Error creating service:", error);
 
-      toast.success("Service created successfully");
-      router.push("/dashboard/owner/service");
-    } catch (error) {
-      console.error("Error creating service:", error);
-      toast.error("Failed to create service. Please try again.");
+        // Detailed error logging
+        if (error && typeof error === "object" && "message" in error) {
+          console.error("Error message:", (error as any).message);
+        }
+        if (error && typeof error === "object" && "status" in error) {
+          console.error("Error status:", (error as any).status);
+        }
+        if (error && typeof error === "object" && "data" in error) {
+          console.error("Error data:", (error as any).data);
+        }
+
+        toast.error(
+          "Failed to create service. Please check console for details."
+        );
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -147,16 +182,19 @@ export default function NewServicePage() {
       <div>
         <h1 className="text-3xl font-bold mb-2">Add New Service</h1>
         <p className="text-white/70">
-          Create a new service offering for your clients
+          Create a new service offering that will be visible to your clients
         </p>
       </div>
 
       {/* Form */}
-      <Card className="bg-gradient-to-br from-white/5 to-white/3 border-white/10">
-        <CardHeader>
-          <CardTitle>Service Information</CardTitle>
+      <Card className="bg-gradient-to-br from-white/5 to-white/3 border-[#9f6eff]/20 shadow-lg shadow-[#9f6eff]/5">
+        <CardHeader className="pb-4">
+          <CardTitle className="text-xl flex items-center gap-2">
+            <Package className="w-5 h-5 text-[#9f6eff]" />
+            Service Information
+          </CardTitle>
           <CardDescription>
-            Enter the details of your new service
+            Enter all the details about your new service offering
           </CardDescription>
         </CardHeader>
         <form onSubmit={handleSubmit}>
@@ -363,20 +401,33 @@ export default function NewServicePage() {
           </div>
 
           {/* Form Actions */}
-          <div className="flex justify-end gap-4">
-            <Link
-              href="/dashboard/owner/services"
-              className="px-6 py-2 rounded-lg bg-white/10 hover:bg-white/20 transition-colors"
+          <div className="flex sm:flex-row flex-col justify-end gap-3 mt-8">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => router.push("/dashboard/owner/service")}
+              className="border-white/10 bg-white/5 hover:bg-white/10 flex items-center"
             >
+              <X className="w-4 h-4 mr-2" />
               Cancel
-            </Link>
-            <button
+            </Button>
+            <Button
               type="submit"
               disabled={isSubmitting}
-              className="px-6 py-2 rounded-lg bg-gradient-to-r from-[#9f6eff] to-[#c061f7] hover:from-[#8b4ff7] hover:to-[#b04fe7] transition-colors"
+              className="bg-gradient-to-r from-[#9f6eff] to-[#c061f7] hover:from-[#8b4ff7] hover:to-[#b04fe7] transition-colors"
             >
-              {isSubmitting ? "Creating..." : "Create Service"}
-            </button>
+              {isSubmitting ? (
+                <span className="flex items-center gap-2">
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Creating...
+                </span>
+              ) : (
+                <>
+                  <PlusCircle className="w-4 h-4 mr-2" />
+                  Create Service
+                </>
+              )}
+            </Button>
           </div>
         </form>
       </Card>

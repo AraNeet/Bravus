@@ -45,10 +45,10 @@ func CreateAnimal(c *fiber.Ctx) error {
 	db := c.Locals("db").(*gorm.DB)
 
 	// Check if owner exists
-	var owner models.User
-	if err := db.First(&owner, "id = ?", parsedOwnerID).Error; err != nil {
+	var client models.Client
+	if err := db.First(&client, "id = ?", parsedOwnerID).Error; err != nil {
 		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
-			"error": "Owner not found",
+			"error": "Client not found",
 		})
 	}
 
@@ -59,7 +59,7 @@ func CreateAnimal(c *fiber.Ctx) error {
 		AnimalAge:  input.AnimalAge,
 		Species:    input.Species,
 		Metadata:   input.Metadata,
-		OwnerID:    parsedOwnerID,
+		ClientID:   parsedOwnerID,
 	}
 
 	if err := db.Create(&animal).Error; err != nil {
@@ -97,7 +97,7 @@ func GetAnimal(c *fiber.Ctx) error {
 	db := c.Locals("db").(*gorm.DB)
 	var animal models.Animal
 
-	if err := db.Preload("Owner").First(&animal, "id = ?", animalID).Error; err != nil {
+	if err := db.Preload("Client").First(&animal, "id = ?", animalID).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
 				"error": "Animal not found",

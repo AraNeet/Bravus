@@ -23,7 +23,10 @@ func ConnectPostgresDB() *gorm.DB {
 	if Global.Devmode {
 		// First, migrate without foreign key constraints
 		err = db.AutoMigrate(
-			&models.User{},
+			&models.Client{},
+			&models.Owner{},
+			&models.Rating{},
+			&models.Review{},
 			&models.Animal{},
 			&models.Service{},
 			&models.Appointment{},
@@ -37,30 +40,101 @@ func ConnectPostgresDB() *gorm.DB {
 		sqlDB := db.Exec(`
 			-- Animals table constraints
 			ALTER TABLE "animals" 
-			ADD CONSTRAINT "fk_animals_users" 
-			FOREIGN KEY ("owner_id") 
-			REFERENCES "users"("id") 
+			ADD CONSTRAINT "fk_animals_clients" 
+			FOREIGN KEY ("client_id") 
+			REFERENCES "clients"("id") 
 			ON DELETE CASCADE;
 
 			-- Services table constraints
 			ALTER TABLE "services" 
-			ADD CONSTRAINT "fk_services_users" 
-			FOREIGN KEY ("user_id") 
-			REFERENCES "users"("id") 
+			ADD CONSTRAINT "fk_services_owners" 
+			FOREIGN KEY ("owner_id") 
+			REFERENCES "owners"("id") 
 			ON DELETE CASCADE;
 
-			-- Appointments table constraints
-			ALTER TABLE "appointments" 
-			ADD CONSTRAINT "fk_appointments_services" 
+			-- Reviews table constraints
+			ALTER TABLE "reviews" 
+			ADD CONSTRAINT "fk_reviews_clients" 
+			FOREIGN KEY ("client_id") 
+			REFERENCES "clients"("id") 
+			ON DELETE CASCADE;
+			
+			ALTER TABLE "reviews" 
+			ADD CONSTRAINT "fk_reviews_owners" 
+			FOREIGN KEY ("owner_id") 
+			REFERENCES "owners"("id") 
+			ON DELETE CASCADE;
+
+			-- Ratings table constraints
+			ALTER TABLE "ratings" 
+			ADD CONSTRAINT "fk_ratings_clients" 
+			FOREIGN KEY ("client_id") 
+			REFERENCES "clients"("id") 
+			ON DELETE CASCADE;
+			
+			ALTER TABLE "ratings" 
+			ADD CONSTRAINT "fk_ratings_owners" 
+			FOREIGN KEY ("owner_id") 
+			REFERENCES "owners"("id") 
+			ON DELETE CASCADE;
+			
+			-- Client-Appointment many-to-many table constraints
+			ALTER TABLE "client_appointments" 
+			ADD CONSTRAINT "fk_client_appointments_clients" 
+			FOREIGN KEY ("client_id") 
+			REFERENCES "clients"("id") 
+			ON DELETE CASCADE;
+			
+			ALTER TABLE "client_appointments" 
+			ADD CONSTRAINT "fk_client_appointments_appointments" 
+			FOREIGN KEY ("appointment_id") 
+			REFERENCES "appointments"("id") 
+			ON DELETE CASCADE;
+			
+			-- Owner-Appointment many-to-many table constraints
+			ALTER TABLE "owner_appointments" 
+			ADD CONSTRAINT "fk_owner_appointments_owners" 
+			FOREIGN KEY ("owner_id") 
+			REFERENCES "owners"("id") 
+			ON DELETE CASCADE;
+			
+			ALTER TABLE "owner_appointments" 
+			ADD CONSTRAINT "fk_owner_appointments_appointments" 
+			FOREIGN KEY ("appointment_id") 
+			REFERENCES "appointments"("id") 
+			ON DELETE CASCADE;
+			
+			-- Service-Appointment many-to-many table constraints
+			ALTER TABLE "appointment_services" 
+			ADD CONSTRAINT "fk_appointment_services_services" 
 			FOREIGN KEY ("service_id") 
 			REFERENCES "services"("id") 
 			ON DELETE CASCADE;
 			
+			ALTER TABLE "appointment_services" 
+			ADD CONSTRAINT "fk_appointment_services_appointments" 
+			FOREIGN KEY ("appointment_id") 
+			REFERENCES "appointments"("id") 
+			ON DELETE CASCADE;
+			
+			-- Animal-Appointment many-to-many table constraints
+			ALTER TABLE "animal_appointments" 
+			ADD CONSTRAINT "fk_animal_appointments_animals" 
+			FOREIGN KEY ("animal_id") 
+			REFERENCES "animals"("id") 
+			ON DELETE CASCADE;
+			
+			ALTER TABLE "animal_appointments" 
+			ADD CONSTRAINT "fk_animal_appointments_appointments" 
+			FOREIGN KEY ("appointment_id") 
+			REFERENCES "appointments"("id") 
+			ON DELETE CASCADE;
+			
 			-- Google token storage constraints
 			ALTER TABLE "google_token_storages" 
-			ADD CONSTRAINT "fk_google_token_storages_users" 
-			FOREIGN KEY ("user_id") 
-			REFERENCES "users"("id") 
+			ADD CONSTRAINT "fk_google_token_storages_owners" 
+			FOREIGN KEY ("owner_id")
+			REFERENCES "owners"("id") 
 			ON DELETE CASCADE;
 		`)
 		if sqlDB.Error != nil {

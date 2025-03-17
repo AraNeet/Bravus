@@ -5,10 +5,9 @@ package Struct
 Struct that manages user request for updating user profiles.
 */
 type UserUpdater struct {
-	FirstName string `json:"firstname"`
-	LastName  string `json:"lastname"`
-	Phone     string `json:"phone"`
-	Career    string `json:"career"`
+	Name   string `json:"name"`
+	Phone  string `json:"phone"`
+	Career string `json:"career"`
 }
 
 // AnimalUpdater
@@ -31,6 +30,7 @@ type ServiceUpdater struct {
 	ServiceName string  `json:"service-name"`
 	ServiceDesc string  `json:"service-desc"`
 	Price       float64 `json:"price"`
+	Duration    int     `json:"duration"`
 }
 
 // AppointmentUpdater
@@ -38,6 +38,7 @@ type ServiceUpdater struct {
 Struct that manages appointment request for update date or time of the appointment.
 */
 type AppointmentUpdater struct {
-	DateTime string `json:"datetime"`
-	Service  string `json:"service"`
+	DateTime  string   `json:"datetime"`
+	Service   string   `json:"service"`
+	AnimalIDs []string `json:"animal_ids"`
 }

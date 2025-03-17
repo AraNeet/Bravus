@@ -25,7 +25,7 @@ export default function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const { user, authUser, isLoading, isLoggedIn, logout } = useAuth();
+  const { user, authUser, isLoading, isLoggedIn, logout, userType } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -85,8 +85,52 @@ export default function DashboardLayout({
     return null;
   }
 
-  // Determine if user is an owner
-  const isOwner = userData.owner;
+  // Safely check if user is an owner
+  const isOwner =
+    userData && "owner" in userData ? userData.owner : userType === "owner"; // Fallback to userType from useAuth hook
+
+  // Function to get user initials
+  const getUserInitials = () => {
+    if (userData && userData.name) {
+      return userData.name
+        .split(" ")
+        .map((part) => part.charAt(0))
+        .join("");
+    }
+
+    // Fallback for older data format
+    const userObj = userData as Record<string, any>;
+    if (userObj.firstname && userObj.lastname) {
+      return `${userObj.firstname.charAt(0)}${userObj.lastname.charAt(0)}`;
+    }
+
+    return "";
+  };
+
+  // Function to get user display name
+  const getUserDisplayName = () => {
+    if (userData && userData.name) {
+      return userData.name;
+    }
+
+    // Fallback for older data format
+    const userObj = userData as Record<string, any>;
+    if (userObj.firstname && userObj.lastname) {
+      return `${userObj.firstname} ${userObj.lastname}`;
+    }
+
+    return isOwner ? "Provider" : "Client";
+  };
+
+  // Function to get user career/role
+  const getUserRole = () => {
+    const userObj = userData as Record<string, any>;
+    if (userObj.career) {
+      return userObj.career;
+    }
+
+    return isOwner ? "Provider" : "Client";
+  };
 
   // Navigation links based on user type
   const navLinks = isOwner
@@ -183,16 +227,11 @@ export default function DashboardLayout({
               </div>
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-full bg-[#9f6eff]/20 flex items-center justify-center">
-                  {userData.firstname?.charAt(0) || ""}
-                  {userData.lastname?.charAt(0) || ""}
+                  {getUserInitials()}
                 </div>
                 <div className="hidden md:block">
-                  <p className="font-medium">
-                    {userData.firstname} {userData.lastname}
-                  </p>
-                  <p className="text-sm text-white/60">
-                    {userData.career || (isOwner ? "Provider" : "Client")}
-                  </p>
+                  <p className="font-medium">{getUserDisplayName()}</p>
+                  <p className="text-sm text-white/60">{getUserRole()}</p>
                 </div>
               </div>
               <button

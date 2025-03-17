@@ -44,6 +44,12 @@ export const apiRequest = async <T>(
   const headers = { ...getDefaultHeaders(includeAuth), ...options.headers };
   const url = `${API_BASE_URL}${endpoint}`;
 
+  console.log(`API Request: ${method} ${url}`);
+  console.log("Request Headers:", headers);
+  if (body) {
+    console.log("Request Body:", body);
+  }
+
   // Create abort controller for timeout
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), timeout);
@@ -59,8 +65,20 @@ export const apiRequest = async <T>(
     // Clear timeout
     clearTimeout(timeoutId);
 
+    // Log response status
+    console.log(`Response Status: ${response.status} ${response.statusText}`);
+    console.log(
+      "Response Headers:",
+      Object.fromEntries([...response.headers.entries()])
+    );
+
     // Parse response data
-    const data = await response.json().catch(() => ({}));
+    const data = await response.json().catch(() => {
+      console.log("No JSON response or invalid JSON");
+      return {};
+    });
+
+    console.log("Response Data:", data);
 
     // Handle error responses
     if (!response.ok) {
@@ -75,15 +93,18 @@ export const apiRequest = async <T>(
   } catch (error: any) {
     // Handle timeout
     if (error.name === "AbortError") {
+      console.error("Request timeout");
       throw new ApiError("Request timeout", 0);
     }
 
     // Re-throw ApiError
     if (error instanceof ApiError) {
+      console.error("API Error:", error.message, error.status, error.data);
       throw error;
     }
 
     // Handle other errors
+    console.error("Fetch Error:", error);
     throw new ApiError(error.message || "Unknown error", 0);
   }
 };

@@ -15,6 +15,8 @@ import {
   Filter,
   Calendar,
   Plus,
+  Clock,
+  X,
 } from "lucide-react";
 import { toast, Toaster } from "sonner";
 import { useAuth } from "@/app/hooks/useAuth";
@@ -45,7 +47,14 @@ export default function ServicesPage() {
         return;
       }
 
-      if (userData && !userData.owner) {
+      // Check if user is owner - different ways the data might be structured
+      const isOwner =
+        userData &&
+        ((userData as any).owner ||
+          (userData as any).userType === "owner" ||
+          localStorage.getItem("user_type") === "owner");
+
+      if (!isOwner) {
         router.push("/dashboard/client");
         return;
       }
@@ -125,16 +134,24 @@ export default function ServicesPage() {
     }
   }, [authLoading, isLoggedIn, userData, router]);
 
+  // Handle service name and description which might be in different formats
+  const getServiceName = (service: any): string => {
+    return service.service_name || service["service-name"] || "Unnamed Service";
+  };
+
+  const getServiceDesc = (service: any): string => {
+    return service.service_desc || service["service-desc"] || "No description";
+  };
+
   // Filter services based on search query
   const filteredServices = Array.isArray(services)
     ? services.filter((service) => {
+        const serviceName = getServiceName(service);
+        const serviceDesc = getServiceDesc(service);
+
         const matchesSearch =
-          service["service-name"]
-            .toLowerCase()
-            .includes(searchQuery.toLowerCase()) ||
-          service["service-desc"]
-            .toLowerCase()
-            .includes(searchQuery.toLowerCase());
+          serviceName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          serviceDesc.toLowerCase().includes(searchQuery.toLowerCase());
 
         return matchesSearch;
       })
@@ -227,14 +244,28 @@ export default function ServicesPage() {
 
       {/* Action Bar */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
-        <div className="relative flex-1 max-w-md">
+        <div className="relative flex-1 max-w-md w-full">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-white/40 w-4 h-4" />
           <Input
-            placeholder="Search services..."
+            placeholder="Search services by name or description..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10 bg-gradient-to-br from-white/5 to-white/3 border-[#9f6eff]/20 focus:border-[#9f6eff]/40 focus:ring-[#9f6eff]/30"
+            className="pl-10 bg-gradient-to-br from-white/5 to-white/3 border-[#9f6eff]/20 focus:border-[#9f6eff]/40 focus:ring-[#9f6eff]/30 w-full"
           />
+          {searchQuery && (
+            <button
+              onClick={() => setSearchQuery("")}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-white/40 hover:text-white/70"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          )}
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="text-white/70 text-sm">
+            {filteredServices.length} service
+            {filteredServices.length !== 1 ? "s" : ""}
+          </span>
         </div>
       </div>
 
@@ -244,63 +275,93 @@ export default function ServicesPage() {
           {filteredServices.map((service) => (
             <div
               key={service.id}
-              className="bg-gradient-to-br from-white/5 to-white/3 backdrop-blur-sm rounded-xl border border-[#9f6eff]/20 p-6 hover:shadow-lg hover:shadow-[#9f6eff]/10 transition-all duration-300"
+              className="bg-gradient-to-br from-white/5 to-white/3 backdrop-blur-sm rounded-xl border border-[#9f6eff]/20 p-6 hover:shadow-lg hover:shadow-[#9f6eff]/10 transition-all duration-300 flex flex-col h-full"
             >
-              <div className="flex justify-between items-start mb-4">
-                <h3 className="font-medium text-lg">
-                  {service["service-name"]}
+              {/* Service Header */}
+              <div className="flex justify-between items-start gap-2 mb-3">
+                <h3 className="font-semibold text-lg text-white truncate">
+                  {getServiceName(service)}
                 </h3>
+                <div className="px-3 py-1 bg-[#9f6eff]/20 rounded-full text-[#c061f7] text-sm font-medium">
+                  Active
+                </div>
               </div>
 
-              <p className="text-white/70 text-sm mb-4 line-clamp-3">
-                {service["service-desc"]}
+              {/* Service Price */}
+              <div className="mb-3 text-2xl font-bold bg-gradient-to-r from-[#9f6eff] to-[#c061f7] bg-clip-text text-transparent">
+                $
+                {typeof service.price === "number"
+                  ? service.price.toFixed(2)
+                  : parseFloat(String(service.price)).toFixed(2)}
+              </div>
+
+              {/* Service Description */}
+              <p className="text-white/70 mb-4 line-clamp-3 flex-grow">
+                {getServiceDesc(service)}
               </p>
 
-              <div className="flex justify-between items-center">
-                <p className="text-[#9f6eff] font-medium">
-                  ${service.price.toFixed(2)}
-                </p>
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => confirmDelete(service.id)}
-                    className="p-2 text-red-400 hover:bg-red-500/20 rounded-lg transition-colors"
-                    aria-label="Delete service"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
-                  <Link
-                    href={`/dashboard/owner/service/${service.id}`}
-                    className="p-2 text-[#9f6eff] hover:bg-[#9f6eff]/20 rounded-lg transition-colors"
-                    aria-label="Edit service"
-                  >
-                    <Edit className="w-4 h-4" />
-                  </Link>
-                </div>
+              {/* Service Duration */}
+              <div className="flex items-center gap-2 mb-4 text-white/70">
+                <Clock className="w-4 h-4" />
+                <span>{service.duration || 60} minutes</span>
+              </div>
+
+              {/* Service Actions */}
+              <div className="flex justify-between items-center pt-3 border-t border-white/10">
+                <Link
+                  href={`/dashboard/owner/service/${service.id}`}
+                  className="px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 transition-colors text-sm font-medium flex items-center"
+                >
+                  <Edit className="w-3.5 h-3.5 mr-1.5" />
+                  Edit
+                </Link>
+                <button
+                  onClick={() => confirmDelete(service.id)}
+                  className="px-3 py-1.5 rounded-lg bg-red-500/10 hover:bg-red-500/20 transition-colors text-sm font-medium text-red-400 flex items-center"
+                >
+                  <Trash2 className="w-3.5 h-3.5 mr-1.5" />
+                  Delete
+                </button>
               </div>
             </div>
           ))}
         </div>
       ) : (
-        <div className="bg-white/5 backdrop-blur-sm rounded-xl border border-white/10 p-8 text-center">
+        <div className="bg-gradient-to-br from-white/5 to-white/3 backdrop-blur-sm rounded-xl border border-[#9f6eff]/20 p-10 text-center">
           {searchQuery ? (
-            <p className="text-white/60 mb-4">
-              No services match your search criteria
-            </p>
+            <>
+              <div className="bg-white/5 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-6">
+                <Search className="w-8 h-8 text-white/40" />
+              </div>
+              <h3 className="text-xl font-semibold mb-2">No matches found</h3>
+              <p className="text-white/60 mb-6 max-w-md mx-auto">
+                We couldn't find any services matching "{searchQuery}". Try a
+                different search term or clear the search.
+              </p>
+              <Button
+                onClick={() => setSearchQuery("")}
+                className="bg-gradient-to-r from-[#9f6eff] to-[#c061f7] hover:from-[#8b4ff7] hover:to-[#b04fe3]"
+              >
+                Clear Search
+              </Button>
+            </>
           ) : (
             <>
-              <div className="flex justify-center mb-4">
-                <Package className="w-12 h-12 text-[#9f6eff]/50" />
+              <div className="bg-white/5 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-6">
+                <Package className="w-8 h-8 text-[#9f6eff]" />
               </div>
-              <p className="text-white/60 mb-4">
-                You haven't added any services yet
+              <h3 className="text-xl font-semibold mb-2">No services yet</h3>
+              <p className="text-white/60 mb-6 max-w-md mx-auto">
+                You haven't added any services to your profile yet. Services
+                will appear here once you create them.
               </p>
-              <Link
-                href="/dashboard/owner/service/new"
-                className="inline-flex items-center gap-1 text-sm bg-gradient-to-r from-[#9f6eff] to-[#c061f7] hover:from-[#8b4ff7] hover:to-[#b04fe7] px-4 py-2 rounded-lg transition-colors"
+              <Button
+                onClick={() => router.push("/dashboard/owner/service/new")}
+                className="bg-gradient-to-r from-[#9f6eff] to-[#c061f7] hover:from-[#8b4ff7] hover:to-[#b04fe3]"
               >
-                <PlusCircle className="w-4 h-4" />
-                <span>Add your first service</span>
-              </Link>
+                <PlusCircle className="w-4 h-4 mr-2" />
+                <span>Add Your First Service</span>
+              </Button>
             </>
           )}
         </div>
@@ -339,26 +400,38 @@ export default function ServicesPage() {
 
       {/* Delete Confirmation Modal */}
       {isDeleting && (
-        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50">
-          <div className="bg-gradient-to-br from-[#1a0b2e] to-[#2c1250] border border-white/10 rounded-xl p-6 max-w-md w-full mx-4">
-            <h2 className="text-xl font-bold mb-4">Delete Service</h2>
-            <p className="text-white/70 mb-6">
-              Are you sure you want to delete this service? This action cannot
-              be undone.
-            </p>
-            <div className="flex justify-end gap-4">
-              <button
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-md flex items-center justify-center z-50 p-4">
+          <div
+            className="bg-gradient-to-br from-[#1a0b2e] to-[#2c1250] border border-[#9f6eff]/20 rounded-xl p-6 max-w-md w-full mx-4 shadow-xl shadow-[#9f6eff]/10"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="mb-6 flex flex-col items-center text-center">
+              <div className="w-16 h-16 bg-red-500/10 rounded-full flex items-center justify-center mb-4">
+                <Trash2 className="w-8 h-8 text-red-400" />
+              </div>
+              <h2 className="text-xl font-bold mb-2">Delete Service</h2>
+              <p className="text-white/70">
+                Are you sure you want to delete this service? This action cannot
+                be undone and will remove all associated data.
+              </p>
+            </div>
+
+            <div className="flex gap-3 sm:flex-row flex-col mt-6">
+              <Button
                 onClick={cancelDelete}
-                className="px-4 py-2 rounded-lg bg-white/10 hover:bg-white/20 transition-colors"
+                className="bg-white/5 hover:bg-white/10 flex-1"
+                variant="outline"
               >
+                <X className="w-4 h-4 mr-2" />
                 Cancel
-              </button>
-              <button
+              </Button>
+              <Button
                 onClick={handleDelete}
-                className="px-4 py-2 rounded-lg bg-red-500/80 hover:bg-red-500 transition-colors"
+                className="bg-gradient-to-r from-red-500/80 to-red-600/80 hover:from-red-500 hover:to-red-600 text-white border-none flex-1"
               >
-                Delete
-              </button>
+                <Trash2 className="w-4 h-4 mr-2" />
+                Delete Service
+              </Button>
             </div>
           </div>
         </div>
