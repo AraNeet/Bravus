@@ -1,0 +1,154 @@
+<svg width="1200" height="600" viewBox="0 0 1200 600" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1200" height="600" fill="#121420"/>
+  <rect x="40" y="40" width="1120" height="520" rx="8" fill="#1a1b29"/>
+  
+  <!-- Header -->
+  <rect x="60" y="60" width="1080" height="60" rx="4" fill="#232536"/>
+  <circle cx="100" cy="90" r="16" fill="#F4A4A6"/>
+  <rect x="140" y="82" width="200" height="16" rx="4" fill="#5C6D70"/>
+  <rect x="940" y="82" width="160" height="16" rx="4" fill="#5C6D70"/>
+  
+  <!-- Calendar/Appointment Section -->
+  <rect x="60" y="140" width="450" height="400" rx="4" fill="#232536"/>
+  
+  <!-- Month Header -->
+  <rect x="80" y="160" width="410" height="40" rx="4" fill="#1a1b29"/>
+  <text x="240" y="185" fill="#F4A4A6" font-family="Arial" font-size="16" text-anchor="middle">April 2024</text>
+  
+  <!-- Calendar Grid -->
+  <rect x="80" y="210" width="410" height="310" rx="4" fill="#1a1b29"/>
+  
+  <!-- Days of Week -->
+  <text x="115" y="235" fill="#5C6D70" font-family="Arial" font-size="12" text-anchor="middle">Sun</text>
+  <text x="170" y="235" fill="#5C6D70" font-family="Arial" font-size="12" text-anchor="middle">Mon</text>
+  <text x="225" y="235" fill="#5C6D70" font-family="Arial" font-size="12" text-anchor="middle">Tue</text>
+  <text x="280" y="235" fill="#5C6D70" font-family="Arial" font-size="12" text-anchor="middle">Wed</text>
+  <text x="335" y="235" fill="#5C6D70" font-family="Arial" font-size="12" text-anchor="middle">Thu</text>
+  <text x="390" y="235" fill="#5C6D70" font-family="Arial" font-size="12" text-anchor="middle">Fri</text>
+  <text x="445" y="235" fill="#5C6D70" font-family="Arial" font-size="12" text-anchor="middle">Sat</text>
+  
+  <!-- Calendar Grid Lines -->
+  <line x1="140" y1="210" x2="140" y2="520" stroke="#232536" stroke-width="1"/>
+  <line x1="195" y1="210" x2="195" y2="520" stroke="#232536" stroke-width="1"/>
+  <line x1="250" y1="210" x2="250" y2="520" stroke="#232536" stroke-width="1"/>
+  <line x1="305" y1="210" x2="305" y2="520" stroke="#232536" stroke-width="1"/>
+  <line x1="360" y1="210" x2="360" y2="520" stroke="#232536" stroke-width="1"/>
+  <line x1="415" y1="210" x2="415" y2="520" stroke="#232536" stroke-width="1"/>
+  
+  <line x1="80" y1="250" x2="490" y2="250" stroke="#232536" stroke-width="1"/>
+  <line x1="80" y1="300" x2="490" y2="300" stroke="#232536" stroke-width="1"/>
+  <line x1="80" y1="350" x2="490" y2="350" stroke="#232536" stroke-width="1"/>
+  <line x1="80" y1="400" x2="490" y2="400" stroke="#232536" stroke-width="1"/>
+  <line x1="80" y1="450" x2="490" y2="450" stroke="#232536" stroke-width="1"/>
+  
+  <!-- Calendar Days -->
+  <!-- Week 1 -->
+  <text x="115" y="275" fill="#5C6D70" font-family="Arial" font-size="14" text-anchor="middle">1</text>
+  <text x="170" y="275" fill="#5C6D70" font-family="Arial" font-size="14" text-anchor="middle">2</text>
+  <text x="225" y="275" fill="#5C6D70" font-family="Arial" font-size="14" text-anchor="middle">3</text>
+  <text x="280" y="275" fill="#5C6D70" font-family="Arial" font-size="14" text-anchor="middle">4</text>
+  <text x="335" y="275" fill="#5C6D70" font-family="Arial" font-size="14" text-anchor="middle">5</text>
+  <text x="390" y="275" fill="#5C6D70" font-family="Arial" font-size="14" text-anchor="middle">6</text>
+  <text x="445" y="275" fill="#5C6D70" font-family="Arial" font-size="14" text-anchor="middle">7</text>
+  
+  <!-- Week 2 -->
+  <text x="115" y="325" fill="#5C6D70" font-family="Arial" font-size="14" text-anchor="middle">8</text>
+  <text x="170" y="325" fill="#5C6D70" font-family="Arial" font-size="14" text-anchor="middle">9</text>
+  <text x="225" y="325" fill="#5C6D70" font-family="Arial" font-size="14" text-anchor="middle">10</text>
+  <text x="280" y="325" fill="#5C6D70" font-family="Arial" font-size="14" text-anchor="middle">11</text>
+  <text x="335" y="325" fill="#5C6D70" font-family="Arial" font-size="14" text-anchor="middle">12</text>
+  <text x="390" y="325" fill="#5C6D70" font-family="Arial" font-size="14" text-anchor="middle">13</text>
+  <text x="445" y="325" fill="#5C6D70" font-family="Arial" font-size="14" text-anchor="middle">14</text>
+  
+  <!-- Week 3 with highlighted appointment day -->
+  <text x="115" y="375" fill="#5C6D70" font-family="Arial" font-size="14" text-anchor="middle">15</text>
+  <circle cx="170" cy="375" r="15" fill="#F4A4A6" opacity="0.3"/>
+  <text x="170" y="375" fill="#ffffff" font-family="Arial" font-size="14" text-anchor="middle">16</text>
+  <text x="225" y="375" fill="#5C6D70" font-family="Arial" font-size="14" text-anchor="middle">17</text>
+  <circle cx="280" cy="375" r="15" fill="#B76D68" opacity="0.3"/>
+  <text x="280" y="375" fill="#ffffff" font-family="Arial" font-size="14" text-anchor="middle">18</text>
+  <text x="335" y="375" fill="#5C6D70" font-family="Arial" font-size="14" text-anchor="middle">19</text>
+  <text x="390" y="375" fill="#5C6D70" font-family="Arial" font-size="14" text-anchor="middle">20</text>
+  <text x="445" y="375" fill="#5C6D70" font-family="Arial" font-size="14" text-anchor="middle">21</text>
+  
+  <!-- Week 4 with today highlighted -->
+  <text x="115" y="425" fill="#5C6D70" font-family="Arial" font-size="14" text-anchor="middle">22</text>
+  <text x="170" y="425" fill="#5C6D70" font-family="Arial" font-size="14" text-anchor="middle">23</text>
+  <text x="225" y="425" fill="#5C6D70" font-family="Arial" font-size="14" text-anchor="middle">24</text>
+  <circle cx="280" cy="425" r="18" fill="#F4A4A6" opacity="0.8"/>
+  <text x="280" y="425" fill="#121420" font-family="Arial" font-size="14" font-weight="bold" text-anchor="middle">25</text>
+  <text x="335" y="425" fill="#5C6D70" font-family="Arial" font-size="14" text-anchor="middle">26</text>
+  <text x="390" y="425" fill="#5C6D70" font-family="Arial" font-size="14" text-anchor="middle">27</text>
+  <text x="445" y="425" fill="#5C6D70" font-family="Arial" font-size="14" text-anchor="middle">28</text>
+  
+  <!-- Week 5 -->
+  <text x="115" y="475" fill="#5C6D70" font-family="Arial" font-size="14" text-anchor="middle">29</text>
+  <text x="170" y="475" fill="#5C6D70" font-family="Arial" font-size="14" text-anchor="middle">30</text>
+  
+  <!-- Financial Chart Section -->
+  <rect x="530" y="140" width="610" height="400" rx="4" fill="#232536"/>
+  
+  <!-- Chart Title -->
+  <text x="835" y="170" fill="#F4A4A6" font-family="Arial" font-size="16" text-anchor="middle">Monthly Revenue Overview</text>
+  
+  <!-- Finance Chart -->
+  <rect x="560" y="190" width="550" height="250" rx="4" fill="#1a1b29"/>
+  
+  <!-- Chart X and Y axis -->
+  <line x1="590" y1="400" x2="1070" y2="400" stroke="#5C6D70" stroke-width="1"/>
+  <line x1="590" y1="200" x2="590" y2="400" stroke="#5C6D70" stroke-width="1"/>
+  
+  <!-- X axis labels (months) -->
+  <text x="630" y="420" fill="#5C6D70" font-family="Arial" font-size="12" text-anchor="middle">Jan</text>
+  <text x="710" y="420" fill="#5C6D70" font-family="Arial" font-size="12" text-anchor="middle">Feb</text>
+  <text x="790" y="420" fill="#5C6D70" font-family="Arial" font-size="12" text-anchor="middle">Mar</text>
+  <text x="870" y="420" fill="#5C6D70" font-family="Arial" font-size="12" text-anchor="middle">Apr</text>
+  <text x="950" y="420" fill="#5C6D70" font-family="Arial" font-size="12" text-anchor="middle">May</text>
+  <text x="1030" y="420" fill="#5C6D70" font-family="Arial" font-size="12" text-anchor="middle">Jun</text>
+  
+  <!-- Y axis labels (revenue) -->
+  <text x="570" y="400" fill="#5C6D70" font-family="Arial" font-size="12" text-anchor="end">$0</text>
+  <text x="570" y="350" fill="#5C6D70" font-family="Arial" font-size="12" text-anchor="end">$5k</text>
+  <text x="570" y="300" fill="#5C6D70" font-family="Arial" font-size="12" text-anchor="end">$10k</text>
+  <text x="570" y="250" fill="#5C6D70" font-family="Arial" font-size="12" text-anchor="end">$15k</text>
+  <text x="570" y="200" fill="#5C6D70" font-family="Arial" font-size="12" text-anchor="end">$20k</text>
+  
+  <!-- Chart grid lines -->
+  <line x1="590" y1="350" x2="1070" y2="350" stroke="#5C6D70" stroke-width="0.5" stroke-dasharray="4"/>
+  <line x1="590" y1="300" x2="1070" y2="300" stroke="#5C6D70" stroke-width="0.5" stroke-dasharray="4"/>
+  <line x1="590" y1="250" x2="1070" y2="250" stroke="#5C6D70" stroke-width="0.5" stroke-dasharray="4"/>
+  <line x1="590" y1="200" x2="1070" y2="200" stroke="#5C6D70" stroke-width="0.5" stroke-dasharray="4"/>
+  
+  <!-- Revenue Line Graph -->
+  <path d="M630 350 L710 320 L790 290 L870 260 L950 230 L1030 210" stroke="#F4A4A6" stroke-width="3" fill="none"/>
+  
+  <!-- Revenue Area Fill -->
+  <path d="M630 350 L710 320 L790 290 L870 260 L950 230 L1030 210 L1030 400 L590 400 L630 350" fill="url(#paint0_linear)" fill-opacity="0.2"/>
+  
+  <!-- Expense Line Graph -->
+  <path d="M630 370 L710 355 L790 325 L870 330 L950 310 L1030 300" stroke="#B76D68" stroke-width="3" fill="none"/>
+  
+  <!-- Financial Metrics Section -->
+  <rect x="560" y="460" width="170" height="60" rx="4" fill="#1a1b29"/>
+  <text x="645" y="485" fill="#F4A4A6" font-family="Arial" font-size="14" text-anchor="middle">Total Revenue</text>
+  <text x="645" y="505" fill="#ffffff" font-family="Arial" font-size="16" font-weight="bold" text-anchor="middle">$47,582.00</text>
+  
+  <rect x="750" y="460" width="170" height="60" rx="4" fill="#1a1b29"/>
+  <text x="835" y="485" fill="#B76D68" font-family="Arial" font-size="14" text-anchor="middle">Total Expenses</text>
+  <text x="835" y="505" fill="#ffffff" font-family="Arial" font-size="16" font-weight="bold" text-anchor="middle">$29,164.00</text>
+  
+  <rect x="940" y="460" width="170" height="60" rx="4" fill="#1a1b29"/>
+  <text x="1025" y="485" fill="#5C6D70" font-family="Arial" font-size="14" text-anchor="middle">Net Profit</text>
+  <text x="1025" y="505" fill="#ffffff" font-family="Arial" font-size="16" font-weight="bold" text-anchor="middle">$18,418.00</text>
+  
+  <!-- Upcoming Appointments -->
+  <rect x="560" y="250" width="550" height="140" rx="4" style="display:none"/>
+  
+  <!-- Gradients -->
+  <defs>
+    <linearGradient id="paint0_linear" x1="800" y1="200" x2="800" y2="400" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#F4A4A6" stop-opacity="0.5"/>
+      <stop offset="1" stop-color="#F4A4A6" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+</svg> 

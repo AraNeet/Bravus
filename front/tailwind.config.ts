@@ -53,6 +53,11 @@ const config: Config = {
           "4": "hsl(var(--chart-4))",
           "5": "hsl(var(--chart-5))",
         },
+        // Direct color values from design system
+        navy: "#121420",
+        mred: "#B76D68",
+        spink: "#F4A4A6",
+        gteal: "#5C6D70",
       },
       borderRadius: {
         lg: "var(--radius)",

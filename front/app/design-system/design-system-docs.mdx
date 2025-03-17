@@ -1,0 +1,141 @@
+# Bravus Design System Documentation
+
+## Overview
+
+The Bravus Design System provides a unified set of design principles, components, and patterns to ensure consistency across our application. This system is built on top of Tailwind CSS and extends it with custom colors, components, and utilities.
+
+## Color Palette
+
+Our color palette consists of:
+
+- **Primary** (`#121420` - Dark Navy): Used for primary UI elements and important actions.
+- **Secondary** (`#B76D68` - Muted Red): Used for secondary UI elements and less prominent actions.
+- **Accent** (`#F4A4A6` - Soft Pink): Used for highlighting and accentuating elements.
+- **Background** (`#FFFFFF` - White): Used for page and component backgrounds.
+- **Text** (`#5C6D70` - Grayish Teal): Used for body text and non-emphasized content.
+
+### Usage in Code
+
+Colors can be used either through Tailwind's HSL variables or direct color classes:
+
+```tsx
+// Using HSL variables
+<div className="bg-primary text-primary-foreground">Primary Button</div>
+
+// Using direct color classes
+<div className="bg-navy text-white">Navy Button</div>
+<div className="bg-mred text-white">Muted Red Button</div>
+<div className="bg-spink text-navy">Soft Pink Button</div>
+<div className="bg-gteal text-white">Grayish Teal Text</div>
+```
+
+## Typography
+
+Our typography system uses a consistent scale for headings and body text:
+
+- **Heading 1**: `text-5xl font-bold`
+- **Heading 2**: `text-4xl font-bold`
+- **Heading 3**: `text-2xl font-semibold`
+- **Heading 4**: `text-xl font-semibold`
+- **Body Text**: `text-base`
+- **Small Text**: `text-sm`
+
+## Spacing
+
+Our spacing system uses Tailwind's default spacing scale, with special attention to:
+
+- `4px` (1): Small spacing (icons, tight elements)
+- `8px` (2): Default spacing between related elements
+- `12px` (3): Medium spacing
+- `16px` (4): Standard spacing between components
+- `24px` (6): Large spacing between sections
+
+## Components
+
+### Buttons
+
+Buttons come in multiple variants and sizes:
+
+**Variants**:
+- `default`: Primary color button
+- `secondary`: Secondary color button
+- `accent`: Accent color button
+- `navy`: Dark navy button
+- `muted`: Muted red button
+- `outline`: Outlined button
+- `ghost`: Ghost button (transparent with hover effect)
+- `subtle`: Subtle button with low emphasis
+
+**Sizes**:
+- `sm`: Small button
+- `default`: Default size
+- `lg`: Large button
+- `xl`: Extra large button
+
+```tsx
+<Button variant="navy" size="lg">Large Navy Button</Button>
+```
+
+### Cards
+
+Cards are used to group related content and come in multiple variants:
+
+- `default`: Standard card
+- `bordered`: Card with more prominent border
+- `elevated`: Card with elevation (shadow)
+- `accent`: Card with accent color styling
+- `navy`: Card with navy background
+- `secondary`: Card with secondary color styling
+
+```tsx
+<Card variant="accent">
+  <CardHeader>
+    <CardTitle>Card Title</CardTitle>
+  </CardHeader>
+  <CardContent>Card content goes here</CardContent>
+</Card>
+```
+
+### Badges
+
+Badges are used to label, categorize, or highlight status:
+
+- `default`: Primary color badge
+- `secondary`: Secondary color badge
+- `navy`: Navy background badge
+- `muted`: Muted red badge
+- `accent`: Accent color badge
+- `subtle`: Subtle styling badge
+- `outline`: Outlined badge
+- `destructive`: Destructive/error badge
+
+```tsx
+<Badge variant="accent">New Feature</Badge>
+```
+
+## Applying the Design System
+
+When building new components or pages, follow these guidelines:
+
+1. Use the predefined components rather than creating custom ones
+2. Stick to the color palette for all visual elements
+3. Follow the typography scale for all text
+4. Use consistent spacing based on the spacing scale
+5. Compose complex UI from existing elements when possible
+
+## Accessibility
+
+All components are designed with accessibility in mind:
+
+- Sufficient color contrast (WCAG AA compliant)
+- Keyboard navigation support
+- Screen reader friendly markup
+- Focus states for interactive elements
+
+## Responsive Design
+
+The design system is built to be responsive by default:
+
+- Use responsive utilities like `md:` and `lg:` prefixes
+- Mobile-first approach (default styles are for mobile)
+- Consistent breakpoints across components 
