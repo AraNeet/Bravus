@@ -42,6 +42,13 @@ export const getAnimalById = async (animalId: string): Promise<Animal> => {
 };
 
 /**
+ * Get all animals for a client
+ */
+export const getAnimalsByClientId = async (clientId: string): Promise<Animal[]> => {
+  return await get<Animal[]>(`/animal/client?id=${clientId}`);
+};
+
+/**
  * Update animal
  */
 export const updateAnimal = async (

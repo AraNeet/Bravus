@@ -12,6 +12,7 @@ func AnimalRoutes(app *fiber.App) {
 	// Protected routes (require authentication)
 	animal.Post("/create", middleware.AuthMiddleware(), CRUD.CreateAnimal)
 	animal.Get("/get-animal", middleware.AuthMiddleware(), CRUD.GetAnimal)
+	animal.Get("/client", middleware.AuthMiddleware(), CRUD.GetAnimalsByClientId)
 	animal.Put("/update", middleware.AuthMiddleware(), CRUD.UpdateAnimal)
 	animal.Delete("/delete", middleware.AuthMiddleware(), CRUD.DeleteAnimal)
 

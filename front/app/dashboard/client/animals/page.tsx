@@ -25,7 +25,7 @@ import {
 import { toast } from "sonner";
 import { useAuth } from "@/app/hooks/useAuth";
 import type { Animal } from "@/app/api/types";
-import { createAnimal, updateAnimal, deleteAnimal } from "@/app/api/animals";
+import { createAnimal, updateAnimal, deleteAnimal, getAnimalsByClientId } from "@/app/api/animals";
 import { getUserIdFromToken } from "@/app/utils/jwt-utils";
 import Link from "next/link";
 
@@ -144,11 +144,25 @@ export default function AnimalsPage() {
 
   // Load animals when user data is available
   useEffect(() => {
-    if (!authLoading && user) {
-      setAnimals(user.animals || []);
-      setFilteredAnimals(user.animals || []);
-      setIsLoading(false);
-    }
+    const fetchAnimals = async () => {
+      if (!authLoading && user) {
+        try {
+          // Get client ID from the user
+          const clientId = user.id;
+          // Fetch animals for this client
+          const clientAnimals = await getAnimalsByClientId(clientId);
+          setAnimals(clientAnimals);
+          setFilteredAnimals(clientAnimals);
+        } catch (error) {
+          console.error("Error fetching animals:", error);
+          toast.error("Failed to load animals");
+        } finally {
+          setIsLoading(false);
+        }
+      }
+    };
+
+    fetchAnimals();
   }, [user, authLoading]);
 
   // Filter animals when search query or active tab changes
@@ -340,51 +354,47 @@ export default function AnimalsPage() {
 
   // Handle form submission for updating an animal
   const handleUpdateAnimal = async () => {
-    if (!selectedAnimal || !validateForm()) return;
-
     setIsSubmitting(true);
     setApiError(null);
 
     try {
-      // Create animal data for API
+      if (!selectedAnimal || !validateForm()) return;
+
+      // Prepare metadata object for additional fields
+      const metadata = {
+        color: formData.color,
+        weight: formData.weight,
+        gender: formData.gender,
+        notes: formData.notes,
+      };
+
+      // Prepare animal data for API
       const animalData = {
         "animal-name": formData.AnimalName,
         "animal-race": formData.AnimalRace,
         "animal-age": formData.AnimalAge,
         species: formData.species,
-        metadata: JSON.stringify({
-          color: formData.color,
-          weight: formData.weight,
-          gender: formData.gender,
-          notes: formData.notes,
-        }),
+        metadata: JSON.stringify(metadata),
       };
 
-      // Call API to update animal
-      const updatedAnimal = await updateAnimal(selectedAnimal.ID, animalData);
+      // Call the API to update the animal
+      const updatedAnimal = await updateAnimal(selectedAnimal.id, animalData);
 
-      // Update local state
+      // Update the local state
       setAnimals((prev) =>
         prev.map((animal) =>
-          animal.ID === selectedAnimal.ID ? updatedAnimal : animal
+          animal.id === selectedAnimal.id ? updatedAnimal : animal
         )
       );
 
-      // Show success message with sonner
-      toast.success("Animal Updated", {
-        description: `${formData.AnimalName}'s information has been updated.`,
-      });
-
-      // Close dialog and reset form
+      // Close the dialog and reset the form
       setIsEditDialogOpen(false);
-      setSelectedAnimal(null);
       setFormData(emptyFormData);
-    } catch (error: any) {
-      console.error("Failed to update animal:", error);
-      setApiError(
-        error.message ||
-          "An error occurred while updating the animal. Please try again."
-      );
+      setSelectedAnimal(null);
+      toast.success("Animal updated successfully");
+    } catch (error) {
+      console.error("Error updating animal:", error);
+      setApiError("Failed to update animal. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
@@ -398,34 +408,26 @@ export default function AnimalsPage() {
 
   // Handle animal deletion
   const handleDeleteAnimal = async () => {
-    if (!selectedAnimal) return;
-
     setIsSubmitting(true);
 
     try {
-      // Call API to delete animal
-      await deleteAnimal(selectedAnimal.ID);
+      if (!selectedAnimal) return;
 
-      // Update local state
+      // Call the API to delete the animal
+      await deleteAnimal(selectedAnimal.id);
+
+      // Update the local state
       setAnimals((prev) =>
-        prev.filter((animal) => animal.ID !== selectedAnimal.ID)
+        prev.filter((animal) => animal.id !== selectedAnimal.id)
       );
 
-      // Show success message with sonner
-      toast.success("Animal Deleted", {
-        description: `${selectedAnimal["animal_name"]} has been removed.`,
-      });
-
-      // Close dialog
+      // Close the dialog
       setIsDeleteDialogOpen(false);
       setSelectedAnimal(null);
-    } catch (error: any) {
-      console.error("Failed to delete animal:", error);
-      toast.error("Error", {
-        description:
-          error.message ||
-          "An error occurred while deleting the animal. Please try again.",
-      });
+      toast.success("Animal deleted successfully");
+    } catch (error) {
+      console.error("Error deleting animal:", error);
+      toast.error("Failed to delete animal");
     } finally {
       setIsSubmitting(false);
     }
@@ -547,7 +549,7 @@ export default function AnimalsPage() {
 
               return (
                 <Card
-                  key={animal.ID}
+                  key={animal.id}
                   className="overflow-hidden bg-gradient-to-br from-white/5 to-white/3 backdrop-blur-sm border-[#9f6eff]/20 hover:border-[#9f6eff]/30 transition-all hover:shadow-md hover:shadow-[#9f6eff]/5"
                 >
                   <CardHeader className="pb-2">

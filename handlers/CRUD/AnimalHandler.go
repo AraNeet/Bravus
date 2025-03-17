@@ -1,6 +1,8 @@
 package CRUD
 
 import (
+	"time"
+
 	"github.com/AramisAra/BravusBackend/Struct"
 	"github.com/AramisAra/BravusBackend/Util"
 	"github.com/AramisAra/BravusBackend/models"
@@ -225,4 +227,63 @@ func DeleteAnimal(c *fiber.Ctx) error {
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
 		"message": "Animal deleted successfully",
 	})
+}
+
+// GetAnimalsByClientId retrieves all animals associated with a client
+func GetAnimalsByClientId(c *fiber.Ctx) error {
+	// Get client ID from query params
+	clientID := c.Query("id")
+	if clientID == "" {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "Client ID is required",
+		})
+	}
+
+	// Parse and validate UUID
+	parsedClientID, err := uuid.Parse(clientID)
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "Invalid client ID format",
+		})
+	}
+
+	db := c.Locals("db").(*gorm.DB)
+
+	// Check if client exists
+	var client models.Client
+	if err := db.First(&client, "id = ?", parsedClientID).Error; err != nil {
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+			"error": "Client not found",
+		})
+	}
+
+	// Get all animals for the client
+	var animals []models.Animal
+	if err := db.Where("client_id = ?", parsedClientID).Find(&animals).Error; err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": "Failed to retrieve animals",
+		})
+	}
+
+	// Serialize animals to response format
+	var responseAnimals []Struct.AnimalSerializer
+	for _, animal := range animals {
+		// Format dates as ISO format
+		createdAt := animal.CreatedAt.Format(time.RFC3339)
+		updatedAt := animal.UpdatedAt.Format(time.RFC3339)
+
+		responseAnimals = append(responseAnimals, Struct.AnimalSerializer{
+			ID:         animal.ID,
+			AnimalName: animal.AnimalName,
+			AnimalRace: animal.AnimalRace,
+			AnimalAge:  animal.AnimalAge,
+			Species:    animal.Species,
+			Metadata:   animal.Metadata,
+			ClientID:   animal.ClientID,
+			CreatedAt:  createdAt,
+			UpdatedAt:  updatedAt,
+		})
+	}
+
+	return c.Status(fiber.StatusOK).JSON(responseAnimals)
 }
