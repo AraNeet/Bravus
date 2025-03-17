@@ -37,10 +37,37 @@ export const createAppointment = async (
   serviceId: string,
   appointmentData: CreateAppointmentRequest
 ): Promise<Appointment> => {
-  return await post<Appointment>(
-    `/appointment/create?Oid=${ownerId}&Uid=${userId}&Sid=${serviceId}`,
+  if (!ownerId || !userId || !serviceId) {
+    console.error("Missing required IDs for creating appointment:", {
+      ownerId,
+      userId,
+      serviceId
+    });
+    throw new Error("Missing required owner, user, or service ID");
+  }
+
+  console.log("Creating appointment with data:", {
+    ownerId,
+    userId,
+    serviceId,
     appointmentData
-  );
+  });
+
+  // Make sure the DateTime is in the correct format (MM-DD-YYYY h:mmAM/PM)
+  if (!appointmentData.DateTime || !/^\d{2}-\d{2}-\d{4} \d{1,2}:\d{2}(AM|PM)$/.test(appointmentData.DateTime)) {
+    console.error("Invalid DateTime format:", appointmentData.DateTime);
+    throw new Error("Date and time must be in the format MM-DD-YYYY h:mmAM/PM");
+  }
+
+  try {
+    return await post<Appointment>(
+      `/appointment/create?Oid=${ownerId}&Uid=${userId}&Sid=${serviceId}`,
+      appointmentData
+    );
+  } catch (error) {
+    console.error("Failed to create appointment:", error);
+    throw error;
+  }
 };
 
 /**
@@ -63,4 +90,22 @@ export const deleteAppointment = async (
   appointmentId: string
 ): Promise<void> => {
   await del(`/appointment/delete?id=${appointmentId}`);
+};
+
+/**
+ * Get all appointments for an owner
+ */
+export const getOwnerAppointments = async (
+  ownerId: string
+): Promise<Appointment[]> => {
+  if (!ownerId) {
+    throw new Error("Owner ID is required");
+  }
+  
+  try {
+    return await get<Appointment[]>(`/owner/get-owner-appointments/${ownerId}`);
+  } catch (error) {
+    console.error("Failed to fetch owner appointments:", error);
+    throw error;
+  }
 };

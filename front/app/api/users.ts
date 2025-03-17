@@ -77,8 +77,12 @@ export const createOwner = async (ownerData: OwnerRequest): Promise<Owner> => {
 
 export const getOwners = async (): Promise<OwnerWithServices[]> => {
   try {
+    console.log("Fetching owners...");
+    
     // Handle both direct array response and object with owners field
     const response = await get<any>(`/owner/get-owners`);
+    
+    console.log("Raw API response for getOwners:", response);
 
     // Determine if response is an array or object with owners field
     const owners = Array.isArray(response)
@@ -87,15 +91,35 @@ export const getOwners = async (): Promise<OwnerWithServices[]> => {
       ? response.owners
       : [];
 
-    console.log("Raw owners response:", owners);
+    console.log("Parsed owners array:", owners);
 
     if (owners.length === 0) {
-      console.warn("No owners returned from API");
+      console.warn("No owners returned from API - attempting fallback");
+      
+      // Fallback: try to fetch individual owners if the list endpoint fails
+      try {
+        // This would need to be replaced with actual owner IDs if you have them
+        // For now, this is just a placeholder for potential fallback logic
+        const sampleOwnerId = localStorage.getItem("sample_owner_id");
+        if (sampleOwnerId) {
+          const singleOwner = await getOwnerById(sampleOwnerId);
+          return [singleOwner];
+        }
+      } catch (fallbackError) {
+        console.error("Fallback owner fetch failed:", fallbackError);
+      }
     }
 
-    return owners.map((owner: any) => {
+    const normalizedOwners = owners.map((owner: any) => {
+      // Check if this is already a properly formatted owner
+      if (owner.id && owner.services && Array.isArray(owner.services)) {
+        console.log("Owner already has proper structure:", owner.id);
+      } else {
+        console.log("Owner needs normalization:", owner);
+      }
+      
       // Normalize owner data to handle different backend formats
-      return {
+      const normalizedOwner = {
         id: owner.id,
         name:
           owner.name ||
@@ -132,8 +156,23 @@ export const getOwners = async (): Promise<OwnerWithServices[]> => {
         rating: owner.rating || 0,
         reviewCount: owner.reviewCount || 0,
         appointments: owner.appointments || [],
+        owner: true, // Explicitly mark as owner
       };
+      
+      console.log("Normalized owner:", normalizedOwner.id, normalizedOwner.name);
+      console.log("Services count:", normalizedOwner.services.length);
+      return normalizedOwner;
     });
+    
+    console.log("Number of normalized owners:", normalizedOwners.length);
+    
+    // Filter out owners with no services if needed
+    const ownersWithServices = normalizedOwners.filter(
+      owner => owner.services && owner.services.length > 0
+    );
+    console.log("Owners with services:", ownersWithServices.length);
+    
+    return normalizedOwners;
   } catch (error) {
     console.error("Error fetching owners:", error);
     // Return empty array if there's an error
@@ -288,5 +327,42 @@ export const getUserWithAllData = async (userId: string): Promise<any> => {
   } catch (error) {
     console.error(`Error in getUserWithAllData for ${userId}:`, error);
     throw error;
+  }
+};
+
+/**
+ * Get services for a specific owner
+ * This uses the direct endpoint for getting an owner's services
+ */
+export const getOwnerServices = async (ownerId: string): Promise<Service[]> => {
+  if (!ownerId) {
+    console.error("Invalid owner ID provided to getOwnerServices");
+    return [];
+  }
+
+  try {
+    console.log(`Fetching services for owner ID: ${ownerId}`);
+    const response = await get<any>(`/service/owner/${ownerId}`);
+    
+    console.log("Raw service data from API:", response);
+    
+    // Handle different response formats
+    const services = Array.isArray(response) ? response : [];
+    
+    // Normalize the service data
+    const normalizedServices = services.map((service: any) => ({
+      id: service.id,
+      service_name: service.ServiceName || service.service_name || "Unnamed Service",
+      service_desc: service.ServiceDesc || service.service_desc || "",
+      price: typeof service.price === "number" ? service.price : parseFloat(service.price || "0"),
+      duration: service.duration || 60,
+      owner_id: service.owner_id || service.OwnerID || ownerId,
+    }));
+    
+    console.log(`Found ${normalizedServices.length} services for owner ${ownerId}`, normalizedServices);
+    return normalizedServices;
+  } catch (error) {
+    console.error(`Error fetching services for owner ${ownerId}:`, error);
+    return [];
   }
 };

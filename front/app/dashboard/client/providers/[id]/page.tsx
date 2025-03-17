@@ -1,7 +1,8 @@
 "use client";
 
+import React from "react";
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useParams } from "next/navigation";
 import {
   ArrowLeft,
   MapPin,
@@ -29,15 +30,13 @@ import { Skeleton } from "@/components/ui/skeleton";
 import type { OwnerWithServices } from "@/app/api/users";
 import type { Service } from "@/app/api/types";
 
-export default function ProviderDetailPage({
-  params,
-}: {
-  params: { id: string };
-}) {
+export default function ProviderDetailPage() {
+  const params = useParams();
   const router = useRouter();
   const [provider, setProvider] = useState<OwnerWithServices | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const providerId = params.id as string;
   const [hasAttemptedFetch, setHasAttemptedFetch] = useState(false);
 
   useEffect(() => {
@@ -48,8 +47,8 @@ export default function ProviderDetailPage({
 
       try {
         setIsLoading(true);
-        console.log("Fetching provider data for ID:", params.id);
-        const data = await getUserWithAllData(params.id);
+        console.log("Fetching provider data for ID:", providerId);
+        const data = await getUserWithAllData(providerId);
         console.log("Provider data fetched:", data);
         setProvider(data as OwnerWithServices);
       } catch (err) {
@@ -60,10 +59,10 @@ export default function ProviderDetailPage({
       }
     };
 
-    if (params.id) {
+    if (providerId) {
       fetchProvider();
     }
-  }, [params.id, hasAttemptedFetch]);
+  }, [providerId, hasAttemptedFetch]);
 
   const getInitials = (firstName?: string, lastName?: string) => {
     return `${firstName?.charAt(0) || ""}${

@@ -5,7 +5,8 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 // Temporary solution - use our own date utilities until date-fns is installed
 import { useAuth } from "@/app/hooks/useAuth";
-import { deleteAppointment } from "@/app/api/appointments";
+import { deleteAppointment, getOwnerAppointments } from "@/app/api/appointments";
+import { getUserIdFromToken } from "@/app/utils/jwt-utils";
 import {
   Calendar,
   Clock,
@@ -198,6 +199,8 @@ export default function OwnerAppointments() {
   );
   const [isLoading2, setIsLoading2] = useState(false);
   const [serviceCache, setServiceCache] = useState<Record<string, Service>>({});
+  const [appointments, setAppointments] = useState<Appointment[]>([]);
+  const [isLoadingAppointments, setIsLoadingAppointments] = useState(false);
 
   // Redirect if not authenticated or not an owner
   useEffect(() => {
@@ -210,8 +213,43 @@ export default function OwnerAppointments() {
     }
   }, [isLoading, isLoggedIn, userType, router]);
 
+  // Fetch appointments using the new API
+  useEffect(() => {
+    const fetchAppointments = async () => {
+      if (!isLoggedIn) return;
+      
+      try {
+        setIsLoadingAppointments(true);
+        const userId = getUserIdFromToken();
+        if (userId) {
+          console.log("Fetching appointments for owner with userId:", userId);
+          const ownerAppointments = await getOwnerAppointments(userId);
+          console.log("Owner appointments:", ownerAppointments);
+          setAppointments(Array.isArray(ownerAppointments) ? ownerAppointments : []);
+        }
+      } catch (error) {
+        console.error("Error fetching appointments:", error);
+        toast.error("Failed to load appointments");
+        // Fallback to user.appointments if available
+        if (
+          user &&
+          (user as any).appointments &&
+          Array.isArray((user as any).appointments)
+        ) {
+          setAppointments((user as any).appointments);
+        }
+      } finally {
+        setIsLoadingAppointments(false);
+      }
+    };
+
+    if (!isLoading && isLoggedIn) {
+      fetchAppointments();
+    }
+  }, [isLoading, isLoggedIn, user]);
+
   // If still loading, show loading state
-  if (isLoading) {
+  if (isLoading || isLoadingAppointments) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-[#1a0b2e] to-[#2c1250] text-white flex items-center justify-center">
         <div className="animate-spin w-12 h-12 border-4 border-[#9f6eff] border-t-transparent rounded-full"></div>
@@ -239,56 +277,60 @@ export default function OwnerAppointments() {
   };
 
   // Filter appointments based on search query, date filter, and status filter
-  const filteredAppointments = hasAppointments(userData)
-    ? userData.appointments.filter((appointment: Appointment) => {
-        const appointmentDate = new Date(appointment.datetime);
-        const clientNames = appointment.clients
+  const filteredAppointments = appointments.filter((appointment: Appointment) => {
+    const appointmentDate = new Date(appointment.datetime);
+    const clientNames = appointment.clients
+      ? appointment.clients
           .map((client: ClientAppointment) => `${client.name}`.toLowerCase())
-          .join(" ");
+          .join(" ")
+      : "";
 
-        // Try to find service name
-        let serviceName = "";
-        if (hasServices(userData)) {
-          const service = userData.services.find(
-            (s: Service) => s.id === appointment.services[0]?.id
-          );
-          if (service) {
-            serviceName = service.service_name.toLowerCase();
-          }
-        }
+    // Try to find service name
+    let serviceName = "";
+    if (appointment.services && appointment.services.length > 0) {
+      serviceName = appointment.services[0].service_name.toLowerCase();
+    } else if (hasServices(userData)) {
+      const service = userData.services.find(
+        (s: Service) => s.id === appointment.services?.[0]?.id
+      );
+      if (service) {
+        serviceName = service.service_name.toLowerCase();
+      }
+    }
 
-        // Search filter
-        const matchesSearch =
-          searchQuery === "" ||
-          clientNames.includes(searchQuery.toLowerCase()) ||
-          serviceName.includes(searchQuery.toLowerCase());
+    // Search filter
+    const matchesSearch =
+      searchQuery === "" ||
+      clientNames.includes(searchQuery.toLowerCase()) ||
+      serviceName.includes(searchQuery.toLowerCase());
 
-        // Date filter
-        let matchesDate = true;
-        if (dateFilter === "today") {
-          matchesDate = isToday(appointmentDate);
-        } else if (dateFilter === "week") {
-          matchesDate = isThisWeek(appointmentDate);
-        } else if (dateFilter === "month") {
-          matchesDate = isThisMonth(appointmentDate);
-        } else if (dateFilter === "upcoming") {
-          matchesDate = isFuture(appointmentDate);
-        }
+    // Date filter
+    let matchesDate = true;
+    if (dateFilter === "today") {
+      matchesDate = isToday(appointmentDate);
+    } else if (dateFilter === "week") {
+      matchesDate = isThisWeek(appointmentDate);
+    } else if (dateFilter === "month") {
+      matchesDate = isThisMonth(appointmentDate);
+    } else if (dateFilter === "upcoming") {
+      matchesDate = isFuture(appointmentDate);
+    }
 
-        // Status filter - for demo purposes, we'll assume all appointments are confirmed unless specified
-        // In a real app, you would have a status field in the appointment object
-        const appointmentStatus = "confirmed";
-        const matchesStatus =
-          statusFilter === "all" || statusFilter === appointmentStatus;
+    // Status filter - for demo purposes, we'll assume all appointments are confirmed unless specified
+    // In a real app, you would have a status field in the appointment object
+    const appointmentStatus = "confirmed";
+    const matchesStatus =
+      statusFilter === "all" || statusFilter === appointmentStatus;
 
-        return matchesSearch && matchesDate && matchesStatus;
-      })
-    : [];
+    return matchesSearch && matchesDate && matchesStatus;
+  });
 
   // Sort appointments by date (newest first)
-  const sortedAppointments = [...filteredAppointments].sort((a, b) => {
-    return new Date(b.datetime).getTime() - new Date(a.datetime).getTime();
-  });
+  const sortedAppointments = [...filteredAppointments].sort(
+    (a: Appointment, b: Appointment) => {
+      return new Date(b.datetime).getTime() - new Date(a.datetime).getTime();
+    }
+  );
 
   // Pagination
   const indexOfLastAppointment = currentPage * appointmentsPerPage;
@@ -299,10 +341,9 @@ export default function OwnerAppointments() {
   );
   const totalPages = Math.ceil(sortedAppointments.length / appointmentsPerPage);
 
-  // Handle page change
   const paginate = (pageNumber: number) => setCurrentPage(pageNumber);
 
-  // Handle appointment deletion
+  // Delete appointment
   const handleDeleteClick = (appointmentId: string) => {
     setAppointmentToDelete(appointmentId);
     setIsDeleteDialogOpen(true);
@@ -314,14 +355,15 @@ export default function OwnerAppointments() {
     setIsLoading2(true);
     try {
       await deleteAppointment(appointmentToDelete);
+      
+      // Update the appointments state by removing the deleted appointment
+      setAppointments(appointments.filter(
+        (appointment) => appointment.id !== appointmentToDelete
+      ));
+      
       toast.success("Appointment deleted successfully");
-      // In a real app, you would refresh the appointments list here
-      // For now, we'll just close the dialog and reset the state
       setIsDeleteDialogOpen(false);
       setAppointmentToDelete(null);
-
-      // Simulate a refresh by redirecting to the same page
-      router.refresh();
     } catch (error) {
       console.error("Error deleting appointment:", error);
       toast.error("Failed to delete appointment");
@@ -330,41 +372,22 @@ export default function OwnerAppointments() {
     }
   };
 
-  // Find service name by ID
-  const getServiceName = (serviceId: string | undefined): string => {
-    if (!serviceId) return "No service";
-
-    // Check if we already have this service in our cache
-    if (serviceCache[serviceId]) {
-      return serviceCache[serviceId].service_name;
+  // Get service name helper function
+  const getServiceName = (appointment: Appointment): string => {
+    if (appointment.services && appointment.services.length > 0) {
+      return appointment.services[0].service_name;
     }
-
-    // Try to find in user's services first (for performance)
-    if (hasServices(userData)) {
-      const service = userData.services.find(
-        (s: Service) => s.id === serviceId
-      );
+    
+    // Fallback to looking up service ID in userData.services
+    if (hasServices(userData) && appointment.services && appointment.services.length > 0) {
+      const serviceId = appointment.services[0].id;
+      const service = userData.services.find((s: Service) => s.id === serviceId);
       if (service) {
-        // Add to cache for future reference
-        setServiceCache((prev) => ({ ...prev, [serviceId]: service }));
         return service.service_name;
       }
     }
-
-    // If not found, fetch from API
-    getServiceById(serviceId)
-      .then((service) => {
-        // Add to cache for future reference
-        setServiceCache((prev) => ({ ...prev, [serviceId]: service }));
-      })
-      .catch((error) => {
-        console.error(`Error fetching service ${serviceId}:`, error);
-      });
-
-    // Return placeholder while loading
-    return serviceCache[serviceId]
-      ? (serviceCache[serviceId] as Service).service_name
-      : "Loading...";
+    
+    return "Unknown Service";
   };
 
   return (
@@ -383,25 +406,9 @@ export default function OwnerAppointments() {
 
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <div className="flex items-center gap-2 mb-2">
-            <Link
-              href="/dashboard/owner"
-              className="text-white/70 hover:text-white flex items-center gap-1"
-            >
-              <ArrowLeft className="w-4 h-4" />
-              Back to Dashboard
-            </Link>
-          </div>
           <h1 className="text-3xl font-bold mb-1">Appointments</h1>
           <p className="text-white/70">Manage your scheduled appointments</p>
         </div>
-        <Link
-          href="/dashboard/owner/appointments/new"
-          className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-[#9f6eff] to-[#c061f7] hover:from-[#8b4ff7] hover:to-[#b04fe3] rounded-lg transition-colors"
-        >
-          <Plus className="w-4 h-4" />
-          <span>New Appointment</span>
-        </Link>
       </div>
 
       {/* Filters */}
@@ -521,7 +528,7 @@ export default function OwnerAppointments() {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <p className="font-medium">
-                        {getServiceName(appointment.services[0]?.id)}
+                        {getServiceName(appointment)}
                       </p>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
@@ -535,13 +542,6 @@ export default function OwnerAppointments() {
                           aria-label="View appointment details"
                         >
                           <MoreHorizontal className="w-4 h-4 text-white/70" />
-                        </Link>
-                        <Link
-                          href={`/dashboard/owner/appointments/${appointment.id}/edit`}
-                          className="p-1.5 rounded-lg bg-white/5 hover:bg-white/10 transition-colors"
-                          aria-label="Edit appointment"
-                        >
-                          <Edit className="w-4 h-4 text-white/70" />
                         </Link>
                         <button
                           onClick={() => handleDeleteClick(appointment.id)}
@@ -570,15 +570,6 @@ export default function OwnerAppointments() {
                 ? "Try adjusting your filters to see more results"
                 : "You don't have any appointments yet"}
             </p>
-            {!searchQuery && dateFilter === "all" && statusFilter === "all" && (
-              <Link
-                href="/dashboard/owner/appointments/new"
-                className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-[#9f6eff] to-[#c061f7] hover:from-[#8b4ff7] hover:to-[#b04fe3] rounded-lg transition-colors"
-              >
-                <Plus className="w-5 h-5" />
-                <span>Create your first appointment</span>
-              </Link>
-            )}
           </div>
         </div>
       )}

@@ -3,17 +3,35 @@
 import Link from "next/link";
 import { Clock, ChevronRight, PlusCircle, Heart } from "lucide-react";
 import { useAuth } from "@/app/hooks/useAuth";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Client, Appointment } from "@/app/api/types";
 
 export default function ClientDashboard() {
   const { user } = useAuth();
   const [showDebug, setShowDebug] = useState(false);
+  const [animalsCount, setAnimalsCount] = useState(0);
 
   // Assert type as Client since we're in client dashboard
   const clientUser = user as Client;
 
   console.log("Client Dashboard - User Data:", user);
+  
+  // Check for animals data when user changes
+  useEffect(() => {
+    if (user) {
+      // Check different possible structures for animals data
+      if (Array.isArray(clientUser?.animals)) {
+        console.log("Animals from clientUser.animals:", clientUser.animals);
+        setAnimalsCount(clientUser.animals.length);
+      } else if (Array.isArray((user as any)?.animals)) {
+        console.log("Animals from user.animals:", (user as any).animals);
+        setAnimalsCount((user as any).animals.length);
+      } else {
+        console.log("No animals array found in user data");
+        setAnimalsCount(0);
+      }
+    }
+  }, [user, clientUser]);
 
   // Helper function to get the user's name
   const getUserName = () => {
@@ -58,6 +76,10 @@ export default function ClientDashboard() {
                 <pre className="bg-black/50 p-2 rounded overflow-auto">
                   {JSON.stringify(user, null, 2)}
                 </pre>
+              </div>
+              <div>
+                <h3 className="font-bold mb-1">Animals Count:</h3>
+                <p className="bg-black/50 p-2 rounded">{animalsCount}</p>
               </div>
               <div>
                 <h3 className="font-bold mb-1">LocalStorage:</h3>
@@ -124,7 +146,7 @@ export default function ClientDashboard() {
             <div>
               <h2 className="font-medium">My Animals</h2>
               <p className="text-2xl font-bold">
-                {clientUser?.animals?.length || 0}
+                {animalsCount}
               </p>
             </div>
           </div>
@@ -264,6 +286,33 @@ export default function ClientDashboard() {
           </div>
         )}
       </section>
+
+      {/* Add debug link to appointments */}
+      <div className="mb-4">
+        <Link
+          href="/dashboard/client/appointments"
+          className="inline-flex items-center justify-between w-full gap-4 px-4 py-3 bg-white/5 hover:bg-white/10 rounded-xl transition-colors"
+        >
+          <div className="flex items-center gap-3">
+            <Clock className="w-5 h-5 text-[#9f6eff]" />
+            <span>My Appointments</span>
+          </div>
+          <ChevronRight className="w-5 h-5 text-white/40" />
+        </Link>
+      </div>
+
+      <div className="mb-4">
+        <Link
+          href="/dashboard/client/debug"
+          className="inline-flex items-center justify-between w-full gap-4 px-4 py-3 bg-white/5 hover:bg-white/10 rounded-xl transition-colors"
+        >
+          <div className="flex items-center gap-3">
+            <div className="w-5 h-5 flex items-center justify-center text-[#9f6eff]">🐞</div>
+            <span>Debug Tools</span>
+          </div>
+          <ChevronRight className="w-5 h-5 text-white/40" />
+        </Link>
+      </div>
     </>
   );
 }

@@ -3,7 +3,7 @@
 import type React from "react";
 
 import { useState, useEffect, useRef } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, Upload, X, Loader2, Check, Package } from "lucide-react";
 import { toast, Toaster } from "sonner";
@@ -19,16 +19,12 @@ import {
   CardDescription,
 } from "@/components/ui/card";
 
-interface EditServicePageProps {
-  params: {
-    id: string;
-  };
-}
-
-export default function EditServicePage({ params }: EditServicePageProps) {
+export default function EditServicePage() {
+  const params = useParams();
   const { user, authUser, isLoading: authLoading } = useAuth();
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const serviceId = params.id as string;
 
   const [isLoading, setIsLoading] = useState(true);
   const [service, setService] = useState<Service | null>(null);
@@ -57,8 +53,8 @@ export default function EditServicePage({ params }: EditServicePageProps) {
 
       try {
         setIsLoading(true);
-        console.log("Fetching service with ID:", params.id);
-        const serviceData = await getServiceById(params.id);
+        console.log("Fetching service with ID:", serviceId);
+        const serviceData = await getServiceById(serviceId);
         console.log("Service data received:", serviceData);
         setService(serviceData);
 
@@ -96,7 +92,7 @@ export default function EditServicePage({ params }: EditServicePageProps) {
     };
 
     fetchService();
-  }, [params.id, userData, authLoading, router]);
+  }, [serviceId, userData, authLoading, router]);
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];

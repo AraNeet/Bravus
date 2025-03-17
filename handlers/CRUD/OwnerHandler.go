@@ -434,3 +434,88 @@ func LoginOwner(c *fiber.Ctx) error {
 		"token":  tokenString,
 	})
 }
+
+// GetOwnerAppointments retrieves all appointments for a specific owner
+func GetOwnerAppointments(c *fiber.Ctx) error {
+	id := c.Params("id")
+	ownerID, err := uuid.Parse(id)
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "Invalid owner ID",
+		})
+	}
+
+	// Find owner first to verify existence
+	var owner models.Owner
+	if err := Global.DB.First(&owner, "id = ?", ownerID).Error; err != nil {
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+			"error": "Owner not found",
+		})
+	}
+
+	// Find all appointments associated with this owner
+	var appointments []models.Appointment
+	if err := Global.DB.Joins("JOIN owner_appointments ON owner_appointments.appointment_id = appointments.id").
+		Where("owner_appointments.owner_id = ?", ownerID).
+		Preload("Clients").
+		Preload("Services").
+		Preload("Animals").
+		Find(&appointments).Error; err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": "Failed to fetch appointments",
+		})
+	}
+
+	// Format the appointments for response
+	formattedAppointments := make([]fiber.Map, len(appointments))
+	for i, appointment := range appointments {
+		// Format clients
+		clients := make([]fiber.Map, len(appointment.Clients))
+		for j, client := range appointment.Clients {
+			clients[j] = fiber.Map{
+				"id":    client.ID,
+				"name":  client.Name,
+				"email": client.Email,
+				"phone": client.Phone,
+			}
+		}
+
+		// Format services
+		services := make([]fiber.Map, len(appointment.Services))
+		for j, service := range appointment.Services {
+			services[j] = fiber.Map{
+				"id":           service.ID,
+				"service_name": service.ServiceName,
+				"service_desc": service.ServiceDesc,
+				"price":        service.Price,
+				"duration":     service.Duration,
+			}
+		}
+
+		// Format animals
+		animals := make([]fiber.Map, len(appointment.Animals))
+		for j, animal := range appointment.Animals {
+			animals[j] = fiber.Map{
+				"id":          animal.ID,
+				"animal_name": animal.AnimalName,
+				"animal_race": animal.AnimalRace,
+				"animal_age":  animal.AnimalAge,
+				"species":     animal.Species,
+			}
+		}
+
+		// Format appointment
+		formattedAppointments[i] = fiber.Map{
+			"id":        appointment.ID,
+			"datetime":  appointment.DateTime.Format("01-02-2006 3:04PM"),
+			"notes":     appointment.Notes,
+			"clients":   clients,
+			"services":  services,
+			"animals":   animals,
+			"createdAt": appointment.CreatedAt,
+			"updatedAt": appointment.UpdatedAt,
+		}
+	}
+
+	return c.Status(fiber.StatusOK).JSON(formattedAppointments)
+}

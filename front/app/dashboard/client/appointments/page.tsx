@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import {
   Clock,
@@ -12,9 +12,11 @@ import {
   CheckCircle2,
   XCircle,
   ArrowLeft,
+  Calendar,
 } from "lucide-react";
 import { useAuth } from "@/app/hooks/useAuth";
-import type { Appointment } from "@/app/api/types";
+import type { Appointment, Service } from "@/app/api/types";
+import { getCurrentClient } from "@/app/api";
 
 // Status badge component
 const StatusBadge = ({ status }: { status: string }) => {
@@ -52,51 +54,65 @@ export default function ClientAppointmentsPage() {
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [dateFilter, setDateFilter] = useState<string>("all");
   const [currentPage, setCurrentPage] = useState(1);
+  const [refreshing, setRefreshing] = useState(false);
+  const [appointments, setAppointments] = useState<Appointment[]>([]);
+  const [showToast, setShowToast] = useState(false);
   const appointmentsPerPage = 10;
 
-  // Get appointments from user data
-  const appointments = user?.appointments || [];
+  // Update the refresh function to show a success message
+  const refreshAppointments = async () => {
+    try {
+      setRefreshing(true);
+      console.log("Refreshing appointments data...");
+      // This will trigger a re-render with updated appointment data
+      await getCurrentClient();
+      // Show success message
+      setShowToast(true);
+      // Hide success message after 3 seconds
+      setTimeout(() => setShowToast(false), 3000);
+    } catch (error) {
+      console.error("Error refreshing appointments:", error);
+    } finally {
+      setRefreshing(false);
+    }
+  };
 
   // Filter appointments based on search, status, and date
   const filteredAppointments = appointments.filter((appointment) => {
     // Search filter - check if service name matches search query
-    const serviceMatch = user?.services
-      ?.find((s) => s.id === appointment.service)
-      ?.["service-name"]?.toLowerCase()
-      .includes(searchQuery.toLowerCase());
-
-    const searchMatch = searchQuery === "" || serviceMatch;
+    const serviceName = getServiceName(appointment);
+    const searchMatch = searchQuery === "" || 
+      serviceName.toLowerCase().includes(searchQuery.toLowerCase());
 
     // Status filter
-    const statusMatch =
-      statusFilter === "all" ||
-      getAppointmentStatus(appointment) === statusFilter;
+    let statusMatch = statusFilter === "all";
+    if (statusFilter === "upcoming") {
+      statusMatch = new Date(appointment.datetime) > new Date();
+    } else if (statusFilter === "past") {
+      statusMatch = new Date(appointment.datetime) < new Date();
+    }
 
     // Date filter
+    let dateMatch = dateFilter === "all";
     const appointmentDate = new Date(appointment.datetime);
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-
+    
     const tomorrow = new Date(today);
     tomorrow.setDate(tomorrow.getDate() + 1);
+    
+    const weekFromNow = new Date(today);
+    weekFromNow.setDate(weekFromNow.getDate() + 7);
+    
+    const monthFromNow = new Date(today);
+    monthFromNow.setMonth(monthFromNow.getMonth() + 1);
 
-    const nextWeek = new Date(today);
-    nextWeek.setDate(nextWeek.getDate() + 7);
-
-    const nextMonth = new Date(today);
-    nextMonth.setMonth(nextMonth.getMonth() + 1);
-
-    let dateMatch = true;
     if (dateFilter === "today") {
       dateMatch = appointmentDate >= today && appointmentDate < tomorrow;
-    } else if (dateFilter === "upcoming") {
-      dateMatch = appointmentDate >= today;
-    } else if (dateFilter === "past") {
-      dateMatch = appointmentDate < today;
     } else if (dateFilter === "week") {
-      dateMatch = appointmentDate >= today && appointmentDate < nextWeek;
+      dateMatch = appointmentDate >= today && appointmentDate < weekFromNow;
     } else if (dateFilter === "month") {
-      dateMatch = appointmentDate >= today && appointmentDate < nextMonth;
+      dateMatch = appointmentDate >= today && appointmentDate < monthFromNow;
     }
 
     return searchMatch && statusMatch && dateMatch;
@@ -109,48 +125,58 @@ export default function ClientAppointmentsPage() {
 
   // Pagination
   const totalPages = Math.ceil(sortedAppointments.length / appointmentsPerPage);
-  const indexOfLastAppointment = currentPage * appointmentsPerPage;
-  const indexOfFirstAppointment = indexOfLastAppointment - appointmentsPerPage;
-  const currentAppointments = sortedAppointments.slice(
-    indexOfFirstAppointment,
-    indexOfLastAppointment
+  const paginatedAppointments = filteredAppointments.slice(
+    (currentPage - 1) * appointmentsPerPage,
+    currentPage * appointmentsPerPage
   );
 
   // Helper function to determine appointment status
   function getAppointmentStatus(appointment: Appointment): string {
-    // This is a placeholder - in a real app, you'd use the actual status from the API
-    // For now, we'll determine status based on date
     const appointmentDate = new Date(appointment.datetime);
     const now = new Date();
-
-    // If appointment has a status property, use that
-    if ((appointment as any).status) {
-      return (appointment as any).status;
-    }
-
-    // Otherwise determine based on date
-    if (appointmentDate < now) {
-      return "completed";
-    } else if (
-      appointmentDate.getTime() - now.getTime() <
-      24 * 60 * 60 * 1000
-    ) {
-      return "confirmed";
+    
+    // Simple status logic based on date
+    if (appointmentDate > now) {
+      return "upcoming";
     } else {
-      return "pending";
+      return "past";
     }
+    
+    // TODO: In the future, this could be expanded to include "cancelled", "completed", etc.
+    // if there's a status field in the appointment data
   }
 
-  // Helper function to find service by ID
-  function getServiceName(serviceId: string): string {
-    return (
-      user?.services?.find((s) => s.id === serviceId)?.["service-name"] ||
-      "Unknown Service"
-    );
+  // Helper function to find service by ID - update to handle the new service structure
+  function getServiceName(appointment: Appointment): string {
+    if (appointment.services && appointment.services.length > 0) {
+      // New structure: appointment has services array
+      return appointment.services[0].service_name || "Unknown Service";
+    }
+    
+    // Fallback for old structure or missing data
+    return "Unknown Service";
   }
+
+  // Add dependency on refreshing state
+  useEffect(() => {
+    if (user) {
+      console.log("User data in appointments page:", user);
+      // Extract appointments from user data, if available
+      setAppointments(
+        user.appointments || []
+      );
+    }
+  }, [user, refreshing]); // Add refreshing to the dependency array
 
   return (
     <div className="space-y-6">
+      {/* Toast notification */}
+      {showToast && (
+        <div className="fixed top-5 right-5 bg-green-500 text-white px-4 py-2 rounded-lg shadow-lg z-50 animate-fade-in-down">
+          Appointments refreshed successfully!
+        </div>
+      )}
+
       <div className="flex items-center gap-2 mb-4">
         <Link
           href="/dashboard/client"
@@ -168,6 +194,24 @@ export default function ClientAppointmentsPage() {
             Manage your upcoming and past appointments
           </p>
         </div>
+        
+        <button
+          onClick={refreshAppointments}
+          disabled={refreshing}
+          className="bg-[#9f6eff] hover:bg-[#8b4ff7] px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 disabled:opacity-50"
+        >
+          {refreshing ? (
+            <>
+              <Clock className="w-4 h-4 animate-spin" />
+              Refreshing...
+            </>
+          ) : (
+            <>
+              <Clock className="w-4 h-4" />
+              Refresh Appointments
+            </>
+          )}
+        </button>
       </div>
 
       {/* Filters and Search */}
@@ -238,7 +282,42 @@ export default function ClientAppointmentsPage() {
       </div>
 
       {/* Appointments List */}
-      {currentAppointments.length > 0 ? (
+      {filteredAppointments.length === 0 ? (
+        <div className="text-center py-8">
+          <div className="text-gray-400 mb-2">No appointments found</div>
+          <p className="text-gray-500 mb-4">
+            {searchQuery || statusFilter !== "all" || dateFilter !== "all" 
+              ? "Try clearing your filters or refreshing the page."
+              : "You don't have any appointments yet. Book one now!"}
+          </p>
+          <div className="flex justify-center space-x-4">
+            <button
+              onClick={refreshAppointments}
+              disabled={refreshing}
+              className="bg-[#9f6eff] hover:bg-[#8b4ff7] px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 disabled:opacity-50"
+            >
+              {refreshing ? (
+                <>
+                  <Clock className="w-4 h-4 animate-spin" />
+                  Refreshing...
+                </>
+              ) : (
+                <>
+                  <Clock className="w-4 h-4" />
+                  Refresh
+                </>
+              )}
+            </button>
+            <Link
+              href="/dashboard/client/appointments/book"
+              className="bg-[#4f46e5] hover:bg-[#4338ca] px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2"
+            >
+              <PlusCircle className="h-4 w-4" />
+              Book Appointment
+            </Link>
+          </div>
+        </div>
+      ) : (
         <div className="bg-white/5 backdrop-blur-sm rounded-xl border border-white/10 overflow-hidden mb-6">
           <div className="overflow-x-auto">
             <table className="w-full">
@@ -259,9 +338,9 @@ export default function ClientAppointmentsPage() {
                 </tr>
               </thead>
               <tbody>
-                {currentAppointments.map((appointment) => (
+                {paginatedAppointments.map((appointment) => (
                   <tr
-                    key={appointment.ID}
+                    key={appointment.id}
                     className="border-b border-white/5 hover:bg-white/5"
                   >
                     <td className="px-6 py-4 whitespace-nowrap text-sm">
@@ -275,7 +354,7 @@ export default function ClientAppointmentsPage() {
                       })}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm">
-                      {getServiceName(appointment.service)}
+                      {getServiceName(appointment)}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm">
                       <StatusBadge status={getAppointmentStatus(appointment)} />
@@ -283,7 +362,7 @@ export default function ClientAppointmentsPage() {
                     <td className="px-6 py-4 whitespace-nowrap text-sm">
                       <div className="flex items-center gap-2">
                         <Link
-                          href={`/dashboard/client/appointments/${appointment.ID}`}
+                          href={`/dashboard/client/appointments/${appointment.id}`}
                           className="text-[#9f6eff] hover:text-[#8b4ff7] transition-colors"
                         >
                           View
@@ -291,7 +370,7 @@ export default function ClientAppointmentsPage() {
                         {getAppointmentStatus(appointment) === "pending" && (
                           <>
                             <Link
-                              href={`/dashboard/client/appointments/${appointment.ID}/edit`}
+                              href={`/dashboard/client/appointments/${appointment.id}/edit`}
                               className="text-[#9f6eff] hover:text-[#8b4ff7] transition-colors"
                             >
                               Edit
@@ -300,7 +379,7 @@ export default function ClientAppointmentsPage() {
                               className="text-red-400 hover:text-red-300 transition-colors"
                               onClick={() => {
                                 // Handle cancellation logic here
-                                alert(`Cancel appointment ${appointment.ID}`);
+                                alert(`Cancel appointment ${appointment.id}`);
                               }}
                             >
                               Cancel
@@ -314,23 +393,6 @@ export default function ClientAppointmentsPage() {
               </tbody>
             </table>
           </div>
-        </div>
-      ) : (
-        <div className="bg-white/5 backdrop-blur-sm rounded-xl border border-white/10 p-8 text-center mb-6">
-          <Clock className="w-12 h-12 text-[#9f6eff]/50 mx-auto mb-4" />
-          <h3 className="text-xl font-medium mb-2">No appointments found</h3>
-          <p className="text-white/60 mb-6">
-            {searchQuery || statusFilter !== "all" || dateFilter !== "all"
-              ? "Try adjusting your filters to see more results."
-              : "You don't have any appointments scheduled yet."}
-          </p>
-          <Link
-            href="/dashboard/client/appointments/book"
-            className="inline-flex items-center gap-1 bg-[#9f6eff] hover:bg-[#8b4ff7] px-4 py-2 rounded-lg transition-colors"
-          >
-            <PlusCircle className="w-4 h-4" />
-            Book Appointment
-          </Link>
         </div>
       )}
 

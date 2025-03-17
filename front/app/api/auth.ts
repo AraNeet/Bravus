@@ -269,8 +269,6 @@ export const addServicesToOwner = async (
       "service-name": service.service_name,
       "service-desc": service.service_desc,
       price: service.price,
-      // Duration is required field in ServiceInput but optional in ServiceRequestHandler
-      // The backend ServiceRequestHandler doesn't have duration but the model expects it
       duration: service.duration || 60,
     };
 
@@ -344,23 +342,26 @@ export const getCurrentClient = async (): Promise<Client> => {
 
   // Get client profile with all related data
   try {
-    const clientData = await get<any>(`/client/get-client/${userId}`);
-    console.log("Raw client data from API:", clientData);
+    const response = await get<any>(`/client/get-client/${userId}`);
 
-    // Normalize the response to match our Client interface
+    const clientData = response.client ? response.client : response;
+
     const normalizedClient: Client = {
       id: clientData.id || userId,
-      name:
-        clientData.name || (clientData.firstname && clientData.lastname)
-          ? `${clientData.firstname} ${clientData.lastname}`.trim()
-          : localStorage.getItem("name") || "Client",
+      name: clientData.name || "",
       email: clientData.email || localStorage.getItem("email") || "",
       phone: clientData.phone || "",
       location: clientData.location || "",
-      animals: Array.isArray(clientData.animals) ? clientData.animals : [],
+      animals: Array.isArray(clientData.animals) 
+        ? clientData.animals 
+        : Array.isArray(clientData.Animals) 
+          ? clientData.Animals 
+          : [],
       appointments: Array.isArray(clientData.appointments)
         ? clientData.appointments
-        : [],
+        : Array.isArray(clientData.Appointments)
+          ? clientData.Appointments
+          : [],
     };
 
     // Save important data to localStorage for fallback

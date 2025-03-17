@@ -11,6 +11,7 @@ func OwnerRoutes(app *fiber.App) {
 	owner.Post("/login", CRUD.LoginOwner)
 	owner.Get("/get-owners", CRUD.GetOwners)
 	owner.Get("/get-owner/:id", CRUD.GetOwnerByID)
+	owner.Get("/get-owner-appointments/:id", CRUD.GetOwnerAppointments)
 	owner.Put("/update/:id", CRUD.UpdateOwner)
 	owner.Delete("/delete/:id", CRUD.DeleteOwner)
 }

@@ -1,20 +1,17 @@
 "use client";
 
+import React from "react";
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useParams } from "next/navigation";
 import { ArrowLeft, FileSpreadsheet } from "lucide-react";
 import SpreadsheetEditor from "../../../../components/SpreadsheetEditor";
 import { Button } from "@/components/ui/button";
 
-interface SpreadsheetEditProps {
-  params: {
-    id: string;
-  };
-}
-
-export default function SpreadsheetEdit({ params }: SpreadsheetEditProps) {
+export default function SpreadsheetEdit() {
+  const params = useParams();
   const router = useRouter();
   const [isExiting, setIsExiting] = useState(false);
+  const spreadsheetId = params.id as string;
 
   const handleBackClick = () => {
     setIsExiting(true);
@@ -46,7 +43,7 @@ export default function SpreadsheetEdit({ params }: SpreadsheetEditProps) {
       {/* Spreadsheet Editor */}
       <div className="flex-grow bg-white/3 backdrop-blur-sm rounded-lg border border-white/10 overflow-hidden">
         <SpreadsheetEditor
-          spreadsheetId={params.id}
+          spreadsheetId={spreadsheetId}
           onBackClick={handleBackClick}
         />
       </div>

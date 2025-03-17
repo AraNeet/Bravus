@@ -149,9 +149,9 @@ func GetClientByID(c *fiber.Ctx) error {
 		})
 	}
 
-	// Find client
+	// Find client with all related data
 	var client models.Client
-	if err := Global.DB.Preload("Animals").Preload("Appointments").First(&client, "id = ?", clientID).Error; err != nil {
+	if err := Global.DB.Preload("Animals").Preload("Appointments.Services").Preload("Appointments.Owners").Preload("Appointments.Animals").First(&client, "id = ?", clientID).Error; err != nil {
 		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
 			"error": "Client not found",
 		})
@@ -173,15 +173,75 @@ func GetClientByID(c *fiber.Ctx) error {
 		}
 	}
 
-	// Serialize client with relationships
+	// Serialize appointments
+	appointmentSerializers := make([]Struct.AppointmentSerializer, len(client.Appointments))
+	for i, appointment := range client.Appointments {
+		// Serialize services for this appointment
+		serviceSerializers := make([]Struct.ServiceSerializer, len(appointment.Services))
+		for j, service := range appointment.Services {
+			serviceSerializers[j] = Struct.ServiceSerializer{
+				ID:          service.ID,
+				ServiceName: service.ServiceName,
+				ServiceDesc: service.ServiceDesc,
+				Price:       service.Price,
+				Duration:    service.Duration,
+				OwnerID:     service.OwnerID,
+			}
+		}
+
+		// Serialize owners for this appointment
+		ownerSerializers := make([]Struct.OwnerAppointmentSerializer, len(appointment.Owners))
+		for j, owner := range appointment.Owners {
+			ownerSerializers[j] = Struct.OwnerAppointmentSerializer{
+				ID:       owner.ID,
+				Name:     owner.Name,
+				Phone:    owner.Phone,
+				Location: owner.Location,
+			}
+		}
+
+		// Serialize animals for this appointment
+		appointmentAnimalSerializers := make([]Struct.AnimalSerializer, len(appointment.Animals))
+		for j, animal := range appointment.Animals {
+			appointmentAnimalSerializers[j] = Struct.AnimalSerializer{
+				ID:         animal.ID,
+				AnimalName: animal.AnimalName,
+				AnimalRace: animal.AnimalRace,
+				AnimalAge:  animal.AnimalAge,
+				Species:    animal.Species,
+				ClientID:   animal.ClientID,
+			}
+		}
+
+		// Create a ClientAppointmentSerializer for this client
+		clientAppointmentSerializer := Struct.ClientAppointmentSerializer{
+			ID:       client.ID,
+			Name:     client.Name,
+			Phone:    client.Phone,
+			Location: client.Location,
+		}
+
+		// Create the AppointmentSerializer with all data
+		appointmentSerializers[i] = Struct.AppointmentSerializer{
+			ID:       appointment.ID,
+			DateTime: appointment.DateTime.Format(time.RFC3339),
+			Notes:    appointment.Notes,
+			Services: serviceSerializers,
+			Owners:   ownerSerializers,
+			Clients:  []Struct.ClientAppointmentSerializer{clientAppointmentSerializer},
+			Animals:  appointmentAnimalSerializers,
+		}
+	}
+
+	// Serialize client with all relationships
 	serializedClient := Struct.ClientSerializer{
-		ID:       client.ID,
-		Name:     client.Name,
-		Email:    client.Email,
-		Phone:    client.Phone,
-		Location: client.Location,
-		Animals:  animalSerializers,
-		// Appointments would be serialized here if needed
+		ID:           client.ID,
+		Name:         client.Name,
+		Email:        client.Email,
+		Phone:        client.Phone,
+		Location:     client.Location,
+		Animals:      animalSerializers,
+		Appointments: appointmentSerializers,
 	}
 
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{

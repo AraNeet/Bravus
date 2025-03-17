@@ -17,7 +17,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/app/hooks/useAuth";
 import type { Service, Appointment } from "@/app/api/types";
-import { getOwners } from "@/app/api/users";
+import { getOwners, getOwnerServices } from "@/app/api/users";
 import { createAppointment, updateAppointment } from "@/app/api/appointments";
 import type { OwnerWithServices } from "@/app/api/users";
 import {
@@ -54,31 +54,44 @@ export default function BookAppointmentPage() {
   const [notes, setNotes] = useState<string>("");
   const [dateTimeString, setDateTimeString] = useState<string>("");
   const [appointment, setAppointment] = useState<Appointment | null>(null);
+  const [ownerServices, setOwnerServices] = useState<Service[]>([]);
+  const [loadingServices, setLoadingServices] = useState<boolean>(false);
 
   // Fetch owners and appointment data (if editing) on component mount
   useEffect(() => {
     const fetchData = async () => {
       try {
         setIsLoading(true);
-
-        // Fetch owners
         const ownersData = await getOwners();
-        const filteredOwners = ownersData.filter(
+        console.log("Owners data received:", ownersData);
+        
+        // For TypeScript, manually assert the 'owner' field
+        const ownersWithType = ownersData.map(owner => ({
+          ...owner,
+          owner: true // Explicitly add owner property
+        }));
+        
+        const filteredOwners = ownersWithType.filter(
           (owner) => owner.owner === true
         );
+        console.log("Filtered owners:", filteredOwners);
+        
         setOwners(filteredOwners);
 
         // If editing, find the appointment in user data
         if (isEditMode && user?.appointments) {
           const foundAppointment = user.appointments.find(
-            (a) => a.ID === appointmentId
+            (a) => a.id === appointmentId // Fix: using lowercase 'id' property
           );
 
           if (foundAppointment) {
             setAppointment(foundAppointment);
 
             // Find the owner of this service
-            const serviceId = foundAppointment.service;
+            // Look for the service in the services array instead of a single service property
+            const serviceId = foundAppointment.services && foundAppointment.services.length > 0 
+              ? foundAppointment.services[0].id 
+              : "";
             let ownerId = "";
 
             for (const owner of filteredOwners) {
@@ -110,7 +123,7 @@ export default function BookAppointmentPage() {
 
         setIsLoading(false);
       } catch (err) {
-        console.error("Failed to fetch data:", err);
+        console.error("Failed to fetch appointment data:", err);
         setError("Failed to load data. Please try again later.");
         setIsLoading(false);
       }
@@ -157,10 +170,35 @@ export default function BookAppointmentPage() {
     }
   }, [selectedDate, selectedTime]);
 
+  // Update the useEffect that runs when selectedOwner changes
+  useEffect(() => {
+    if (!isEditMode || (isEditMode && !isLoading)) {
+      setSelectedService("");
+      
+      // Fetch services directly when an owner is selected
+      if (selectedOwner) {
+        setLoadingServices(true);
+        setOwnerServices([]);
+        
+        // Use the dedicated function to get services for this owner
+        getOwnerServices(selectedOwner)
+          .then(services => {
+            console.log(`Loaded ${services.length} services for owner ${selectedOwner}`, services);
+            setOwnerServices(services);
+          })
+          .catch(err => {
+            console.error("Error fetching owner services:", err);
+          })
+          .finally(() => {
+            setLoadingServices(false);
+          });
+      }
+    }
+  }, [selectedOwner, isEditMode, isLoading]);
+
   // Get services from selected owner
-  const getOwnerServices = () => {
-    const owner = owners.find((o) => o.id === selectedOwner);
-    return owner?.services || [];
+  const getSelectedOwnerServices = () => {
+    return ownerServices || [];
   };
 
   // Helper function to get days in month
@@ -229,7 +267,7 @@ export default function BookAppointmentPage() {
   useEffect(() => {
     if (!isEditMode || (isEditMode && !isLoading)) {
       setSelectedService("");
-      }
+    }
   }, [selectedOwner, isEditMode, isLoading]);
 
   // Handle form submission
@@ -451,6 +489,35 @@ export default function BookAppointmentPage() {
               Select a Service Provider
             </h2>
 
+            {/* Debug info */}
+            <div className="mb-4 p-2 rounded bg-gray-800/50 text-xs">
+              <p>Number of owners loaded: {owners.length}</p>
+              <button 
+                onClick={() => console.log("Current owners state:", owners)}
+                className="text-[#9f6eff] hover:underline mt-1"
+              >
+                Log owners to console
+              </button>
+              <button 
+                onClick={async () => {
+                  setIsLoading(true);
+                  try {
+                    const refreshedOwners = await getOwners();
+                    console.log("Refreshed owners:", refreshedOwners);
+                    const withOwnerFlag = refreshedOwners.map(o => ({...o, owner: true}));
+                    setOwners(withOwnerFlag.filter(o => o.owner === true));
+                  } catch (err) {
+                    console.error("Failed to refresh owners:", err);
+                  } finally {
+                    setIsLoading(false);
+                  }
+                }}
+                className="text-[#9f6eff] hover:underline mt-1 ml-4"
+              >
+                Refresh owners
+              </button>
+            </div>
+
             {owners.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {owners.map((owner) => (
@@ -465,23 +532,26 @@ export default function BookAppointmentPage() {
                   >
                     <div className="flex items-center gap-3 mb-2">
                       <div className="w-10 h-10 rounded-full bg-[#9f6eff]/20 flex items-center justify-center">
-                        {owner.firstname.charAt(0)}
-                        {owner.lastname.charAt(0)}
+                        {owner.firstname?.charAt(0) || '?'}
+                        {owner.lastname?.charAt(0) || ''}
                       </div>
                       <div>
                         <h3 className="font-medium text-lg">
-                          {owner.firstname} {owner.lastname}
+                          {owner.firstname || owner.name?.split(' ')[0] || 'Unknown'} {owner.lastname || (owner.name?.split(' ').length > 1 ? owner.name?.split(' ').slice(1).join(' ') : '')}
                         </h3>
                         <p className="text-white/60 text-sm">
                           {owner.career || "Service Provider"}
                         </p>
+                        <p className="text-xs text-white/40">
+                          {owner.services?.length || 0} services available
+                        </p>
                       </div>
                     </div>
 
-                    {owner.services && owner.services.length > 0 && (
+                    {owner.services && owner.services.length > 0 ? (
                       <div className="mt-3 pt-3 border-t border-white/10">
                         <p className="text-sm text-white/60 mb-2">
-                          Services offered:
+                          Services offered: {owner.services.length}
                         </p>
                         <div className="flex flex-wrap gap-2">
                           {owner.services
@@ -491,9 +561,9 @@ export default function BookAppointmentPage() {
                                 key={service.id}
                                 className="px-2 py-1 bg-white/10 rounded-full text-xs"
                               >
-                              {service["service-name"]}
-                            </span>
-                          ))}
+                                {service.service_name || "Unnamed Service"}
+                              </span>
+                            ))}
                           {owner.services.length > 3 && (
                             <span className="px-2 py-1 bg-white/10 rounded-full text-xs">
                               +{owner.services.length - 3} more
@@ -501,15 +571,29 @@ export default function BookAppointmentPage() {
                           )}
                         </div>
                       </div>
+                    ) : (
+                      <div className="mt-3 pt-3 border-t border-white/10 text-white/40 text-xs">
+                        No services configured yet
+                      </div>
                     )}
                   </button>
                 ))}
               </div>
             ) : (
               <div className="bg-white/5 rounded-lg p-6 text-center">
-                <p className="text-white/60">
+                <p className="text-white/60 mb-4">
                   No service providers available at the moment.
                 </p>
+                <p className="text-white/40 text-sm mb-4">
+                  This could be because there are no providers in the system yet,
+                  or there was an error loading the providers.
+                </p>
+                <button
+                  onClick={() => window.location.reload()}
+                  className="px-4 py-2 bg-[#9f6eff] hover:bg-[#8b4ff7] rounded-lg transition-colors text-sm font-medium"
+                >
+                  Refresh Page
+                </button>
               </div>
             )}
 
@@ -534,34 +618,76 @@ export default function BookAppointmentPage() {
             <div className="bg-[#9f6eff]/10 rounded-lg p-4 border border-[#9f6eff]/30 mb-6">
               <p className="font-medium">Selected Provider:</p>
               <p className="text-lg">
-                {owners.find((o) => o.id === selectedOwner)?.firstname}{" "}
-                {owners.find((o) => o.id === selectedOwner)?.lastname}
+                {owners.find((o) => o.id === selectedOwner)?.firstname || owners.find((o) => o.id === selectedOwner)?.name || 'Unknown'}{" "}
+                {owners.find((o) => o.id === selectedOwner)?.lastname || ''}
               </p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {getOwnerServices().map((service: Service) => (
-                <button
-                  key={service.id}
-                  onClick={() => setSelectedService(service.id)}
-                  className={`p-4 rounded-lg text-left transition-colors ${
-                    selectedService === service.id
-                      ? "bg-[#9f6eff]/20 border border-[#9f6eff]/50"
-                      : "bg-white/5 border border-white/10 hover:bg-white/10"
-                  }`}
-                >
-                  <h3 className="font-medium text-lg">
-                    {service["service-name"]}
-                  </h3>
-                  <p className="text-white/60 text-sm mb-2">
-                    {service["service-desc"]}
-                  </p>
-                  <p className="text-[#9f6eff] font-medium">
-                    ${service.price.toFixed(2)}
-                  </p>
-                </button>
-              ))}
-            </div>
+            {loadingServices ? (
+              <div className="py-8 flex flex-col items-center justify-center">
+                <Loader2 className="w-8 h-8 text-[#9f6eff] animate-spin mb-4" />
+                <p className="text-white/70">Loading services...</p>
+              </div>
+            ) : ownerServices.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {ownerServices.map((service: Service) => (
+                  <button
+                    key={service.id}
+                    onClick={() => setSelectedService(service.id)}
+                    className={`p-4 rounded-lg text-left transition-colors ${
+                      selectedService === service.id
+                        ? "bg-[#9f6eff]/20 border border-[#9f6eff]/50"
+                        : "bg-white/5 border border-white/10 hover:bg-white/10"
+                    }`}
+                  >
+                    <h3 className="font-medium text-lg">
+                      {service.service_name}
+                    </h3>
+                    <p className="text-white/60 text-sm mb-2">
+                      {service.service_desc}
+                    </p>
+                    <p className="text-[#9f6eff] font-medium">
+                      ${service.price.toFixed(2)}
+                    </p>
+                    <p className="text-white/40 text-xs mt-1">
+                      Duration: {service.duration} minutes
+                    </p>
+                  </button>
+                ))}
+              </div>
+            ) : (
+              <div className="bg-white/5 rounded-lg p-6 text-center">
+                <p className="text-white/60 mb-4">
+                  This provider has no services available.
+                </p>
+                <div className="flex flex-col gap-2 items-center">
+                  <button
+                    onClick={() => setStep(1)}
+                    className="px-4 py-2 bg-[#9f6eff] hover:bg-[#8b4ff7] rounded-lg transition-colors text-sm font-medium"
+                  >
+                    Select a different provider
+                  </button>
+                  
+                  <button
+                    onClick={() => {
+                      setLoadingServices(true);
+                      getOwnerServices(selectedOwner)
+                        .then(services => {
+                          console.log(`Refreshed services: ${services.length}`);
+                          setOwnerServices(services);
+                        })
+                        .catch(err => {
+                          console.error("Error refreshing services:", err);
+                        })
+                        .finally(() => setLoadingServices(false));
+                    }}
+                    className="px-4 py-2 bg-white/10 hover:bg-white/20 rounded-lg transition-colors text-sm font-medium mt-2"
+                  >
+                    Refresh Services
+                  </button>
+                </div>
+              </div>
+            )}
 
             <div className="mt-8 flex justify-between">
               <button
@@ -791,15 +917,15 @@ export default function BookAppointmentPage() {
               <h3 className="text-sm font-medium text-white/60">Service</h3>
               <p className="font-medium">
                 {selectedService
-                  ? getOwnerServices().find(
+                  ? ownerServices.find(
                       (s: Service) => s.id === selectedService
-                    )?.["service-name"]
+                    )?.service_name
                   : "No service selected"}
               </p>
               {selectedService && (
                 <p className="text-[#9f6eff]">
                   $
-                  {getOwnerServices()
+                  {ownerServices
                     .find((s: Service) => s.id === selectedService)
                     ?.price.toFixed(2)}
                 </p>

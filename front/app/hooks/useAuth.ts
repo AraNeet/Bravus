@@ -145,49 +145,11 @@ export const useAuth = (): UseAuthReturn => {
             }
           } else {
             console.log("useAuth - Attempting to load client data");
+            
             userData = await getCurrentClient();
-            // Force log the complete response to see what's coming back
-            console.log("CLIENT API RESPONSE (raw):", userData);
 
-            // Log all keys to debug
-            console.log("CLIENT DATA KEYS:", Object.keys(userData || {}));
-
-            // Make sure we store key user data in localStorage for fallback
             if (userData && userData.id) {
               localStorage.setItem("ID", userData.id);
-
-              // Enhanced name handling for client
-              let name = "";
-
-              // Try to get name from different property formats
-              if (userData.name && userData.name !== "Client User") {
-                name = userData.name;
-                console.log("Using name from userData.name:", name);
-              } else if (
-                (userData as any).firstname ||
-                (userData as any).lastname
-              ) {
-                name = `${(userData as any).firstname || ""} ${
-                  (userData as any).lastname || ""
-                }`.trim();
-                console.log(
-                  "Using constructed name from firstname/lastname:",
-                  name
-                );
-
-                // Set the name property on the userData object
-                userData.name = name;
-              } else {
-                // Last resort fallback
-                name = localStorage.getItem("name") || "Client";
-                console.log("Using fallback name from localStorage:", name);
-                userData.name = name;
-              }
-
-              // Always save to localStorage
-              if (name && name !== "Client User") {
-                localStorage.setItem("name", name);
-              }
 
               // Handle email
               if (userData.email) {

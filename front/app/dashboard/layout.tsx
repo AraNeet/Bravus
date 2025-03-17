@@ -32,7 +32,6 @@ export default function DashboardLayout({
   const [isSidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [showDebug, setShowDebug] = useState(false);
 
-  // Check localStorage for sidebar state on component mount
   useEffect(() => {
     const storedState = localStorage.getItem("sidebarCollapsed");
     if (storedState !== null) {
@@ -40,7 +39,6 @@ export default function DashboardLayout({
     }
   }, []);
 
-  // Save sidebar state to localStorage when it changes
   useEffect(() => {
     localStorage.setItem("sidebarCollapsed", isSidebarCollapsed.toString());
   }, [isSidebarCollapsed]);
@@ -80,12 +78,6 @@ export default function DashboardLayout({
   // Get user data from either full profile or auth response
   const userData = user || authUser;
 
-  // Debug log to see what data we're getting
-  console.log("Dashboard Layout - userData:", userData);
-  console.log("Dashboard Layout - user object:", user);
-  console.log("Dashboard Layout - authUser object:", authUser);
-  console.log("Dashboard Layout - email in userData:", userData?.email);
-
   // If no user data, redirect to login (should be handled by useEffect, but just in case)
   if (!userData) {
     router.push("/login");
@@ -94,7 +86,7 @@ export default function DashboardLayout({
 
   // Safely check if user is an owner
   const isOwner =
-    userData && "owner" in userData ? userData.owner : userType === "owner"; // Fallback to userType from useAuth hook
+    userData && "owner" in userData ? userData.owner : userType === "owner"; 
 
   // Function to get user initials
   const getUserInitials = () => {
@@ -106,7 +98,6 @@ export default function DashboardLayout({
       return `${firstInitial}${lastInitial}`.toUpperCase();
     }
 
-    // Fallback for older data format
     const userObj = userData as Record<string, any>;
     if (userObj.firstname && userObj.lastname) {
       return `${userObj.firstname.charAt(0)}${userObj.lastname.charAt(
@@ -180,11 +171,6 @@ export default function DashboardLayout({
           href: "/dashboard/owner/appointments",
           icon: <Clock className="w-5 h-5" />,
           label: "Appointments",
-        },
-        {
-          href: "/dashboard/owner/clients",
-          icon: <Users className="w-5 h-5" />,
-          label: "Clients",
         },
         {
           href: "/dashboard/owner/service",

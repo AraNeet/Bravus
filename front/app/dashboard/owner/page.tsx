@@ -6,6 +6,7 @@ import Link from "next/link";
 import { Clock, Users, Package, ChevronRight, PlusCircle } from "lucide-react";
 import { useAuth } from "@/app/hooks/useAuth";
 import { getUserServices } from "@/app/api/services";
+import { getOwnerAppointments } from "@/app/api/appointments";
 import { getUserIdFromToken } from "@/app/utils/jwt-utils";
 import type { Service, Appointment } from "@/app/api/types";
 
@@ -36,10 +37,12 @@ interface ExtendedOwner {
 }
 
 export default function OwnerDashboard() {
-  const { user, authUser, isLoading, isLoggedIn } = useAuth();
+  const { user, authUser, isLoading, isLoggedIn, userType } = useAuth();
   const router = useRouter();
   const [services, setServices] = useState<Service[]>([]);
+  const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [isLoadingServices, setIsLoadingServices] = useState(false);
+  const [isLoadingAppointments, setIsLoadingAppointments] = useState(false);
 
   // Redirect to login if not authenticated or to client dashboard if not an owner
   useEffect(() => {
@@ -48,12 +51,15 @@ export default function OwnerDashboard() {
         router.push("/login");
       } else {
         const userData = user || authUser;
-        if (userData && !(userData as any).owner) {
+        if (userType !== "owner") {
+          console.log("Redirecting to client dashboard, userType:", userType);
           router.push("/dashboard/client");
+        } else {
+          console.log("User is an owner, staying on owner dashboard");
         }
       }
     }
-  }, [isLoading, isLoggedIn, user, authUser, router]);
+  }, [isLoading, isLoggedIn, user, authUser, router, userType]);
 
   // Fetch services
   useEffect(() => {
@@ -89,9 +95,54 @@ export default function OwnerDashboard() {
     }
   }, [isLoading, isLoggedIn, user]);
 
+  // Fetch appointments
+  useEffect(() => {
+    const fetchAppointments = async () => {
+      if (!isLoggedIn) return;
+
+      try {
+        setIsLoadingAppointments(true);
+        const userId = getUserIdFromToken();
+        if (userId) {
+          console.log("Fetching appointments for dashboard with userId:", userId);
+          const ownerAppointments = await getOwnerAppointments(userId);
+          console.log("Dashboard appointments:", ownerAppointments);
+          setAppointments(Array.isArray(ownerAppointments) ? ownerAppointments : []);
+        }
+      } catch (error) {
+        console.error("Error fetching appointments for dashboard:", error);
+        // Fallback to user.appointments if available
+        if (
+          user &&
+          (user as any).appointments &&
+          Array.isArray((user as any).appointments)
+        ) {
+          setAppointments((user as any).appointments);
+        }
+      } finally {
+        setIsLoadingAppointments(false);
+      }
+    };
+
+    if (!isLoading && isLoggedIn) {
+      fetchAppointments();
+    }
+  }, [isLoading, isLoggedIn, user]);
+
   // Loading state is already handled by the parent layout
   // Get user data from either full profile or auth response
   const userData = user || authUser;
+
+  // Filter today's appointments
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const tomorrow = new Date(today);
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  
+  const todaysAppointments = appointments.filter(appointment => {
+    const appointmentDate = new Date(appointment.datetime);
+    return appointmentDate >= today && appointmentDate < tomorrow;
+  });
 
   return (
     <div className="space-y-8">
@@ -113,7 +164,7 @@ export default function OwnerDashboard() {
             <div>
               <h2 className="font-medium">Appointments</h2>
               <p className="text-2xl font-bold">
-                {user?.appointments?.length || 0}
+                {appointments.length || 0}
               </p>
             </div>
           </div>
@@ -122,34 +173,6 @@ export default function OwnerDashboard() {
             className="flex items-center justify-between text-sm text-[#9f6eff] hover:underline"
           >
             <span>View all appointments</span>
-            <ChevronRight className="w-4 h-4" />
-          </Link>
-        </div>
-
-        <div className="bg-white/5 backdrop-blur-sm rounded-xl border border-white/10 p-6">
-          <div className="flex items-center gap-4 mb-4">
-            <div className="w-12 h-12 rounded-lg bg-[#9f6eff]/20 flex items-center justify-center">
-              <Users className="w-6 h-6 text-[#9f6eff]" />
-            </div>
-            <div>
-              <h2 className="font-medium">Clients</h2>
-              <p className="text-2xl font-bold">
-                {/* Calculate unique clients from appointments */}
-                {user?.appointments
-                  ? new Set(
-                      user.appointments.flatMap((a) =>
-                        a.Users.map((u) => u.firstname + u.lastname)
-                      )
-                    ).size
-                  : 0}
-              </p>
-            </div>
-          </div>
-          <Link
-            href="/dashboard/owner/clients"
-            className="flex items-center justify-between text-sm text-[#9f6eff] hover:underline"
-          >
-            <span>View all clients</span>
             <ChevronRight className="w-4 h-4" />
           </Link>
         </div>
@@ -178,16 +201,14 @@ export default function OwnerDashboard() {
       <section className="mb-8">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-bold">Today's Appointments</h2>
-          <Link
-            href="/dashboard/owner/appointments/new"
-            className="flex items-center gap-1 text-sm bg-[#9f6eff] hover:bg-[#8b4ff7] px-3 py-2 rounded-lg transition-colors"
-          >
-            <PlusCircle className="w-4 h-4" />
-            <span>New Appointment</span>
-          </Link>
+          {/* New Appointment button removed - owners can only edit existing appointments */}
         </div>
 
-        {user?.appointments && user.appointments.length > 0 ? (
+        {isLoadingAppointments ? (
+          <div className="bg-white/5 backdrop-blur-sm rounded-xl border border-white/10 p-6 text-center">
+            <p>Loading appointments...</p>
+          </div>
+        ) : todaysAppointments.length > 0 ? (
           <div className="bg-white/5 backdrop-blur-sm rounded-xl border border-white/10 overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full">
@@ -203,148 +224,52 @@ export default function OwnerDashboard() {
                       Service
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-white/60 uppercase tracking-wider">
-                      Status
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-white/60 uppercase tracking-wider">
                       Actions
                     </th>
                   </tr>
                 </thead>
-                <tbody>
-                  {/* Filter today's appointments */}
-                  {(user.appointments as AppointmentWithUsers[])
-                    .filter((appointment) => {
-                      const today = new Date();
-                      const appointmentDate = new Date(appointment.datetime);
-                      return (
-                        appointmentDate.getDate() === today.getDate() &&
-                        appointmentDate.getMonth() === today.getMonth() &&
-                        appointmentDate.getFullYear() === today.getFullYear()
-                      );
-                    })
-                    .map((appointment) => (
-                      <tr
-                        key={appointment.ID || appointment.id}
-                        className="border-b border-white/5 hover:bg-white/5"
-                      >
-                        <td className="px-6 py-4 whitespace-nowrap text-sm">
-                          {new Date(appointment.datetime).toLocaleTimeString(
-                            [],
-                            {
-                              hour: "2-digit",
-                              minute: "2-digit",
-                            }
-                          )}
+                <tbody className="divide-y divide-white/10">
+                  {todaysAppointments.map((appointment) => {
+                    const appointmentTime = new Date(appointment.datetime);
+                    const clientName = appointment.clients && appointment.clients.length > 0 
+                      ? appointment.clients[0].name 
+                      : "Unknown Client";
+                    const serviceName = appointment.services && appointment.services.length > 0
+                      ? appointment.services[0].service_name
+                      : "Unknown Service";
+                    
+                    return (
+                      <tr key={appointment.id} className="hover:bg-white/5">
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          {appointmentTime.toLocaleTimeString([], {
+                            hour: '2-digit',
+                            minute: '2-digit'
+                          })}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm">
-                          {(() => {
-                            // Handle different appointment data structures
-                            if (
-                              (appointment as any).Users &&
-                              Array.isArray((appointment as any).Users)
-                            ) {
-                              return (appointment as any).Users.map(
-                                (u: any) => `${u.firstname} ${u.lastname}`
-                              ).join(", ");
-                            }
-
-                            // Try to use the clients array if available
-                            if (
-                              appointment.clients &&
-                              appointment.clients.length > 0
-                            ) {
-                              return appointment.clients
-                                .map((client) => client.name)
-                                .join(", ");
-                            }
-
-                            return "No clients";
-                          })()}
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          {clientName}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm">
-                          {/* Find service by ID or use service info from the appointment */}
-                          {(() => {
-                            // Try to find service in the owner's services list
-                            const serviceId =
-                              (appointment as any).service ||
-                              (appointment.services &&
-                              appointment.services.length > 0
-                                ? appointment.services[0].id
-                                : null);
-
-                            if (serviceId) {
-                              const service = services?.find(
-                                (s) => s.id === serviceId
-                              );
-                              if (service) {
-                                return service.service_name;
-                              }
-                            }
-
-                            // If service is included in the appointment
-                            if (
-                              appointment.services &&
-                              appointment.services.length > 0
-                            ) {
-                              return appointment.services[0].service_name;
-                            }
-
-                            return "Unknown Service";
-                          })()}
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          {serviceName}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm">
-                          <span className="px-2 py-1 rounded-full bg-green-500/20 text-green-400 text-xs">
-                            Confirmed
-                          </span>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm">
-                          <div className="flex items-center gap-2">
-                            <button className="text-[#9f6eff] hover:text-[#8b4ff7]">
-                              View
-                            </button>
-                            <button className="text-[#9f6eff] hover:text-[#8b4ff7]">
-                              Edit
-                            </button>
-                          </div>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <Link
+                            href={`/dashboard/owner/appointments/${appointment.id}`}
+                            className="text-[#9f6eff] hover:underline"
+                          >
+                            View Details
+                          </Link>
                         </td>
                       </tr>
-                    ))}
-
-                  {/* If no appointments today, show message */}
-                  {!(user.appointments as AppointmentWithUsers[]).some(
-                    (appointment) => {
-                      const today = new Date();
-                      const appointmentDate = new Date(appointment.datetime);
-                      return (
-                        appointmentDate.getDate() === today.getDate() &&
-                        appointmentDate.getMonth() === today.getMonth() &&
-                        appointmentDate.getFullYear() === today.getFullYear()
-                      );
-                    }
-                  ) && (
-                    <tr>
-                      <td
-                        colSpan={5}
-                        className="px-6 py-8 text-center text-white/60"
-                      >
-                        No appointments scheduled for today
-                      </td>
-                    </tr>
-                  )}
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
           </div>
         ) : (
-          <div className="bg-white/5 backdrop-blur-sm rounded-xl border border-white/10 p-8 text-center">
-            <p className="text-white/60 mb-4">No appointments scheduled yet</p>
-            <Link
-              href="/dashboard/owner/appointments/new"
-              className="inline-flex items-center gap-1 text-sm bg-[#9f6eff] hover:bg-[#8b4ff7] px-4 py-2 rounded-lg transition-colors"
-            >
-              <PlusCircle className="w-4 h-4" />
-              <span>Create your first appointment</span>
-            </Link>
+          <div className="bg-white/5 backdrop-blur-sm rounded-xl border border-white/10 p-6 text-center">
+            <p>No appointments scheduled for today.</p>
           </div>
         )}
       </section>
