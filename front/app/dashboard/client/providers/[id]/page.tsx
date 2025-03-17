@@ -38,9 +38,14 @@ export default function ProviderDetailPage({
   const [provider, setProvider] = useState<OwnerWithServices | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [hasAttemptedFetch, setHasAttemptedFetch] = useState(false);
 
   useEffect(() => {
+    if (hasAttemptedFetch) return;
+
     const fetchProvider = async () => {
+      setHasAttemptedFetch(true);
+
       try {
         setIsLoading(true);
         console.log("Fetching provider data for ID:", params.id);
@@ -58,7 +63,7 @@ export default function ProviderDetailPage({
     if (params.id) {
       fetchProvider();
     }
-  }, [params.id]);
+  }, [params.id, hasAttemptedFetch]);
 
   const getInitials = (firstName?: string, lastName?: string) => {
     return `${firstName?.charAt(0) || ""}${
@@ -99,6 +104,29 @@ export default function ProviderDetailPage({
         <ArrowLeft className="mr-2 h-4 w-4" />
         Back to Providers
       </Button>
+
+      {!provider || !provider.id ? (
+        <Card className="bg-yellow-500/20 border-yellow-500/40 mb-6">
+          <CardHeader>
+            <CardTitle className="text-white">Warning</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-white/80">
+              Provider data is incomplete or missing. This may be due to an API
+              error.
+            </p>
+            <Button
+              className="mt-4 bg-white/10 hover:bg-white/20 text-white"
+              onClick={() => {
+                setHasAttemptedFetch(false);
+                setError(null);
+              }}
+            >
+              Retry
+            </Button>
+          </CardContent>
+        </Card>
+      ) : null}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Provider Profile Card */}
@@ -209,25 +237,31 @@ export default function ProviderDetailPage({
 
             <TabsContent value="services" className="mt-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {provider?.services && provider.services.length > 0 ? (
+                {provider?.services &&
+                Array.isArray(provider.services) &&
+                provider.services.length > 0 ? (
                   provider.services.map((service: Service) => (
                     <Card
-                      key={service.id}
+                      key={service.id || `service-${Math.random()}`}
                       className="bg-gradient-to-br from-white/5 to-white/3 border-white/10 hover:border-[#9f6eff]/40 transition-all duration-300"
                     >
                       <CardHeader className="pb-2">
                         <div className="flex justify-between items-start">
                           <CardTitle className="text-lg text-white">
-                            {service.service_name}
+                            {service.service_name || "Unnamed Service"}
                           </CardTitle>
                           <div className="flex items-center text-white font-medium">
                             <DollarSign className="h-4 w-4 text-[#9f6eff]" />
-                            {service.price?.toFixed(2)}
+                            {typeof service.price === "number"
+                              ? service.price.toFixed(2)
+                              : "0.00"}
                           </div>
                         </div>
                       </CardHeader>
                       <CardContent>
-                        <p className="text-white/70">{service.service_desc}</p>
+                        <p className="text-white/70">
+                          {service.service_desc || "No description available."}
+                        </p>
                         <div className="mt-4">
                           <Button
                             variant="outline"

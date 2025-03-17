@@ -103,97 +103,153 @@ export const useAuth = (): UseAuthReturn => {
 
   // Load user on mount if token exists
   useEffect(() => {
-    const loadUser = async () => {
-      if (isAuthenticated()) {
-        try {
-          setIsLoading(true);
-          const type = getUserType();
-          console.log("useAuth - User type from token:", type);
-          setUserType(type);
+    // Flag to track if the component is still mounted
+    let isMounted = true;
 
-          // Always set a minimal user from localStorage first as a fallback
-          const localStorageUser = getUserFromLocalStorage(type);
-          if (localStorageUser) {
-            console.log(
-              "Setting initial user data from localStorage:",
-              localStorageUser
-            );
-            setUser(localStorageUser);
-            setIsLoggedIn(true);
+    const loadUser = async () => {
+      if (!isAuthenticated()) {
+        setIsLoading(false);
+        return;
+      }
+
+      try {
+        setIsLoading(true);
+        const type = getUserType();
+        console.log("useAuth - User type from token:", type);
+        if (isMounted) setUserType(type);
+
+        // Always set a minimal user from localStorage first as a fallback
+        const localStorageUser = getUserFromLocalStorage(type);
+        if (localStorageUser && isMounted) {
+          console.log(
+            "Setting initial user data from localStorage:",
+            localStorageUser
+          );
+          setUser(localStorageUser);
+          setIsLoggedIn(true);
+        }
+
+        let userData;
+        try {
+          if (type === "owner") {
+            console.log("useAuth - Attempting to load owner data");
+            userData = await getCurrentOwner();
+            // Force log the complete response to see what's coming back
+            console.log("OWNER API RESPONSE (raw):", userData);
+
+            // Make sure we store key user data in localStorage for fallback
+            if (userData && userData.id) {
+              localStorage.setItem("ID", userData.id);
+              if (userData.name) localStorage.setItem("name", userData.name);
+              if (userData.email) localStorage.setItem("email", userData.email);
+            }
+          } else {
+            console.log("useAuth - Attempting to load client data");
+            userData = await getCurrentClient();
+            // Force log the complete response to see what's coming back
+            console.log("CLIENT API RESPONSE (raw):", userData);
+
+            // Log all keys to debug
+            console.log("CLIENT DATA KEYS:", Object.keys(userData || {}));
+
+            // Make sure we store key user data in localStorage for fallback
+            if (userData && userData.id) {
+              localStorage.setItem("ID", userData.id);
+
+              // Enhanced name handling for client
+              let name = "";
+
+              // Try to get name from different property formats
+              if (userData.name && userData.name !== "Client User") {
+                name = userData.name;
+                console.log("Using name from userData.name:", name);
+              } else if (
+                (userData as any).firstname ||
+                (userData as any).lastname
+              ) {
+                name = `${(userData as any).firstname || ""} ${
+                  (userData as any).lastname || ""
+                }`.trim();
+                console.log(
+                  "Using constructed name from firstname/lastname:",
+                  name
+                );
+
+                // Set the name property on the userData object
+                userData.name = name;
+              } else {
+                // Last resort fallback
+                name = localStorage.getItem("name") || "Client";
+                console.log("Using fallback name from localStorage:", name);
+                userData.name = name;
+              }
+
+              // Always save to localStorage
+              if (name && name !== "Client User") {
+                localStorage.setItem("name", name);
+              }
+
+              // Handle email
+              if (userData.email) {
+                localStorage.setItem("email", userData.email);
+              } else if ((userData as any).email) {
+                userData.email = (userData as any).email;
+                localStorage.setItem("email", userData.email);
+              }
+
+              console.log("Final userData after normalization:", userData);
+            }
           }
 
-          let userData;
-          try {
-            if (type === "owner") {
-              console.log("useAuth - Attempting to load owner data");
-              userData = await getCurrentOwner();
-              // Force log the complete response to see what's coming back
-              console.log("OWNER API RESPONSE (raw):", userData);
+          if (!userData || typeof userData !== "object") {
+            console.error("useAuth - userData not valid:", userData);
+            // Fall back to localStorage, which we've already done above
+            return;
+          }
 
-              // Make sure we store key user data in localStorage for fallback
-              if (userData && userData.id) {
-                localStorage.setItem("ID", userData.id);
-                if (userData.name) localStorage.setItem("name", userData.name);
-                if (userData.email)
-                  localStorage.setItem("email", userData.email);
-              }
-            } else {
-              console.log("useAuth - Attempting to load client data");
-              userData = await getCurrentClient();
-              // Force log the complete response to see what's coming back
-              console.log("CLIENT API RESPONSE (raw):", userData);
+          // Check if the API response has a name property - add one if missing
+          if (!userData.name && userData.id) {
+            console.log(
+              "API response missing name property - adding from localStorage"
+            );
+            userData.name = localStorage.getItem("name") || "User";
+          }
 
-              // Make sure we store key user data in localStorage for fallback
-              if (userData && userData.id) {
-                localStorage.setItem("ID", userData.id);
-                if (userData.name) localStorage.setItem("name", userData.name);
-                if (userData.email)
-                  localStorage.setItem("email", userData.email);
-              }
-            }
-
-            if (!userData || typeof userData !== "object") {
-              console.error("useAuth - userData not valid:", userData);
-              // Fall back to localStorage, which we've already done above
-              return;
-            }
-
-            // Check if the API response has a name property - add one if missing
-            if (!userData.name && userData.id) {
-              console.log(
-                "API response missing name property - adding from localStorage"
-              );
-              userData.name = localStorage.getItem("name") || "User";
-            }
-
-            // Ensure we're setting valid user data
+          // Ensure we're setting valid user data and only update if component is still mounted
+          if (isMounted) {
             console.log("useAuth - Setting user data from API:", userData);
             setUser(userData);
             setIsLoggedIn(true);
-          } catch (userError: any) {
-            console.error("useAuth - Error loading user data:", userError);
-            // We already set the localStorage user above, so we're good
           }
-        } catch (err: any) {
-          console.error("Failed to load user:", err);
-          // If token is invalid, clear it
-          if (err.status === 401) {
-            localStorage.removeItem("auth_token");
-            localStorage.removeItem("ID");
-            localStorage.removeItem("user_type");
-            localStorage.removeItem("email");
-            localStorage.removeItem("name");
-          }
-        } finally {
+        } catch (userError: any) {
+          console.error("useAuth - Error loading user data:", userError);
+          // We already set the localStorage user above, so we're good
+        }
+      } catch (err: any) {
+        console.error("Failed to load user:", err);
+        // If token is invalid, clear it
+        if (err.status === 401) {
+          localStorage.removeItem("auth_token");
+          localStorage.removeItem("ID");
+          localStorage.removeItem("user_type");
+          localStorage.removeItem("email");
+          localStorage.removeItem("name");
+        }
+      } finally {
+        // Only update state if the component is still mounted
+        if (isMounted) {
           setIsLoading(false);
         }
-      } else {
-        setIsLoading(false);
       }
     };
 
     loadUser();
-  }, []);
+
+    // Cleanup function to handle unmounting
+    return () => {
+      isMounted = false;
+    };
+  }, []); // Empty dependency array to run only on mount
 
   const login = useCallback(
     async (credentials: LoginRequest) => {

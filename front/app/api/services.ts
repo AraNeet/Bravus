@@ -92,27 +92,61 @@ export type { Service, ServiceRequest };
  */
 export const getUserServices = async (userId: string): Promise<Service[]> => {
   try {
+    console.log(`Fetching services for user ID: ${userId}`);
+
     // First try the proper endpoint
     const response = await get<any>(`/owner/get-owner/${userId}`);
+    console.log("getUserServices response:", JSON.stringify(response, null, 2));
 
     // Try different possible response structures
-    if (response.services) {
+    if (response.services && Array.isArray(response.services)) {
+      console.log(
+        `Found ${response.services.length} services in response.services`
+      );
       return normalizeServices(response.services, userId);
-    } else if (response.owner && response.owner.services) {
+    } else if (
+      response.owner &&
+      response.owner.services &&
+      Array.isArray(response.owner.services)
+    ) {
+      console.log(
+        `Found ${response.owner.services.length} services in response.owner.services`
+      );
       return normalizeServices(response.owner.services, userId);
     } else if (Array.isArray(response)) {
+      console.log(`Response is an array with ${response.length} items`);
       return normalizeServices(response, userId);
     }
 
-    // If we got a response but couldn't find services, log and return empty array
+    // If we got a response but couldn't find services, log and try direct Services endpoint
+    console.log(
+      "Could not find services in primary response, trying Services endpoint"
+    );
+    try {
+      const servicesResponse = await get<any>(`/services/owner/${userId}`);
+      if (Array.isArray(servicesResponse)) {
+        console.log(
+          `Found ${servicesResponse.length} services from direct services endpoint`
+        );
+        return normalizeServices(servicesResponse, userId);
+      }
+    } catch (servicesError) {
+      console.log("Failed to fetch from Services endpoint:", servicesError);
+    }
+
+    // If we got a response but still couldn't find services, log and return empty array
     console.log("Received response but no services found:", response);
     return [];
   } catch (error) {
     console.error("Error fetching services:", error);
     // Fallback to getting the owner data
     try {
+      console.log(`Trying fallback endpoint: /owner/${userId}`);
       const ownerData = await get<any>(`/owner/${userId}`);
-      if (ownerData.services) {
+      console.log("Fallback owner data:", JSON.stringify(ownerData, null, 2));
+
+      if (ownerData.services && Array.isArray(ownerData.services)) {
+        console.log(`Found ${ownerData.services.length} services in fallback`);
         return normalizeServices(ownerData.services, userId);
       }
       return [];
@@ -128,32 +162,39 @@ export const getUserServices = async (userId: string): Promise<Service[]> => {
  */
 function normalizeServices(services: any[], ownerId: string): Service[] {
   if (!Array.isArray(services)) {
-    console.error("Expected services array, got:", services);
+    console.warn("Expected services array, got:", typeof services);
     return [];
   }
 
-  return services.map((service) => {
-    // Create a normalized service object
-    const normalizedService: Service = {
+  return services.map((service: any) => {
+    // Handle different cases of service structure
+    const normalized: Service = {
       id:
         service.id ||
         service.ID ||
-        `service-${Math.random().toString(36).substr(2, 9)}`,
+        `mock-${Math.random().toString(36).substring(2, 9)}`,
       service_name:
-        service.service_name || service["service-name"] || "Unnamed Service",
+        service.service_name ||
+        service.ServiceName ||
+        service["service-name"] ||
+        "Unnamed Service",
       service_desc:
-        service.service_desc || service["service-desc"] || "No description",
+        service.service_desc ||
+        service.ServiceDesc ||
+        service["service-desc"] ||
+        "",
       price:
         typeof service.price === "number"
           ? service.price
-          : parseFloat(service.price || "0"),
-      duration:
-        typeof service.duration === "number"
-          ? service.duration
-          : parseInt(service.duration || "60", 10),
-      owner_id: service.owner_id || service.ownerId || ownerId,
+          : typeof service.Price === "number"
+          ? service.Price
+          : parseFloat(service.price || service.Price || "0"),
+      duration: service.duration || service.Duration || 60,
+      owner_id:
+        service.owner_id || service.OwnerID || service.ownerID || ownerId,
     };
 
-    return normalizedService;
+    console.log("Normalized service:", normalized);
+    return normalized;
   });
 }

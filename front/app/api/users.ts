@@ -213,21 +213,80 @@ export const deleteOwner = async (ownerId: string): Promise<void> => {
  * from the owner's appointments.
  */
 export const getUserWithAllData = async (userId: string): Promise<any> => {
-  // First determine if the user is an owner or client
+  if (!userId) {
+    console.error("getUserWithAllData called with empty userId");
+    throw new Error("Invalid user ID");
+  }
+
   try {
-    // First try as owner
-    const ownerData = await getOwnerById(userId);
-    return {
-      ...ownerData,
-      appointments: ownerData.appointments || [],
-      services: ownerData.services || [],
-    };
+    // Direct API call to get owner by ID without going through getOwnerById
+    const response = await get<any>(`/owner/get-owner/${userId}`);
+
+    // Handle both response formats - either owner object directly or wrapped in an "owner" property
+    const owner = response.owner ? response.owner : response;
+
+    if (owner && owner.id) {
+      // It's an owner, normalize the data
+      return {
+        id: owner.id,
+        name:
+          owner.name ||
+          `${owner.firstname || ""} ${owner.lastname || ""}`.trim(),
+        email: owner.email,
+        phone: owner.phone,
+        location: owner.location || "",
+        bio: owner.bio || "",
+        firstname: owner.firstname || owner.name?.split(" ")[0] || "",
+        lastname:
+          owner.lastname || owner.name?.split(" ").slice(1).join(" ") || "",
+        career: owner.career || owner.Career || "",
+        services: Array.isArray(owner.services)
+          ? owner.services.map((service: any) => ({
+              id: service.id,
+              service_name:
+                service.service_name ||
+                service["service-name"] ||
+                "Unnamed Service",
+              service_desc:
+                service.service_desc || service["service-desc"] || "",
+              price:
+                typeof service.price === "number"
+                  ? service.price
+                  : parseFloat(service.price || "0"),
+              duration: service.duration || 60,
+              owner_id: service.owner_id || owner.id,
+            }))
+          : [],
+        rating: owner.rating || owner.averageRating || 0,
+        reviewCount:
+          owner.reviewCount || (owner.reviews ? owner.reviews.length : 0),
+        appointments: owner.appointments || [],
+      };
+    }
+
+    // If not an owner or owner fetch failed, try as client
+    try {
+      const clientResponse = await get<any>(`/client/get-client/${userId}`);
+      const client = clientResponse.client
+        ? clientResponse.client
+        : clientResponse;
+
+      if (client && client.id) {
+        return {
+          id: client.id,
+          name: client.name || "",
+          email: client.email || "",
+          phone: client.phone || "",
+          appointments: client.appointments || [],
+        };
+      }
+    } catch (clientError) {
+      console.error("Error fetching client data:", clientError);
+    }
+
+    throw new Error("User not found");
   } catch (error) {
-    // If not an owner, try as client
-    const clientData = await getClientById(userId);
-    return {
-      ...clientData,
-      appointments: clientData.appointments || [],
-    };
+    console.error(`Error in getUserWithAllData for ${userId}:`, error);
+    throw error;
   }
 };

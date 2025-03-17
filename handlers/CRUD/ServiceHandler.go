@@ -204,3 +204,49 @@ func DeleteService(c *fiber.Ctx) error {
 
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{"message": "Service deleted successfully"})
 }
+
+// GetServicesByOwner retrieves all services for a specific owner
+func GetServicesByOwner(c *fiber.Ctx) error {
+	ownerID := c.Params("id")
+	if ownerID == "" {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Owner ID is required"})
+	}
+
+	parsedOwnerID, err := uuid.Parse(ownerID)
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid owner ID format"})
+	}
+
+	db := c.Locals("db").(*gorm.DB)
+	var services []models.Service
+
+	if err := db.Where("owner_id = ?", parsedOwnerID).Find(&services).Error; err != nil {
+		fmt.Println("Error fetching services for owner:", err)
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error":   "Failed to retrieve services",
+			"details": err.Error(),
+		})
+	}
+
+	// If no services found, return empty array instead of error
+	if len(services) == 0 {
+		fmt.Printf("No services found for owner ID: %s\n", ownerID)
+		return c.Status(fiber.StatusOK).JSON([]interface{}{})
+	}
+
+	// Serialize services
+	serializedServices := make([]Struct.ServiceSerializer, len(services))
+	for i, service := range services {
+		serializedServices[i] = Struct.ServiceSerializer{
+			ID:          service.ID,
+			ServiceName: service.ServiceName,
+			ServiceDesc: service.ServiceDesc,
+			Price:       service.Price,
+			Duration:    service.Duration,
+			OwnerID:     service.OwnerID,
+		}
+	}
+
+	fmt.Printf("Returning %d services for owner ID: %s\n", len(serializedServices), ownerID)
+	return c.Status(fiber.StatusOK).JSON(serializedServices)
+}

@@ -30,6 +30,7 @@ export default function DashboardLayout({
   const pathname = usePathname();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isSidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [showDebug, setShowDebug] = useState(false);
 
   // Check localStorage for sidebar state on component mount
   useEffect(() => {
@@ -79,6 +80,12 @@ export default function DashboardLayout({
   // Get user data from either full profile or auth response
   const userData = user || authUser;
 
+  // Debug log to see what data we're getting
+  console.log("Dashboard Layout - userData:", userData);
+  console.log("Dashboard Layout - user object:", user);
+  console.log("Dashboard Layout - authUser object:", authUser);
+  console.log("Dashboard Layout - email in userData:", userData?.email);
+
   // If no user data, redirect to login (should be handled by useEffect, but just in case)
   if (!userData) {
     router.push("/login");
@@ -92,16 +99,19 @@ export default function DashboardLayout({
   // Function to get user initials
   const getUserInitials = () => {
     if (userData && userData.name) {
-      return userData.name
-        .split(" ")
-        .map((part) => part.charAt(0))
-        .join("");
+      const parts = userData.name.split(" ");
+      const firstInitial = parts[0] ? parts[0].charAt(0) : "";
+      const lastInitial =
+        parts.length > 1 ? parts[parts.length - 1].charAt(0) : "";
+      return `${firstInitial}${lastInitial}`.toUpperCase();
     }
 
     // Fallback for older data format
     const userObj = userData as Record<string, any>;
     if (userObj.firstname && userObj.lastname) {
-      return `${userObj.firstname.charAt(0)}${userObj.lastname.charAt(0)}`;
+      return `${userObj.firstname.charAt(0)}${userObj.lastname.charAt(
+        0
+      )}`.toUpperCase();
     }
 
     return "";
@@ -109,11 +119,21 @@ export default function DashboardLayout({
 
   // Function to get user display name
   const getUserDisplayName = () => {
-    if (userData && userData.name) {
+    // Add console log to debug the userData
+    console.log("getUserDisplayName userData:", userData);
+
+    // Check for name property
+    if (userData && userData.name && userData.name !== "Client User") {
       return userData.name;
     }
 
-    // Fallback for older data format
+    // Check for localStorage value
+    const storedName = localStorage.getItem("name");
+    if (storedName && storedName !== "Client User") {
+      return storedName;
+    }
+
+    // Access as Record to check for alternative properties
     const userObj = userData as Record<string, any>;
     if (userObj.firstname && userObj.lastname) {
       return `${userObj.firstname} ${userObj.lastname}`;
@@ -130,6 +150,22 @@ export default function DashboardLayout({
     }
 
     return isOwner ? "Provider" : "Client";
+  };
+
+  // Function to get user email
+  const getUserEmail = () => {
+    // Directly try to access the email from userData
+    if (userData && userData.email) {
+      return userData.email;
+    }
+
+    // Try to get it from localStorage as fallback
+    const storedEmail = localStorage.getItem("email");
+    if (storedEmail) {
+      return storedEmail;
+    }
+
+    return "No email provided";
   };
 
   // Navigation links based on user type
@@ -184,8 +220,38 @@ export default function DashboardLayout({
         },
       ];
 
+  // Add debug information component
+  const DebugInfo = () => (
+    <div className="fixed bottom-4 right-4 z-50 bg-black/80 text-white text-xs p-4 rounded-lg max-w-md overflow-auto max-h-96">
+      <div className="flex justify-between items-center mb-2">
+        <h3 className="font-bold">Debug Information</h3>
+        <button
+          onClick={() => setShowDebug(false)}
+          className="text-white/70 hover:text-white"
+        >
+          ×
+        </button>
+      </div>
+      <div>
+        <p className="mb-1 font-bold">User Data:</p>
+        <pre className="whitespace-pre-wrap overflow-auto">
+          {JSON.stringify(userData, null, 2)}
+        </pre>
+        <p className="mt-2 mb-1 font-bold">LocalStorage:</p>
+        <ul>
+          <li>ID: {localStorage.getItem("ID") || "not set"}</li>
+          <li>name: {localStorage.getItem("name") || "not set"}</li>
+          <li>email: {localStorage.getItem("email") || "not set"}</li>
+          <li>user_type: {localStorage.getItem("user_type") || "not set"}</li>
+        </ul>
+      </div>
+    </div>
+  );
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#1a0b2e] to-[#2c1250] text-white">
+      {showDebug && <DebugInfo />}
+
       {/* Header */}
       <header className="bg-black/20 backdrop-blur-sm border-b border-white/10 sticky top-0 z-10">
         <div className="container mx-auto px-1/2 py-4">
@@ -231,7 +297,7 @@ export default function DashboardLayout({
                 </div>
                 <div className="hidden md:block">
                   <p className="font-medium">{getUserDisplayName()}</p>
-                  <p className="text-sm text-white/60">{getUserRole()}</p>
+                  <p className="text-sm text-white/60">{getUserEmail()}</p>
                 </div>
               </div>
               <button
@@ -263,6 +329,18 @@ export default function DashboardLayout({
                   <X className="w-5 h-5 text-white/70" />
                 </button>
               </div>
+
+              {/* User profile in mobile menu */}
+              <div className="flex items-center gap-3 p-3 mb-4 bg-black/20 rounded-lg">
+                <div className="w-10 h-10 rounded-full bg-[#9f6eff]/20 flex items-center justify-center">
+                  {getUserInitials()}
+                </div>
+                <div>
+                  <p className="font-medium">{getUserDisplayName()}</p>
+                  <p className="text-sm text-white/60">{getUserEmail()}</p>
+                </div>
+              </div>
+
               <nav className="space-y-2">
                 {navLinks.map((link) => (
                   <Link
@@ -315,7 +393,16 @@ export default function DashboardLayout({
         </aside>
 
         {/* Main Content */}
-        <main className="flex-1 p-6 overflow-auto">{children}</main>
+        <main className="flex-1 p-6 overflow-auto">
+          {/* Debug button */}
+          <button
+            onClick={() => setShowDebug(!showDebug)}
+            className="fixed bottom-4 right-4 z-40 bg-[#9f6eff]/70 hover:bg-[#9f6eff] text-white p-2 rounded-full"
+          >
+            🐞
+          </button>
+          {children}
+        </main>
       </div>
     </div>
   );

@@ -14,6 +14,7 @@ func ServiceRoutes(app *fiber.App) {
 	service.Get("/get-service", middleware.AuthMiddleware(), CRUD.GetService)
 	service.Put("/update", middleware.AuthMiddleware(), CRUD.UpdateService)
 	service.Delete("/delete", middleware.AuthMiddleware(), CRUD.DeleteService)
+	service.Get("/owner/:id", middleware.AuthMiddleware(), CRUD.GetServicesByOwner)
 
 	// Public routes (no authentication required)
 	service.Post("/create-no-auth", CRUD.CreateService)

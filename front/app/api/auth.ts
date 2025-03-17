@@ -343,7 +343,49 @@ export const getCurrentClient = async (): Promise<Client> => {
   }
 
   // Get client profile with all related data
-  return await get<Client>(`/client/get-client/${userId}`);
+  try {
+    const clientData = await get<any>(`/client/get-client/${userId}`);
+    console.log("Raw client data from API:", clientData);
+
+    // Normalize the response to match our Client interface
+    const normalizedClient: Client = {
+      id: clientData.id || userId,
+      name:
+        clientData.name || (clientData.firstname && clientData.lastname)
+          ? `${clientData.firstname} ${clientData.lastname}`.trim()
+          : localStorage.getItem("name") || "Client",
+      email: clientData.email || localStorage.getItem("email") || "",
+      phone: clientData.phone || "",
+      location: clientData.location || "",
+      animals: Array.isArray(clientData.animals) ? clientData.animals : [],
+      appointments: Array.isArray(clientData.appointments)
+        ? clientData.appointments
+        : [],
+    };
+
+    // Save important data to localStorage for fallback
+    localStorage.setItem("name", normalizedClient.name);
+    localStorage.setItem("email", normalizedClient.email);
+
+    console.log("Normalized client data:", normalizedClient);
+    return normalizedClient;
+  } catch (error) {
+    console.error("Error fetching client data:", error);
+
+    // Return minimal client from localStorage as fallback
+    const fallbackClient: Client = {
+      id: userId,
+      name: localStorage.getItem("name") || "Client",
+      email: localStorage.getItem("email") || "",
+      phone: "",
+      location: "",
+      animals: [],
+      appointments: [],
+    };
+
+    console.log("Using fallback client data:", fallbackClient);
+    return fallbackClient;
+  }
 };
 
 /**

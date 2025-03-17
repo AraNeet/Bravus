@@ -3,19 +3,95 @@
 import Link from "next/link";
 import { Clock, ChevronRight, PlusCircle, Heart } from "lucide-react";
 import { useAuth } from "@/app/hooks/useAuth";
+import { useState } from "react";
+import { Client, Appointment } from "@/app/api/types";
 
 export default function ClientDashboard() {
   const { user } = useAuth();
+  const [showDebug, setShowDebug] = useState(false);
+
+  // Assert type as Client since we're in client dashboard
+  const clientUser = user as Client;
+
+  console.log("Client Dashboard - User Data:", user);
+
+  // Helper function to get the user's name
+  const getUserName = () => {
+    if (user?.name && user.name !== "Client User") {
+      return user.name;
+    }
+
+    // Try from localStorage as fallback
+    const storedName = localStorage.getItem("name");
+    if (storedName && storedName !== "Client User") {
+      return storedName;
+    }
+
+    // Fallbacks for legacy data
+    if ((user as any)?.firstname || (user as any)?.lastname) {
+      return `${(user as any)?.firstname || ""} ${
+        (user as any)?.lastname || ""
+      }`.trim();
+    }
+
+    return "Client";
+  };
 
   return (
     <>
+      {/* Debug overlay - only shown when showDebug is true */}
+      {showDebug && (
+        <div className="fixed inset-0 bg-black/70 z-50 p-4 overflow-auto">
+          <div className="bg-[#1a0b2e] border border-white/20 rounded-lg p-4 max-w-2xl mx-auto my-10 text-xs">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-lg font-bold">Debug Information</h2>
+              <button
+                onClick={() => setShowDebug(false)}
+                className="bg-white/10 hover:bg-white/20 rounded-full p-2"
+              >
+                Close
+              </button>
+            </div>
+            <div className="space-y-4">
+              <div>
+                <h3 className="font-bold mb-1">User Object:</h3>
+                <pre className="bg-black/50 p-2 rounded overflow-auto">
+                  {JSON.stringify(user, null, 2)}
+                </pre>
+              </div>
+              <div>
+                <h3 className="font-bold mb-1">LocalStorage:</h3>
+                <ul className="bg-black/50 p-2 rounded">
+                  <li>ID: {localStorage.getItem("ID") || "not set"}</li>
+                  <li>name: {localStorage.getItem("name") || "not set"}</li>
+                  <li>email: {localStorage.getItem("email") || "not set"}</li>
+                  <li>
+                    user_type: {localStorage.getItem("user_type") || "not set"}
+                  </li>
+                </ul>
+              </div>
+              <div>
+                <h3 className="font-bold mb-1">Returned Name:</h3>
+                <p className="bg-black/50 p-2 rounded">{getUserName()}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Welcome Section */}
       <section className="mb-10">
-        <h1 className="text-3xl font-bold mb-2">
-          Welcome, {user?.firstname || "Client"}!
-        </h1>
+        <h1 className="text-3xl font-bold mb-2">Welcome, {getUserName()}!</h1>
         <p className="text-white/70">Manage your appointments and animals</p>
       </section>
+
+      {/* Debug toggle button */}
+      <button
+        onClick={() => setShowDebug(!showDebug)}
+        className="fixed top-20 right-4 bg-[#9f6eff]/40 hover:bg-[#9f6eff] text-white p-1 rounded text-xs z-40"
+      >
+        Toggle Debug
+      </button>
 
       {/* Quick Stats */}
       <section className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
@@ -27,7 +103,7 @@ export default function ClientDashboard() {
             <div>
               <h2 className="font-medium">My Appointments</h2>
               <p className="text-2xl font-bold">
-                {user?.appointments?.length || 0}
+                {clientUser?.appointments?.length || 0}
               </p>
             </div>
           </div>
@@ -47,7 +123,9 @@ export default function ClientDashboard() {
             </div>
             <div>
               <h2 className="font-medium">My Animals</h2>
-              <p className="text-2xl font-bold">{user?.animals?.length || 0}</p>
+              <p className="text-2xl font-bold">
+                {clientUser?.animals?.length || 0}
+              </p>
             </div>
           </div>
           <Link
@@ -73,7 +151,7 @@ export default function ClientDashboard() {
           </Link>
         </div>
 
-        {user?.appointments && user.appointments.length > 0 ? (
+        {clientUser?.appointments && clientUser.appointments.length > 0 ? (
           <div className="bg-white/5 backdrop-blur-sm rounded-xl border border-white/10 overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full">
@@ -95,21 +173,21 @@ export default function ClientDashboard() {
                 </thead>
                 <tbody>
                   {/* Filter upcoming appointments */}
-                  {user.appointments
-                    .filter((appointment) => {
+                  {clientUser.appointments
+                    .filter((appointment: Appointment) => {
                       const now = new Date();
                       const appointmentDate = new Date(appointment.datetime);
                       return appointmentDate > now;
                     })
                     .sort(
-                      (a, b) =>
+                      (a: Appointment, b: Appointment) =>
                         new Date(a.datetime).getTime() -
                         new Date(b.datetime).getTime()
                     )
                     .slice(0, 5)
-                    .map((appointment) => (
+                    .map((appointment: Appointment) => (
                       <tr
-                        key={appointment.ID}
+                        key={appointment.id}
                         className="border-b border-white/5 hover:bg-white/5"
                       >
                         <td className="px-6 py-4 whitespace-nowrap text-sm">
@@ -121,10 +199,11 @@ export default function ClientDashboard() {
                           })}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm">
-                          {/* Find service name by ID */}
-                          {user.services?.find(
-                            (s) => s.id === appointment.service
-                          )?.["service-name"] || appointment.service}
+                          {/* Use the first service in the services array */}
+                          {appointment.services &&
+                          appointment.services.length > 0
+                            ? appointment.services[0].service_name
+                            : "Unknown Service"}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm">
                           <span className="px-2 py-1 rounded-full bg-green-500/20 text-green-400 text-xs">
@@ -134,7 +213,7 @@ export default function ClientDashboard() {
                         <td className="px-6 py-4 whitespace-nowrap text-sm">
                           <div className="flex items-center gap-2">
                             <Link
-                              href={`/dashboard/client/appointments/${appointment.ID}`}
+                              href={`/dashboard/client/appointments/${appointment.id}`}
                               className="text-[#9f6eff] hover:text-[#8b4ff7]"
                             >
                               View
@@ -143,7 +222,7 @@ export default function ClientDashboard() {
                               className="text-[#9f6eff] hover:text-[#8b4ff7]"
                               onClick={() => {
                                 // Handle cancellation logic here
-                                alert(`Cancel appointment ${appointment.ID}`);
+                                alert(`Cancel appointment ${appointment.id}`);
                               }}
                             >
                               Cancel
@@ -154,7 +233,7 @@ export default function ClientDashboard() {
                     ))}
 
                   {/* If no upcoming appointments, show message */}
-                  {user.appointments.filter((appointment) => {
+                  {clientUser.appointments.filter((appointment) => {
                     const now = new Date();
                     const appointmentDate = new Date(appointment.datetime);
                     return appointmentDate > now;

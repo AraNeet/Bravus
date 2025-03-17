@@ -74,7 +74,12 @@ export default function ServicesPage() {
 
         // Fetch services directly from API
         let userServices: Service[] = [];
+        let fetchSuccess = false;
+
         try {
+          console.log(
+            `Attempting to fetch services via getUserServices(${userId})...`
+          );
           const result = await getUserServices(userId);
           console.log("Fetched services:", result);
           console.log(
@@ -92,12 +97,12 @@ export default function ServicesPage() {
 
           // Ensure we have an array
           userServices = Array.isArray(result) ? result : [];
+          fetchSuccess = userServices.length > 0;
 
           if (userServices.length === 0) {
-            toast("No services found", {
-              description:
-                "You haven't created any services yet. Use the Add Service button to create your first service.",
-            });
+            console.log(
+              "No services found in first attempt, trying direct API endpoints..."
+            );
           }
 
           if (!Array.isArray(result)) {
@@ -105,19 +110,84 @@ export default function ServicesPage() {
           }
         } catch (apiError) {
           console.error("Error fetching services from API:", apiError);
-          toast.error(
-            "Failed to load services from API. Trying fallback method..."
-          );
+          toast.error("Retrying with alternative endpoints...");
+        }
 
-          // Fallback: If user data has services property
-          if (
-            userData &&
-            "services" in userData &&
-            Array.isArray(userData.services)
-          ) {
+        // If first method failed, try alternative methods
+        if (!fetchSuccess) {
+          try {
+            console.log("Trying direct endpoint: /service/owner/" + userId);
+            const response = await fetch(
+              `/api/proxy?url=/service/owner/${userId}`,
+              {
+                headers: {
+                  Authorization: `Bearer ${localStorage.getItem("token")}`,
+                },
+              }
+            );
+
+            if (response.ok) {
+              const result = await response.json();
+              console.log("Direct service API result:", result);
+
+              if (Array.isArray(result) && result.length > 0) {
+                userServices = result.map((service: any) => ({
+                  id: service.ID || service.id,
+                  service_name:
+                    service.ServiceName ||
+                    service.service_name ||
+                    "Unnamed Service",
+                  service_desc:
+                    service.ServiceDesc || service.service_desc || "",
+                  price:
+                    typeof service.Price === "number"
+                      ? service.Price
+                      : typeof service.price === "number"
+                      ? service.price
+                      : 0,
+                  duration: service.Duration || service.duration || 60,
+                  owner_id: service.OwnerID || service.owner_id || userId,
+                }));
+                fetchSuccess = true;
+                console.log(
+                  "Successfully fetched services from direct endpoint:",
+                  userServices
+                );
+              }
+            }
+          } catch (directError) {
+            console.error("Error with direct endpoint:", directError);
+          }
+        }
+
+        // Fallback: If user data has services property
+        if (!fetchSuccess && userData) {
+          if ("services" in userData && Array.isArray(userData.services)) {
             userServices = userData.services;
             console.log("Using services from user data:", userServices);
+            fetchSuccess = true;
+          } else {
+            console.log("User data structure:", userData);
+            // Try to find services nested in the user object
+            for (const key in userData) {
+              if (key === "services" || key === "Services") {
+                const services = (userData as any)[key];
+                if (Array.isArray(services)) {
+                  userServices = services;
+                  console.log(`Found services in userData.${key}:`, services);
+                  fetchSuccess = true;
+                  break;
+                }
+              }
+            }
           }
+        }
+
+        if (userServices.length === 0) {
+          toast("No services found", {
+            description:
+              "You haven't created any services yet. Use the Add Service button to create your first service.",
+          });
         }
 
         setServices(userServices || []);

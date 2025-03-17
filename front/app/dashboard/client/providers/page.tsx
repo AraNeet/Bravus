@@ -108,51 +108,10 @@ export default function ProvidersPage() {
     fetchProviders();
   }, []);
 
+  // Filter providers based on search and filters - this was causing an infinite loop
   useEffect(() => {
-    // Filter providers based on search query and selected service
-    const filtered = providers.filter((provider) => {
-      const matchesSearch =
-        searchQuery === "" ||
-        provider.firstname?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        provider.lastname?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        provider.services?.some(
-          (service: Service) =>
-            service.service_name
-              .toLowerCase()
-              .includes(searchQuery.toLowerCase()) ||
-            service.service_desc
-              .toLowerCase()
-              .includes(searchQuery.toLowerCase())
-        );
-
-      const matchesService =
-        selectedService === "all" ||
-        provider.services?.some(
-          (service: Service) => service.service_name === selectedService
-        );
-
-      return matchesSearch && matchesService;
-    });
-
-    setProviders(filtered);
-  }, [searchQuery, selectedService, providers]);
-
-  // Get unique services from all providers
-  useEffect(() => {
-    if (allProviders.length) {
-      const services = new Set();
-      allProviders.forEach((provider) => {
-        provider.services?.forEach((service: Service) => {
-          services.add(service.service_name);
-        });
-      });
-      setAvailableServices(Array.from(services) as string[]);
-    }
-  }, [allProviders]);
-
-  // Apply filters for sorting
-  useEffect(() => {
-    if (allProviders.length) {
+    // Only run this effect if we have providers loaded
+    if (allProviders.length > 0) {
       let filtered = [...allProviders];
 
       // Apply sorting based on selected filter
@@ -210,6 +169,19 @@ export default function ProvidersPage() {
     selectedService,
     selectedServices,
   ]);
+
+  // Get unique services from all providers
+  useEffect(() => {
+    if (allProviders.length) {
+      const services = new Set();
+      allProviders.forEach((provider) => {
+        provider.services?.forEach((service: Service) => {
+          services.add(service.service_name);
+        });
+      });
+      setAvailableServices(Array.from(services) as string[]);
+    }
+  }, [allProviders]);
 
   const getInitials = (firstName?: string, lastName?: string) => {
     return `${firstName?.charAt(0) || ""}${

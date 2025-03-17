@@ -12,6 +12,7 @@ export default function UserProfileCircle() {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const [debugMode, setDebugMode] = useState<boolean>(true);
+  const [dataProcessed, setDataProcessed] = useState<boolean>(false);
 
   // Use these values directly for rendering to avoid type issues
   const [userInitials, setUserInitials] = useState<string>("?");
@@ -63,7 +64,8 @@ export default function UserProfileCircle() {
       // If we don't have a valid user but have an ID in localStorage, try to fetch directly
       if (
         (!processedUser || !processedUser.name) &&
-        localStorage.getItem("ID")
+        localStorage.getItem("ID") &&
+        !dataProcessed // Only fetch if we haven't already processed the data
       ) {
         console.log("Attempting to fetch user data directly from API");
         processedUser = await fetchUserData();
@@ -104,9 +106,17 @@ export default function UserProfileCircle() {
         initials = email.charAt(0).toUpperCase();
       }
       setUserInitials(initials);
+
+      // Mark data as processed to prevent unnecessary re-fetching
+      setDataProcessed(true);
     };
 
     processUserData();
+  }, [user, userType, dataProcessed]);
+
+  // Reset the dataProcessed flag when user or userType changes
+  useEffect(() => {
+    setDataProcessed(false);
   }, [user, userType]);
 
   // Handle click outside to close dropdown
