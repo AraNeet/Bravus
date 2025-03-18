@@ -283,7 +283,7 @@ export default function DashboardLayout({
                   key={link.href}
                   href={link.href}
                   className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium ${
-                    pathname === link.href || pathname.startsWith(`${link.href}/`)
+                    pathname === link.href
                       ? "bg-spink/20 text-spink"
                       : "text-white/70 hover:bg-white/5 hover:text-white"
                   }`}
@@ -372,12 +372,12 @@ export default function DashboardLayout({
                     key={link.href}
                     href={link.href}
                     className={`group flex items-center gap-3 rounded-lg ${isSidebarCollapsed ? "justify-center p-3" : "px-3 py-2.5"} text-sm font-medium ${
-                      pathname === link.href || pathname.startsWith(`${link.href}/`)
+                      pathname === link.href
                         ? "bg-spink/20 text-spink"
                         : "text-white/70 hover:bg-white/5 hover:text-white"
                     }`}
                   >
-                    <span className={pathname === link.href || pathname.startsWith(`${link.href}/`) 
+                    <span className={pathname === link.href
                       ? "text-spink" 
                       : "text-white/70 group-hover:text-white"
                     }>

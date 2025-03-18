@@ -87,6 +87,63 @@ export default function ClientAppointmentsPage() {
     }
   };
 
+  // Format date to a friendly string
+  function formatAppointmentDate(datetime: string): string {
+    const date = new Date(datetime);
+    
+    // Add 4 hours to the time
+    date.setHours(date.getHours());
+    
+    // Use UTC methods to ensure consistent rendering
+    const today = new Date();
+    today.setUTCHours(0, 0, 0, 0);
+    
+    const tomorrow = new Date(today);
+    tomorrow.setUTCDate(tomorrow.getUTCDate() + 1);
+    
+    const isToday = date >= today && date < tomorrow;
+    const isTomorrow = date >= tomorrow && date < new Date(tomorrow.getTime() + 86400000);
+    
+    const options: Intl.DateTimeFormatOptions = {
+      hour: "2-digit",
+      minute: "2-digit",
+      timeZone: 'UTC' // Use UTC to ensure consistent rendering
+    };
+    
+    let dateString = "";
+    
+    if (isToday) {
+      dateString = "Today";
+    } else if (isTomorrow) {
+      dateString = "Tomorrow";
+    } else {
+      dateString = date.toLocaleDateString(undefined, {
+        weekday: "short",
+        month: "short", 
+        day: "numeric",
+        timeZone: 'UTC' // Use UTC to ensure consistent rendering
+      });
+    }
+    
+    return `${dateString} at ${date.toLocaleTimeString([], options)}`;
+  }
+
+  // Helper function to determine appointment status
+  function getAppointmentStatus(appointment: Appointment): string {
+    const appointmentDate = new Date(appointment.datetime);
+    const now = new Date();
+    
+    // Add 4 hours to match the display time
+    appointmentDate.setHours(appointmentDate.getHours() + 4);
+    
+    // Simple status logic based on date
+    if (appointmentDate > now) {
+      return "upcoming";
+    } else {
+      return "past";
+    }
+  }
+
   // Filter appointments based on search, status, and date
   const filteredAppointments = appointments.filter((appointment) => {
     // Search filter - check if service name matches search query
@@ -97,9 +154,13 @@ export default function ClientAppointmentsPage() {
     // Status filter
     let statusMatch = statusFilter === "all";
     if (statusFilter === "upcoming") {
-      statusMatch = new Date(appointment.datetime) > new Date();
+      const appointmentDate = new Date(appointment.datetime);
+      appointmentDate.setHours(appointmentDate.getHours() + 4);
+      statusMatch = appointmentDate > new Date();
     } else if (statusFilter === "past") {
-      statusMatch = new Date(appointment.datetime) < new Date();
+      const appointmentDate = new Date(appointment.datetime);
+      appointmentDate.setHours(appointmentDate.getHours() + 4);
+      statusMatch = appointmentDate < new Date();
     } else if (statusFilter !== "all") {
       statusMatch = getAppointmentStatus(appointment) === statusFilter;
     }
@@ -107,17 +168,19 @@ export default function ClientAppointmentsPage() {
     // Date filter
     let dateMatch = dateFilter === "all";
     const appointmentDate = new Date(appointment.datetime);
+    appointmentDate.setHours(appointmentDate.getHours() + 4);
+    
     const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    today.setUTCHours(0, 0, 0, 0);
     
     const tomorrow = new Date(today);
-    tomorrow.setDate(tomorrow.getDate() + 1);
+    tomorrow.setUTCDate(tomorrow.getUTCDate() + 1);
     
     const weekFromNow = new Date(today);
-    weekFromNow.setDate(weekFromNow.getDate() + 7);
+    weekFromNow.setUTCDate(weekFromNow.getUTCDate() + 7);
     
     const monthFromNow = new Date(today);
-    monthFromNow.setMonth(monthFromNow.getMonth() + 1);
+    monthFromNow.setUTCMonth(monthFromNow.getUTCMonth() + 1);
 
     if (dateFilter === "today") {
       dateMatch = appointmentDate >= today && appointmentDate < tomorrow;
@@ -142,22 +205,6 @@ export default function ClientAppointmentsPage() {
     currentPage * appointmentsPerPage
   );
 
-  // Helper function to determine appointment status
-  function getAppointmentStatus(appointment: Appointment): string {
-    const appointmentDate = new Date(appointment.datetime);
-    const now = new Date();
-    
-    // Simple status logic based on date
-    if (appointmentDate > now) {
-      return "upcoming";
-    } else {
-      return "past";
-    }
-    
-    // TODO: In the future, this could be expanded to include "cancelled", "completed", etc.
-    // if there's a status field in the appointment data
-  }
-
   // Helper function to find service by ID - update to handle the new service structure
   function getServiceName(appointment: Appointment): string {
     if (appointment.services && appointment.services.length > 0) {
@@ -167,40 +214,6 @@ export default function ClientAppointmentsPage() {
     
     // Fallback for old structure or missing data
     return "Unknown Service";
-  }
-
-  // Format date to a friendly string
-  function formatAppointmentDate(datetime: string): string {
-    const date = new Date(datetime);
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    
-    const tomorrow = new Date(today);
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    
-    const isToday = date >= today && date < tomorrow;
-    const isTomorrow = date >= tomorrow && date < new Date(tomorrow.getTime() + 86400000);
-    
-    const options: Intl.DateTimeFormatOptions = {
-      hour: "2-digit",
-      minute: "2-digit",
-    };
-    
-    let dateString = "";
-    
-    if (isToday) {
-      dateString = "Today";
-    } else if (isTomorrow) {
-      dateString = "Tomorrow";
-    } else {
-      dateString = date.toLocaleDateString(undefined, {
-        weekday: "short",
-        month: "short", 
-        day: "numeric"
-      });
-    }
-    
-    return `${dateString} at ${date.toLocaleTimeString([], options)}`;
   }
 
   // Add dependency on refreshing state

@@ -99,9 +99,12 @@ export function getDateForInput(date: Date): string {
  * Get time in HH:mm format for input fields
  */
 export function getTimeForInput(date: Date): string {
-  const hours = String(date.getHours()).padStart(2, "0");
-  const minutes = String(date.getMinutes()).padStart(2, "0");
-
+  // Subtract 4 hours from the date to get the correct time for the backend
+  const adjustedDate = new Date(date);
+  adjustedDate.setHours(adjustedDate.getHours() - 4);
+  
+  const hours = adjustedDate.getHours().toString().padStart(2, '0');
+  const minutes = adjustedDate.getMinutes().toString().padStart(2, '0');
   return `${hours}:${minutes}`;
 }
 
@@ -109,7 +112,17 @@ export function getTimeForInput(date: Date): string {
  * Combine date and time strings into the standard format
  */
 export function combineDateAndTime(dateStr: string, timeStr: string): string {
-  return `${dateStr} ${timeStr}`;
+  // Parse the time string (HH:mm format)
+  const [hours, minutes] = timeStr.split(':').map(Number);
+  
+  // Create a new date object from the date string
+  const date = new Date(dateStr);
+  
+  // Set the time (subtract 4 hours to match backend time)
+  date.setHours(hours - 4, minutes);
+  
+  // Format the date-time string
+  return formatDateToStandard(date);
 }
 
 /**
@@ -159,9 +172,23 @@ export function formatTimeForDisplay(date: Date): string {
 /**
  * Format time string (HH:mm) for display
  */
-export function formatTimeStringForDisplay(time: string): string {
-  const [hour, minute] = time.split(":").map(Number);
-  const period = hour >= 12 ? "PM" : "AM";
-  const displayHour = hour % 12 || 12;
-  return `${displayHour}:${String(minute).padStart(2, "0")} ${period}`;
+export function formatTimeStringForDisplay(timeString: string): string {
+  if (!timeString) return "";
+  
+  // Parse the time string (HH:mm format)
+  const [hours, minutes] = timeString.split(':').map(Number);
+  
+  // Add 4 hours to the time
+  let adjustedHours = hours + 4;
+  
+  // Handle cases where adding 4 hours goes past midnight
+  if (adjustedHours >= 24) {
+    adjustedHours -= 24;
+  }
+  
+  // Format the time with AM/PM
+  const period = adjustedHours >= 12 ? 'PM' : 'AM';
+  const displayHours = adjustedHours % 12 || 12; // Convert 24h to 12h format
+  
+  return `${displayHours}:${minutes.toString().padStart(2, '0')} ${period}`;
 }
