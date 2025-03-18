@@ -2,25 +2,28 @@
 
 import React, { useState } from "react";
 import {
-  Calendar,
   Eye,
   EyeOff,
-  ArrowRight,
   ArrowLeft,
-  Check,
   Plus,
   Trash,
   User,
   Briefcase,
-  PawPrint,
+  Phone,
+  MapPin,
+  Mail,
+  ShoppingBag,
+  Users,
 } from "lucide-react";
 import Link from "next/link";
 import { useAuth } from "../hooks/useAuth";
 import { post, put } from "../api/http";
+import Image from "next/image";
 
 export default function SignupPage() {
   const [step, setStep] = useState(1);
   const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [formData, setFormData] = useState({
     // Step 1
     name: "",
@@ -152,6 +155,14 @@ export default function SignupPage() {
       ...prev,
       animals: updatedAnimals,
     }));
+  };
+
+  // Handle user type change (owner or client)
+  const handleUserTypeChange = (isOwner: boolean) => {
+    setFormData({
+      ...formData,
+      owner: isOwner
+    });
   };
 
   // Go to the next step and create the user account
@@ -373,88 +384,81 @@ export default function SignupPage() {
   };
 
   return (
-    <main className="min-h-screen bg-gradient-to-b from-[#1a0b2e] to-[#2c1250] text-white flex flex-col">
-      {/* Header */}
-      <header className="w-full py-4 bg-black/20 backdrop-blur-sm">
-        <section className="container mx-auto px-6">
-          <nav className="flex justify-between items-center">
-            <Link href="/" className="flex items-center gap-2 group">
-              <figure className="bg-white/10 p-1.5 rounded-lg group-hover:bg-white/20 transition-colors">
-                <Calendar className="w-5 h-5 text-[#9f6eff]" />
-              </figure>
-              <span className="text-xl font-bold bg-gradient-to-r from-[#9f6eff] to-[#c061f7] text-transparent bg-clip-text">
-                Bravus
-              </span>
-            </Link>
-          </nav>
-        </section>
-      </header>
-
-      {/* Background effects */}
-      <section className="absolute inset-0 pointer-events-none overflow-hidden">
-        <span className="absolute top-1/4 left-1/4 w-96 h-96 bg-[#9f6eff] rounded-full opacity-10 blur-3xl" />
-        <span className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-[#c061f7] rounded-full opacity-10 blur-3xl" />
-      </section>
+    <main className="min-h-screen relative bg-navy flex justify-center items-center px-4 py-10 overflow-hidden">
+      {/* Background Image */}
+      <div className="absolute inset-0 w-full h-full z-0">
+        <Image
+          src="/images/signup-bg.svg"
+          alt="Background"
+          fill
+          priority
+          className="object-cover opacity-75"
+        />
+      </div>
+      
+      {/* Stars Animation */}
+      <div className="absolute inset-0 overflow-hidden">
+        <div className="stars-container">
+          {Array.from({ length: 20 }).map((_, i) => (
+            <div
+              key={i}
+              className={`star star-${i % 5}`}
+            />
+          ))}
+              </div>
+              </div>
+      
+      <div className="container max-w-6xl mx-auto flex relative z-10">
+        {/* Left Content - Only shows on larger screens */}
+        <div className="hidden lg:flex lg:w-1/2 flex-col justify-center pr-8">
+          <h1 className="text-4xl xl:text-5xl font-bold text-white mb-4">
+            Begin Your <span className="text-spink">Journey</span> With Us
+            </h1>
+          <p className="text-white/70 text-lg max-w-lg">
+            Create your account and unlock a world of possibilities for your pet care business or find the perfect services for your beloved pets.
+          </p>
+        </div>
 
       {/* Signup Form */}
-      <section className="flex-1 flex items-center justify-center p-4 relative z-10 py-12">
-        <article className="w-full max-w-lg bg-white/5 backdrop-blur-md rounded-2xl border border-white/10 p-8 shadow-xl">
-          <header className="text-center mb-8">
-            <div className="flex items-center justify-center gap-3 mb-4">
-              <div
-                className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                  step === 1 ? "bg-[#9f6eff]/80" : "bg-white/10"
-                }`}
-              >
-                <User className="w-5 h-5" />
+        <div className="w-full lg:w-1/2 max-w-md mx-auto">
+          <div className="bg-navy/75 backdrop-blur-lg rounded-2xl shadow-xl border border-spink/20 p-6 animate-fadeIn">
+            {/* Mobile Header - Only visible on smaller screens */}
+            <div className="lg:hidden mb-6 text-center">
+              <h1 className="text-2xl font-bold text-white">
+                Join <span className="text-spink">Bravus</span>
+              </h1>
+              <p className="text-white/70 mt-1">Create your account</p>
               </div>
-              <div className="h-0.5 w-8 bg-white/20"></div>
-              <div
-                className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                  step === 2 ? "bg-[#9f6eff]/80" : "bg-white/10"
-                }`}
-              >
-                {formData.owner ? (
-                  <Briefcase className="w-5 h-5" />
-                ) : (
-                  <PawPrint className="w-5 h-5" />
-                )}
+            
+            {/* Steps Indicator */}
+            <div className="flex justify-between items-center mb-6">
+              <div className="flex items-center">
+                <div className={`h-8 w-8 rounded-full flex items-center justify-center text-xs font-medium ${step >= 1 ? 'bg-spink text-navy' : 'bg-navy/50 text-white/70 border border-spink/30'}`}>
+                  1
+              </div>
+                <div className={`h-0.5 w-8 ${step === 2 ? 'bg-spink' : 'bg-navy/50'}`}></div>
+                <div className={`h-8 w-8 rounded-full flex items-center justify-center text-xs font-medium ${step === 2 ? 'bg-spink text-navy' : 'bg-navy/50 text-white/70 border border-spink/30'}`}>
+                  2
+            </div>
+              </div>
+              <div className="text-sm text-white/70">
+                {step === 1 ? 'Account Details' : formData.owner ? 'Business Details' : 'Pet Information'}
               </div>
             </div>
-            <h1 className="text-3xl font-bold mb-2 bg-gradient-to-r from-[#9f6eff] to-[#c061f7] text-transparent bg-clip-text">
-              {step === 1
-                ? "Create Account"
-                : formData.owner
-                ? "Business Details"
-                : "Your Pets"}
-            </h1>
-            <p className="text-white/60">
-              {step === 1
-                ? "Join Bravus to manage your business"
-                : step === 2 && formData.owner
-                ? "Tell us about your services"
-                : "Add your pets (required)"}
-            </p>
-          </header>
 
           {formError && (
-            <div className="mb-6 p-4 bg-red-500/20 border border-red-500/50 rounded-lg text-white text-sm">
-              {formError}
+              <div className="bg-mred/20 border border-mred/40 text-white rounded-lg p-3 mb-4">
+                <p className="text-sm">{formError}</p>
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Step 1: Basic Information */}
+            <form onSubmit={handleSubmit} className="space-y-4">
+              {/* Step 1: Account Creation */}
             {step === 1 && (
-              <fieldset className="space-y-4">
-                {/* Name Field */}
-                <div>
-                  <label
-                    htmlFor="name"
-                    className="block text-sm font-medium text-white/80 mb-1"
-                  >
-                    Full Name <span className="text-red-400">*</span>
-                  </label>
+                <>
+                  {/* Full Name */}
+                  <div className="space-y-2 group">
+                    <div className="relative transition-all duration-300 group-hover:scale-[1.01]">
                   <input
                     id="name"
                     name="name"
@@ -462,19 +466,37 @@ export default function SignupPage() {
                     value={formData.name}
                     onChange={handleChange}
                     required
-                    placeholder="John Doe"
-                    className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#9f6eff]/50 text-white placeholder:text-white/40"
+                        placeholder="Full Name"
+                        className="w-full px-5 py-3.5 bg-navy/50 border border-spink/30 rounded-full text-white placeholder:text-white/60 pr-10 focus:outline-none focus:border-spink/60 focus:shadow-[0_0_15px_rgba(244,164,166,0.15)] transition-all duration-300"
                   />
+                      <span className="absolute right-4 top-1/2 transform -translate-y-1/2 text-white/60">
+                        <User className="w-4 h-4" />
+                      </span>
+                    </div>
                 </div>
 
-                {/* Phone Number */}
-                <div>
-                  <label
-                    htmlFor="phone"
-                    className="block text-sm font-medium text-white/80 mb-1"
-                  >
-                    Phone Number <span className="text-red-400">*</span>
-                  </label>
+                  {/* Email */}
+                  <div className="space-y-2 group">
+                    <div className="relative transition-all duration-300 group-hover:scale-[1.01]">
+                      <input
+                        id="email"
+                        name="email"
+                        type="email"
+                        value={formData.email}
+                        onChange={handleChange}
+                        required
+                        placeholder="Email Address"
+                        className="w-full px-5 py-3.5 bg-navy/50 border border-spink/30 rounded-full text-white placeholder:text-white/60 pr-10 focus:outline-none focus:border-spink/60 focus:shadow-[0_0_15px_rgba(244,164,166,0.15)] transition-all duration-300"
+                      />
+                      <span className="absolute right-4 top-1/2 transform -translate-y-1/2 text-white/60">
+                        <Mail className="w-4 h-4" />
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Phone */}
+                  <div className="space-y-2 group">
+                    <div className="relative transition-all duration-300 group-hover:scale-[1.01]">
                   <input
                     id="phone"
                     name="phone"
@@ -482,19 +504,18 @@ export default function SignupPage() {
                     value={formData.phone}
                     onChange={handleChange}
                     required
-                    placeholder="(123) 456-7890"
-                    className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#9f6eff]/50 text-white placeholder:text-white/40"
+                        placeholder="Phone Number"
+                        className="w-full px-5 py-3.5 bg-navy/50 border border-spink/30 rounded-full text-white placeholder:text-white/60 pr-10 focus:outline-none focus:border-spink/60 focus:shadow-[0_0_15px_rgba(244,164,166,0.15)] transition-all duration-300"
                   />
+                      <span className="absolute right-4 top-1/2 transform -translate-y-1/2 text-white/60">
+                        <Phone className="w-4 h-4" />
+                      </span>
+                    </div>
                 </div>
 
                 {/* Location */}
-                <div>
-                  <label
-                    htmlFor="location"
-                    className="block text-sm font-medium text-white/80 mb-1"
-                  >
-                    Location <span className="text-red-400">*</span>
-                  </label>
+                  <div className="space-y-2 group">
+                    <div className="relative transition-all duration-300 group-hover:scale-[1.01]">
                   <input
                     id="location"
                     name="location"
@@ -502,40 +523,18 @@ export default function SignupPage() {
                     value={formData.location}
                     onChange={handleChange}
                     required
-                    placeholder="New York, NY"
-                    className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#9f6eff]/50 text-white placeholder:text-white/40"
+                        placeholder="Location/Address"
+                        className="w-full px-5 py-3.5 bg-navy/50 border border-spink/30 rounded-full text-white placeholder:text-white/60 pr-10 focus:outline-none focus:border-spink/60 focus:shadow-[0_0_15px_rgba(244,164,166,0.15)] transition-all duration-300"
                   />
+                      <span className="absolute right-4 top-1/2 transform -translate-y-1/2 text-white/60">
+                        <MapPin className="w-4 h-4" />
+                      </span>
                 </div>
-
-                {/* Email */}
-                <div>
-                  <label
-                    htmlFor="email"
-                    className="block text-sm font-medium text-white/80 mb-1"
-                  >
-                    Email <span className="text-red-400">*</span>
-                  </label>
-                  <input
-                    id="email"
-                    name="email"
-                    type="email"
-                    value={formData.email}
-                    onChange={handleChange}
-                    required
-                    placeholder="your@email.com"
-                    className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#9f6eff]/50 text-white placeholder:text-white/40"
-                  />
                 </div>
 
                 {/* Password */}
-                <div>
-                  <label
-                    htmlFor="password"
-                    className="block text-sm font-medium text-white/80 mb-1"
-                  >
-                    Password <span className="text-red-400">*</span>
-                  </label>
-                  <div className="relative">
+                  <div className="space-y-2 group">
+                    <div className="relative transition-all duration-300 group-hover:scale-[1.01]">
                     <input
                       id="password"
                       name="password"
@@ -543,259 +542,229 @@ export default function SignupPage() {
                       value={formData.password}
                       onChange={handleChange}
                       required
-                      placeholder="••••••••"
-                      className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#9f6eff]/50 text-white placeholder:text-white/40"
+                        placeholder="Password"
+                        className="w-full px-5 py-3.5 bg-navy/50 border border-spink/30 rounded-full text-white placeholder:text-white/60 pr-10 focus:outline-none focus:border-spink/60 focus:shadow-[0_0_15px_rgba(244,164,166,0.15)] transition-all duration-300"
                     />
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-white/60 hover:text-white"
-                      aria-label={
-                        showPassword ? "Hide password" : "Show password"
-                      }
-                    >
-                      {showPassword ? (
-                        <EyeOff className="w-5 h-5" />
-                      ) : (
-                        <Eye className="w-5 h-5" />
-                      )}
+                        className="absolute right-4 top-1/2 transform -translate-y-1/2 text-white/60 hover:text-white transition-colors"
+                      >
+                        {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                     </button>
                   </div>
-
-                  {/* Password strength indicator */}
-                  {formData.password && (
-                    <div className="mt-2">
-                      <div className="flex gap-1 mb-1">
-                        {[...Array(4)].map((_, i) => (
-                          <span
-                            key={i}
-                            className={`h-1 flex-1 rounded-full ${
-                              i < passwordStrength
-                                ? passwordStrength === 1
-                                  ? "bg-red-500"
-                                  : passwordStrength === 2
-                                  ? "bg-yellow-500"
-                                  : passwordStrength === 3
-                                  ? "bg-green-400"
-                                  : "bg-green-500"
-                                : "bg-white/10"
-                            }`}
-                          />
-                        ))}
-                      </div>
-                      <p className="text-xs text-white/60">
-                        {passwordStrength === 0 &&
-                          "Use 8+ characters with letters, numbers & symbols"}
-                        {passwordStrength === 1 &&
-                          "Weak - Add uppercase, numbers or symbols"}
-                        {passwordStrength === 2 && "Fair - Add more variety"}
-                        {passwordStrength === 3 && "Good - Almost there"}
-                        {passwordStrength === 4 && "Strong password"}
-                      </p>
-                    </div>
-                  )}
                 </div>
 
                 {/* Confirm Password */}
-                <div>
-                  <label
-                    htmlFor="confirmPassword"
-                    className="block text-sm font-medium text-white/80 mb-1"
-                  >
-                    Confirm Password <span className="text-red-400">*</span>
-                  </label>
-                  <div className="relative">
+                  <div className="space-y-2 group">
+                    <div className="relative transition-all duration-300 group-hover:scale-[1.01]">
                     <input
                       id="confirmPassword"
                       name="confirmPassword"
-                      type={showPassword ? "text" : "password"}
+                        type={showConfirmPassword ? "text" : "password"}
                       value={formData.confirmPassword}
                       onChange={handleChange}
                       required
-                      placeholder="••••••••"
-                      className={`w-full px-4 py-3 bg-white/5 border ${
-                        formData.confirmPassword
-                          ? passwordMatch
-                            ? "border-green-500/50"
-                            : "border-red-500/50"
-                          : "border-white/10"
-                      } rounded-lg focus:outline-none focus:ring-2 focus:ring-[#9f6eff]/50 text-white placeholder:text-white/40`}
+                        placeholder="Confirm Password"
+                        className={`w-full px-5 py-3.5 bg-navy/50 border rounded-full text-white placeholder:text-white/60 pr-10 focus:outline-none focus:shadow-[0_0_15px_rgba(244,164,166,0.15)] transition-all duration-300 ${
+                          formData.password && formData.confirmPassword && !passwordMatch
+                            ? "border-mred/60 focus:border-mred"
+                            : "border-spink/30 focus:border-spink/60"
+                        }`}
                     />
                     <button
                       type="button"
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-white/60 hover:text-white"
-                      aria-label={
-                        showPassword ? "Hide password" : "Show password"
-                      }
-                    >
-                      {showPassword ? (
-                        <EyeOff className="w-5 h-5" />
-                      ) : (
-                        <Eye className="w-5 h-5" />
-                      )}
+                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                        className="absolute right-4 top-1/2 transform -translate-y-1/2 text-white/60 hover:text-white transition-colors"
+                      >
+                        {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                     </button>
-
-                    {formData.confirmPassword && passwordMatch && (
-                      <Check className="absolute right-10 top-1/2 -translate-y-1/2 text-green-500 w-5 h-5" />
-                    )}
                   </div>
-
-                  {formData.confirmPassword && !passwordMatch && (
-                    <p className="mt-1 text-xs text-red-400">
-                      Passwords don't match
-                    </p>
+                    {formData.password && formData.confirmPassword && !passwordMatch && (
+                      <p className="text-mred text-sm animate-shake">Passwords do not match!</p>
                   )}
                 </div>
 
-                {/* Owner Checkbox */}
-                <div className="flex items-center bg-white/5 p-3 rounded-lg border border-white/10">
-                  <input
-                    id="owner"
-                    name="owner"
-                    type="checkbox"
-                    checked={formData.owner}
-                    onChange={handleChange}
-                    className="h-4 w-4 rounded border-white/20 bg-white/5 text-[#9f6eff] focus:ring-[#9f6eff]/50"
-                  />
-                  <label
-                    htmlFor="owner"
-                    className="ml-2 block text-sm text-white/80"
-                  >
-                    I am a business owner
-                  </label>
+                  {/* User Type */}
+                  <div className="pt-1 pb-1">
+                    <h3 className="text-white text-sm mb-2">I want to:</h3>
+                    <div className="grid grid-cols-2 gap-3">
+                      <button
+                        type="button"
+                        onClick={() => handleUserTypeChange(true)}
+                        className={`flex flex-col items-center gap-2 p-3 rounded-xl border transition-all ${
+                          formData.owner
+                            ? "border-spink bg-spink/10"
+                            : "border-white/10 bg-navy/50 hover:bg-navy/70"
+                        }`}
+                      >
+                        <ShoppingBag className={`w-5 h-5 ${formData.owner ? "text-spink" : "text-white/70"}`} />
+                        <span className={formData.owner ? "text-white" : "text-white/70"}>
+                          Offer Services
+                        </span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleUserTypeChange(false)}
+                        className={`flex flex-col items-center gap-2 p-3 rounded-xl border transition-all ${
+                          !formData.owner
+                            ? "border-spink bg-spink/10"
+                            : "border-white/10 bg-navy/50 hover:bg-navy/70"
+                        }`}
+                      >
+                        <Users className={`w-5 h-5 ${!formData.owner ? "text-spink" : "text-white/70"}`} />
+                        <span className={!formData.owner ? "text-white" : "text-white/70"}>
+                          Book Services
+                        </span>
+                      </button>
+                    </div>
                 </div>
 
-                {/* Terms and Conditions */}
-                <div className="flex items-center">
+                  {/* Terms & Conditions */}
+                  <div className="flex items-start gap-2 my-2">
                   <input
-                    id="agreeToTerms"
-                    name="agreeToTerms"
                     type="checkbox"
+                      id="terms"
+                      name="agreeToTerms"
                     checked={formData.agreeToTerms}
-                    onChange={handleChange}
+                      onChange={(e) => setFormData({
+                        ...formData,
+                        agreeToTerms: e.target.checked,
+                      })}
                     required
-                    className="h-4 w-4 rounded border-white/20 bg-white/5 text-[#9f6eff] focus:ring-[#9f6eff]/50"
+                      className="mt-1 h-4 w-4 rounded border-spink/30 bg-navy/50 text-spink focus:ring-spink/50"
                   />
-                  <label
-                    htmlFor="agreeToTerms"
-                    className="ml-2 block text-sm text-white/80"
-                  >
+                    <label htmlFor="terms" className="text-sm text-white/70">
                     I agree to the{" "}
-                    <Link
-                      href="/terms"
-                      className="text-[#9f6eff] hover:text-[#c061f7] transition-colors"
+                      <a
+                        href="#"
+                        className="text-spink hover:text-spink/80 transition-colors underline"
                     >
                       Terms of Service
-                    </Link>{" "}
+                      </a>{" "}
                     and{" "}
-                    <Link
-                      href="/privacy"
-                      className="text-[#9f6eff] hover:text-[#c061f7] transition-colors"
+                      <a
+                        href="#"
+                        className="text-spink hover:text-spink/80 transition-colors underline"
                     >
                       Privacy Policy
-                    </Link>
+                      </a>
                   </label>
                 </div>
-              </fieldset>
-            )}
 
-            {/* Step 2: Owner Details (Career & Services) */}
-            {step === 2 && formData.owner && (
-              <fieldset className="space-y-6">
-                {/* Career Field */}
-                <div>
-                  <label
-                    htmlFor="career"
-                    className="block text-sm font-medium text-white/80 mb-1"
+                  {/* Continue Button (Step 1 only) */}
+                  <button
+                    type="button"
+                    onClick={goToNextStep}
+                    disabled={
+                      creatingAccount ||
+                      !formData.name ||
+                      !formData.email ||
+                      !formData.phone ||
+                      !formData.location ||
+                      !formData.password ||
+                      !formData.confirmPassword ||
+                      !passwordMatch ||
+                      !formData.agreeToTerms
+                    }
+                    className="w-full bg-spink hover:bg-mred text-navy font-medium py-3.5 rounded-full transition-all duration-300 shadow-lg shadow-spink/20 hover:shadow-spink/30 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed mt-2"
                   >
-                    Career <span className="text-red-400">*</span>
-                  </label>
-                  <select
+                    {creatingAccount ? (
+                      <span className="flex items-center justify-center gap-2">
+                        <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
+                          <circle
+                            className="opacity-25"
+                            cx="12"
+                            cy="12"
+                            r="10"
+                            stroke="currentColor"
+                            strokeWidth="4"
+                          ></circle>
+                          <path
+                            className="opacity-75"
+                            fill="currentColor"
+                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                          ></path>
+                        </svg>
+                        Creating Account...
+                      </span>
+                    ) : (
+                      "Continue"
+                    )}
+                  </button>
+                </>
+              )}
+
+              {/* Step 2: Account Type Specific Fields */}
+            {step === 2 && formData.owner && (
+                <>
+                {/* Career Field */}
+                  <div className="space-y-2 group">
+                    <div className="relative transition-all duration-300 group-hover:scale-[1.01]">
+                      <input
                     id="career"
                     name="career"
+                        type="text"
                     value={formData.career}
                     onChange={handleChange}
                     required
-                    className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#9f6eff]/50 text-white"
-                  >
-                    <option value="" className="bg-[#1a0b2e]">
-                      Select a career
-                    </option>
-                    <option value="Business Owner" className="bg-[#1a0b2e]">
-                      Business Owner
-                    </option>
-                    <option value="Manager" className="bg-[#1a0b2e]">
-                      Manager
-                    </option>
-                    <option value="Stylist" className="bg-[#1a0b2e]">
-                      Stylist
-                    </option>
-                    <option value="Technician" className="bg-[#1a0b2e]">
-                      Technician
-                    </option>
-                    <option value="Receptionist" className="bg-[#1a0b2e]">
-                      Receptionist
-                    </option>
-                    <option value="Groomer" className="bg-[#1a0b2e]">
-                      Groomer
-                    </option>
-                    <option value="Other" className="bg-[#1a0b2e]">
-                      Other
-                    </option>
-                  </select>
+                        placeholder="Your Career/Profession"
+                        className="w-full px-5 py-3.5 bg-navy/50 border border-spink/30 rounded-full text-white placeholder:text-white/60 pr-10 focus:outline-none focus:border-spink/60 focus:shadow-[0_0_15px_rgba(244,164,166,0.15)] transition-all duration-300"
+                      />
+                      <span className="absolute right-4 top-1/2 transform -translate-y-1/2 text-white/60">
+                        <Briefcase className="w-4 h-4" />
+                      </span>
+                    </div>
                 </div>
 
-                {/* Services Section */}
-                <div>
-                  <div className="flex items-center justify-between mb-2">
-                    <label className="block text-sm font-medium text-white/80">
-                      Your Services <span className="text-red-400">*</span>
-                    </label>
-                    <p className="text-xs text-white/60">
-                      Add at least 2 services
-                    </p>
+                  {/* Services */}
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-lg font-medium text-white">Services</h3>
+                      <button
+                        type="button"
+                        onClick={addServiceField}
+                        className="flex items-center gap-1 text-spink hover:text-spink/80 text-sm"
+                      >
+                        <Plus className="w-4 h-4" /> Add Service
+                      </button>
                   </div>
 
                   {formData.services.map((service, index) => (
                     <div
                       key={index}
-                      className="mb-4 p-4 bg-white/5 rounded-lg border border-white/10"
-                    >
-                      <div className="flex justify-between items-center mb-2">
-                        <h3 className="font-medium">Service #{index + 1}</h3>
+                        className="p-4 bg-navy/40 rounded-xl border border-spink/20"
+                      >
+                        <div className="flex justify-between items-center mb-3">
+                          <h4 className="font-medium text-white">
+                            Service #{index + 1}
+                          </h4>
                         {formData.services.length > 1 && (
                           <button
                             type="button"
                             onClick={() => removeServiceField(index)}
-                            className="p-1 rounded-full hover:bg-white/10"
+                              className="text-mred hover:text-red-400 transition-colors"
+                              aria-label="Remove service"
                           >
-                            <Trash className="w-4 h-4 text-red-400" />
+                              <Trash className="w-4 h-4" />
                           </button>
                         )}
                       </div>
 
                       <div className="space-y-3">
-                        <div>
-                          <label className="block text-xs text-white/80 mb-1">
-                            Service Name <span className="text-red-400">*</span>
-                          </label>
+                          {/* Service Name */}
                           <input
                             type="text"
                             value={service.name}
                             onChange={(e) =>
                               handleServiceChange(index, "name", e.target.value)
                             }
-                            placeholder="e.g. Haircut"
+                            placeholder="Service Name"
                             required
-                            className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg focus:outline-none focus:ring-1 focus:ring-[#9f6eff]/50 text-white placeholder:text-white/40"
+                            className="w-full px-4 py-2.5 bg-navy/50 border border-spink/30 rounded-lg text-white placeholder:text-white/60 focus:outline-none focus:border-spink/60"
                           />
-                        </div>
 
-                        <div>
-                          <label className="block text-xs text-white/80 mb-1">
-                            Description <span className="text-red-400">*</span>
-                          </label>
+                          {/* Service Description */}
                           <textarea
                             value={service.description}
                             onChange={(e) =>
@@ -805,21 +774,19 @@ export default function SignupPage() {
                                 e.target.value
                               )
                             }
-                            placeholder="Describe your service"
+                            placeholder="Service Description"
                             required
                             rows={2}
-                            className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg focus:outline-none focus:ring-1 focus:ring-[#9f6eff]/50 text-white placeholder:text-white/40"
+                            className="w-full px-4 py-2.5 bg-navy/50 border border-spink/30 rounded-lg text-white placeholder:text-white/60 focus:outline-none focus:border-spink/60 resize-none"
                           />
-                        </div>
 
-                        <div>
-                          <label className="block text-xs text-white/80 mb-1">
-                            Price ($) <span className="text-red-400">*</span>
-                          </label>
+                          {/* Service Price */}
+                          <div className="relative">
+                            <span className="absolute left-4 top-1/2 transform -translate-y-1/2 text-white/60">
+                              $
+                            </span>
                           <input
                             type="number"
-                            min="0"
-                            step="0.01"
                             value={service.price}
                             onChange={(e) =>
                               handleServiceChange(
@@ -828,286 +795,161 @@ export default function SignupPage() {
                                 e.target.value
                               )
                             }
-                            placeholder="29.99"
+                              placeholder="Price"
                             required
-                            className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg focus:outline-none focus:ring-1 focus:ring-[#9f6eff]/50 text-white placeholder:text-white/40"
+                              min="0"
+                              step="0.01"
+                              className="w-full pl-8 pr-4 py-2.5 bg-navy/50 border border-spink/30 rounded-lg text-white placeholder:text-white/60 focus:outline-none focus:border-spink/60"
                           />
                         </div>
                       </div>
                     </div>
                   ))}
+                  </div>
+                </>
+              )}
 
+              {/* Step 2: Pet Information for Clients */}
+              {step === 2 && !formData.owner && (
+                <>
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-lg font-medium text-white">Your Pets</h3>
                   <button
                     type="button"
-                    onClick={addServiceField}
-                    className="w-full mt-2 flex items-center justify-center gap-2 py-2 border border-dashed border-white/20 rounded-lg hover:bg-white/5 transition-colors text-white/60 hover:text-white"
+                        onClick={addAnimalField}
+                        className="flex items-center gap-1 text-spink hover:text-spink/80 text-sm"
                   >
-                    <Plus className="w-4 h-4" />
-                    Add Another Service
+                        <Plus className="w-4 h-4" /> Add Pet
                   </button>
-                </div>
-              </fieldset>
-            )}
-
-            {/* Step 2: Client Details (Animals) */}
-            {step === 2 && !formData.owner && (
-              <fieldset className="space-y-6">
-                <div>
-                  <div className="flex items-center justify-between mb-2">
-                    <label className="block text-sm font-medium text-white/80">
-                      Your Pets <span className="text-red-400">*</span>
-                    </label>
-                    <p className="text-xs text-white/60">Add at least 1 pet</p>
                   </div>
 
                   {formData.animals.map((animal, index) => (
                     <div
                       key={index}
-                      className="mb-4 p-4 bg-white/5 rounded-lg border border-white/10"
-                    >
-                      <div className="flex justify-between items-center mb-2">
-                        <h3 className="font-medium">Pet #{index + 1}</h3>
+                        className="p-4 bg-navy/40 rounded-xl border border-spink/20"
+                      >
+                        <div className="flex justify-between items-center mb-3">
+                          <h4 className="font-medium text-white">
+                            Pet #{index + 1}
+                          </h4>
                         {formData.animals.length > 1 && (
                           <button
                             type="button"
                             onClick={() => removeAnimalField(index)}
-                            className="p-1 rounded-full hover:bg-white/10"
+                              className="text-mred hover:text-red-400 transition-colors"
+                              aria-label="Remove pet"
                           >
-                            <Trash className="w-4 h-4 text-red-400" />
+                              <Trash className="w-4 h-4" />
                           </button>
                         )}
                       </div>
 
-                      <div className="space-y-3">
-                        <div>
-                          <label className="block text-xs text-white/80 mb-1">
-                            Pet Name <span className="text-red-400">*</span>
-                          </label>
+                        <div className="grid grid-cols-2 gap-3">
+                          {/* Pet Name */}
                           <input
                             type="text"
                             value={animal.name}
                             onChange={(e) =>
                               handleAnimalChange(index, "name", e.target.value)
                             }
-                            placeholder="e.g. Max"
+                            placeholder="Pet Name"
                             required
-                            className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg focus:outline-none focus:ring-1 focus:ring-[#9f6eff]/50 text-white placeholder:text-white/40"
+                            className="w-full px-4 py-2.5 bg-navy/50 border border-spink/30 rounded-lg text-white placeholder:text-white/60 focus:outline-none focus:border-spink/60"
                           />
-                        </div>
 
-                        <div className="grid grid-cols-2 gap-3">
-                          <div>
-                            <label className="block text-xs text-white/80 mb-1">
-                              Species <span className="text-red-400">*</span>
-                            </label>
+                          {/* Pet Age */}
                             <input
-                              type="text"
-                              value={animal.species}
-                              onChange={(e) =>
-                                handleAnimalChange(
-                                  index,
-                                  "species",
-                                  e.target.value
-                                )
-                              }
-                              placeholder="e.g. Dog, Cat"
-                              required
-                              className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg focus:outline-none focus:ring-1 focus:ring-[#9f6eff]/50 text-white placeholder:text-white/40"
-                            />
-                          </div>
-
-                          <div>
-                            <label className="block text-xs text-white/80 mb-1">
-                              Breed <span className="text-red-400">*</span>
-                            </label>
-                            <input
-                              type="text"
-                              value={animal.race}
-                              onChange={(e) =>
-                                handleAnimalChange(
-                                  index,
-                                  "race",
-                                  e.target.value
-                                )
-                              }
-                              placeholder="e.g. Golden Retriever"
-                              required
-                              className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg focus:outline-none focus:ring-1 focus:ring-[#9f6eff]/50 text-white placeholder:text-white/40"
-                            />
-                          </div>
-                        </div>
-
-                        <div>
-                          <label className="block text-xs text-white/80 mb-1">
-                            Age <span className="text-red-400">*</span>
-                          </label>
-                          <input
                             type="number"
-                            min="0"
                             value={animal.age}
-                            onChange={(e) =>
+                              onChange={(e) =>
                               handleAnimalChange(index, "age", e.target.value)
                             }
-                            placeholder="e.g. 3"
+                            placeholder="Age"
+                              required
+                            min="0"
+                            className="w-full px-4 py-2.5 bg-navy/50 border border-spink/30 rounded-lg text-white placeholder:text-white/60 focus:outline-none focus:border-spink/60"
+                            />
+
+                          {/* Pet Species */}
+                            <input
+                              type="text"
+                            value={animal.species}
+                              onChange={(e) =>
+                              handleAnimalChange(index, "species", e.target.value)
+                            }
+                            placeholder="Species (e.g. Dog, Cat)"
+                              required
+                            className="w-full px-4 py-2.5 bg-navy/50 border border-spink/30 rounded-lg text-white placeholder:text-white/60 focus:outline-none focus:border-spink/60"
+                            />
+
+                          {/* Pet Race/Breed */}
+                          <input
+                            type="text"
+                            value={animal.race}
+                            onChange={(e) =>
+                              handleAnimalChange(index, "race", e.target.value)
+                            }
+                            placeholder="Breed"
                             required
-                            className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg focus:outline-none focus:ring-1 focus:ring-[#9f6eff]/50 text-white placeholder:text-white/40"
+                            className="w-full px-4 py-2.5 bg-navy/50 border border-spink/30 rounded-lg text-white placeholder:text-white/60 focus:outline-none focus:border-spink/60"
                           />
-                        </div>
                       </div>
                     </div>
                   ))}
-
-                  <button
-                    type="button"
-                    onClick={addAnimalField}
-                    className="w-full mt-2 flex items-center justify-center gap-2 py-2 border border-dashed border-white/20 rounded-lg hover:bg-white/5 transition-colors text-white/60 hover:text-white"
-                  >
-                    <Plus className="w-4 h-4" />
-                    Add Another Pet
-                  </button>
                 </div>
-              </fieldset>
+                </>
             )}
 
-            {/* Form buttons */}
-            <div className="flex gap-3">
+              {/* Back Button (Step 2 only) */}
               {step === 2 && (
+                <div className="flex mt-2 mb-2">
                 <button
                   type="button"
                   onClick={goToPrevStep}
-                  className="flex-1 flex items-center justify-center gap-2 bg-white/5 hover:bg-white/10 border border-white/10 px-6 py-3 rounded-lg text-white font-medium transition-colors"
+                    className="flex items-center gap-1 text-white/70 hover:text-white transition-colors"
                 >
-                  <ArrowLeft className="w-4 h-4" />
-                  Back
+                    <ArrowLeft className="w-4 h-4" /> Back
                 </button>
+                </div>
               )}
 
-              {step === 1 ? (
-                <button
-                  type="button"
-                  onClick={goToNextStep}
-                  disabled={
-                    creatingAccount ||
-                    !formData.name ||
-                    !formData.email ||
-                    !formData.password ||
-                    !formData.confirmPassword ||
-                    !passwordMatch ||
-                    !formData.agreeToTerms
-                  }
-                  className="flex-1 flex items-center justify-center gap-2 bg-[#9f6eff] hover:bg-[#8b4ff7] px-6 py-3 rounded-lg text-white font-medium transition-colors disabled:opacity-70 disabled:cursor-not-allowed"
-                >
-                  {creatingAccount ? (
-                    <>
-                      <svg
-                        className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
-                        xmlns="http://www.w3.org/2000/svg"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                      >
-                        <circle
-                          className="opacity-25"
-                          cx="12"
-                          cy="12"
-                          r="10"
-                          stroke="currentColor"
-                          strokeWidth="4"
-                        ></circle>
-                        <path
-                          className="opacity-75"
-                          fill="currentColor"
-                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                        ></path>
-                      </svg>
-                      Creating Account...
-                    </>
-                  ) : (
-                    <>
-                      Next Step
-                      <ArrowRight className="w-4 h-4" />
-                    </>
-                  )}
-                </button>
-              ) : (
+              {/* Submit Button (Step 2 only) */}
+              {step === 2 && (
                 <button
                   type="submit"
-                  disabled={
-                    isLoading ||
-                    (formData.owner &&
-                      (!formData.career ||
-                        formData.services.filter(
-                          (s) => s.name && s.description && s.price
-                        ).length < 2)) ||
-                    (!formData.owner &&
-                      formData.animals.filter(
-                        (a) => a.name && a.species && a.race && a.age
-                      ).length < 1)
-                  }
-                  className="flex-1 flex items-center justify-center gap-2 bg-[#9f6eff] hover:bg-[#8b4ff7] px-6 py-3 rounded-lg text-white font-medium transition-colors disabled:opacity-70 disabled:cursor-not-allowed"
+                  disabled={isLoading}
+                  className="w-full bg-spink hover:bg-mred text-navy font-medium py-3.5 rounded-full transition-all duration-300 shadow-lg shadow-spink/20 hover:shadow-spink/30 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed"
                 >
-                  {isLoading ? (
-                    <>
-                      <svg
-                        className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
-                        xmlns="http://www.w3.org/2000/svg"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                      >
-                        <circle
-                          className="opacity-25"
-                          cx="12"
-                          cy="12"
-                          r="10"
-                          stroke="currentColor"
-                          strokeWidth="4"
-                        ></circle>
-                        <path
-                          className="opacity-75"
-                          fill="currentColor"
-                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                        ></path>
-                      </svg>
-                      {createdAccount?.type === "owner"
-                        ? "Adding Services..."
-                        : "Adding Pets..."}
-                    </>
-                  ) : (
-                    <>
-                      {createdAccount?.type === "owner"
-                        ? "Add Services"
-                        : "Add Pets"}
-                      <ArrowRight className="w-4 h-4" />
-                    </>
-                  )}
+                  {isLoading ? "Processing..." : "Complete Registration"}
                 </button>
               )}
-            </div>
           </form>
 
-          <footer className="mt-8 text-center">
+            {/* Sign in link */}
+            <div className="mt-6 text-center">
             <p className="text-white/60 text-sm">
               Already have an account?{" "}
               <Link
                 href="/login"
-                className="text-[#9f6eff] hover:text-[#c061f7] transition-colors"
+                  className="text-spink hover:text-spink/80 transition-colors"
               >
-                Sign in
+                  Login
               </Link>
             </p>
-          </footer>
-        </article>
-      </section>
-
-      {/* Back to home link */}
-      <footer className="py-6 text-center">
+              <p className="text-white/60 text-sm">
+                Want to go back?{" "}
         <Link
           href="/"
-          className="inline-flex items-center gap-2 text-white/60 hover:text-white transition-colors text-sm"
+                  className="text-spink hover:text-spink/80 transition-colors"
         >
-          <ArrowLeft className="w-4 h-4" />
           Back to home
         </Link>
-      </footer>
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
     </main>
   );
 }

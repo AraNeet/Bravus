@@ -92,7 +92,7 @@ export default function Home() {
                 </Badge>
                 <h1 className="text-5xl md:text-6xl font-bold mb-6 leading-tight">
                   Elevate your<br />business.
-                </h1>
+              </h1>
                 <p className="text-lg md:text-xl text-gteal mb-8 max-w-lg">
                   Elevate your business with Bravus Tools all in one place.
                 </p>
@@ -126,7 +126,7 @@ export default function Home() {
             
             <h3 className="text-3xl font-bold max-w-2xl mx-auto mb-6">
               All at your fingertips. Simple and easy to use. Brilliant results.
-            </h3>
+                </h3>
           </div>
           
           {/* Dashboard Preview */}
@@ -226,7 +226,7 @@ export default function Home() {
             </div>
           </div>
         </section>
-        
+
         {/* Final CTA */}
         <section className="py-20 px-4">
           <div className="container mx-auto text-center max-w-3xl">

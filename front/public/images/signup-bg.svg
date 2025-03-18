@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1920" height="1080" viewBox="0 0 1920 1080" fill="none">
+  <!-- Background - darker to match reference -->
+  <rect width="1920" height="1080" fill="#0F1520" />
+  
+  <!-- Walls -->
+  <rect x="0" y="0" width="1920" height="680" fill="#111520" />
+  
+  <!-- Dark room floor - wooden planks -->
+  <g>
+    <!-- Wooden floorboards base -->
+    <rect x="0" y="680" width="1920" height="400" fill="#1A1510" />
+    
+    <!-- Floorboard lines - made more pronounced -->
+    <line x1="0" y1="720" x2="1920" y2="720" stroke="#2A2115" stroke-width="3" />
+    <line x1="0" y1="760" x2="1920" y2="760" stroke="#2A2115" stroke-width="3" />
+    <line x1="0" y1="800" x2="1920" y2="800" stroke="#2A2115" stroke-width="3" />
+    <line x1="0" y1="840" x2="1920" y2="840" stroke="#2A2115" stroke-width="3" />
+    <line x1="0" y1="880" x2="1920" y2="880" stroke="#2A2115" stroke-width="3" />
+    <line x1="0" y1="920" x2="1920" y2="920" stroke="#2A2115" stroke-width="3" />
+    <line x1="0" y1="960" x2="1920" y2="960" stroke="#2A2115" stroke-width="3" />
+    <line x1="0" y1="1000" x2="1920" y2="1000" stroke="#2A2115" stroke-width="3" />
+    <line x1="0" y1="1040" x2="1920" y2="1040" stroke="#2A2115" stroke-width="3" />
+    
+    <!-- Wood grain texture highlights -->
+    <g opacity="0.4">
+      <line x1="100" y1="720" x2="300" y2="720" stroke="#3A2A20" stroke-width="1" />
+      <line x1="450" y1="720" x2="650" y2="720" stroke="#3A2A20" stroke-width="1" />
+      <line x1="800" y1="720" x2="950" y2="720" stroke="#3A2A20" stroke-width="1" />
+      <line x1="1100" y1="720" x2="1350" y2="720" stroke="#3A2A20" stroke-width="1" />
+      <line x1="1500" y1="720" x2="1800" y2="720" stroke="#3A2A20" stroke-width="1" />
+      
+      <line x1="200" y1="760" x2="350" y2="760" stroke="#3A2A20" stroke-width="1" />
+      <line x1="500" y1="760" x2="750" y2="760" stroke="#3A2A20" stroke-width="1" />
+      <line x1="900" y1="760" x2="1050" y2="760" stroke="#3A2A20" stroke-width="1" />
+      <line x1="1200" y1="760" x2="1450" y2="760" stroke="#3A2A20" stroke-width="1" />
+      <line x1="1600" y1="760" x2="1850" y2="760" stroke="#3A2A20" stroke-width="1" />
+      
+      <!-- Similar pattern for other rows -->
+      <line x1="150" y1="800" x2="400" y2="800" stroke="#3A2A20" stroke-width="1" />
+      <line x1="550" y1="800" x2="700" y2="800" stroke="#3A2A20" stroke-width="1" />
+      <line x1="850" y1="800" x2="1100" y2="800" stroke="#3A2A20" stroke-width="1" />
+      <line x1="1250" y1="800" x2="1400" y2="800" stroke="#3A2A20" stroke-width="1" />
+      <line x1="1550" y1="800" x2="1800" y2="800" stroke="#3A2A20" stroke-width="1" />
+    </g>
+  </g>
+  
+  <!-- Door frame shadow -->
+  <rect x="800" y="200" width="320" height="700" rx="2" fill="#080808" opacity="0.8" />
+  
+  <!-- Door frame outer -->
+  <rect x="810" y="210" width="300" height="680" rx="2" fill="#151515" stroke="#252525" stroke-width="2" />
+  
+  <!-- Left door (opened) -->
+  <rect x="820" y="220" width="136" height="660" rx="2" fill="#202020" />
+  <rect x="825" y="225" width="126" height="650" rx="1" fill="#232323" stroke="#333333" stroke-width="1" />
+  
+  <!-- Door handle on left door -->
+  <circle cx="935" cy="540" r="8" fill="#333333" />
+  <circle cx="935" cy="540" r="6" fill="#444444" />
+  <circle cx="935" cy="540" r="2" fill="#333333" />
+  
+  <!-- Right door (opened wide) - slightly angled -->
+  <g opacity="0.9">
+    <rect x="960" y="220" width="140" height="660" fill="#181818" transform="skewX(-8)" />
+  </g>
+  
+  <!-- Light rays from the door - more intense-->
+  <defs>
+    <radialGradient id="lightRays" cx="0.5" cy="0.5" r="0.7" fx="0.5" fy="0.5">
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="1" />
+      <stop offset="25%" stop-color="#FFF8E8" stop-opacity="0.9" />
+      <stop offset="50%" stop-color="#FFF6E2" stop-opacity="0.7" />
+      <stop offset="75%" stop-color="#FFF3DA" stop-opacity="0.4" />
+      <stop offset="100%" stop-color="#FFF0D2" stop-opacity="0" />
+    </radialGradient>
+    
+    <mask id="doorOpeningMask">
+      <rect x="960" y="220" width="140" height="660" fill="white" />
+    </mask>
+  </defs>
+  
+  <!-- Light glow from the open door - brighter and larger -->
+  <g mask="url(#doorOpeningMask)">
+    <circle cx="960" cy="540" r="500" fill="url(#lightRays)" />
+  </g>
+  
+  <!-- Floor light beam - brighter and more pronounced -->
+  <polygon points="960,680 1300,680 1500,1080 960,1080" fill="#FFFFFF" opacity="0.25" />
+  
+  <!-- Additional floor light beams for more dramatic effect -->
+  <polygon points="960,680 1150,680 1300,1080 960,1080" fill="#FFFFFF" opacity="0.35" />
+  <polygon points="960,680 1050,680 1100,1080 960,1080" fill="#FFFFFF" opacity="0.45" />
+  
+  <!-- Central bright light source -->
+  <g opacity="0.8">
+    <circle cx="960" cy="450" r="150" fill="#FFFFFF" filter="blur(15px)" />
+  </g>
+  
+  <!-- Light haze - brighter -->
+  <g opacity="0.35">
+    <circle cx="960" cy="540" r="400" fill="#FFFFFF" filter="blur(60px)" />
+  </g>
+  
+  <!-- Dust particles in light - more dramatic -->
+  <g opacity="0.8">
+    <circle cx="980" cy="400" r="1.5" fill="#FFFFFF" />
+    <circle cx="1000" cy="450" r="1.5" fill="#FFFFFF" />
+    <circle cx="990" cy="500" r="1.5" fill="#FFFFFF" />
+    <circle cx="1020" cy="550" r="1.5" fill="#FFFFFF" />
+    <circle cx="1010" cy="600" r="1.5" fill="#FFFFFF" />
+    <circle cx="1030" cy="650" r="1.5" fill="#FFFFFF" />
+    <circle cx="1050" cy="630" r="1.5" fill="#FFFFFF" />
+    <circle cx="1070" cy="500" r="1.5" fill="#FFFFFF" />
+    <circle cx="1090" cy="550" r="1.5" fill="#FFFFFF" />
+    <circle cx="1110" cy="600" r="1.5" fill="#FFFFFF" />
+    <circle cx="1130" cy="520" r="1.5" fill="#FFFFFF" />
+    <circle cx="1050" cy="450" r="1.5" fill="#FFFFFF" />
+    <circle cx="1000" cy="570" r="1.5" fill="#FFFFFF" />
+    <circle cx="1025" cy="620" r="1.5" fill="#FFFFFF" />
+  </g>
+  
+  <!-- Stars/particles in the dark room -->
+  <g opacity="0.6">
+    <circle cx="400" cy="400" r="1" fill="#F4A4A6" />
+    <circle cx="500" cy="300" r="1" fill="#F4A4A6" />
+    <circle cx="600" cy="500" r="1" fill="#F4A4A6" />
+    <circle cx="300" cy="600" r="1" fill="#F4A4A6" />
+    <circle cx="450" cy="350" r="1" fill="#F4A4A6" />
+    <circle cx="550" cy="450" r="1" fill="#F4A4A6" />
+    <circle cx="350" cy="550" r="1" fill="#F4A4A6" />
+    <circle cx="700" cy="400" r="1" fill="#F4A4A6" />
+    <circle cx="250" cy="450" r="1" fill="#F4A4A6" />
+    <circle cx="1400" cy="300" r="1" fill="#F4A4A6" />
+    <circle cx="1500" cy="400" r="1" fill="#F4A4A6" />
+    <circle cx="1600" cy="500" r="1" fill="#F4A4A6" />
+    <circle cx="1300" cy="350" r="1" fill="#F4A4A6" />
+    <circle cx="1450" cy="450" r="1" fill="#F4A4A6" />
+    <circle cx="1550" cy="350" r="1" fill="#F4A4A6" />
+  </g>
+</svg> 

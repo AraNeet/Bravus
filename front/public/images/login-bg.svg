@@ -1,0 +1,224 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="1200" height="800" viewBox="0 0 1200 800" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background gradient -->
+  <defs>
+    <linearGradient id="roomGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#121420" />
+      <stop offset="100%" stop-color="#1D202F" />
+    </linearGradient>
+    <linearGradient id="deskGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#7a6c5d" />
+      <stop offset="100%" stop-color="#5a4e44" />
+    </linearGradient>
+    <linearGradient id="deskLegGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#5a4e44" />
+      <stop offset="100%" stop-color="#483c34" />
+    </linearGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="5" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+    <filter id="shadow">
+      <feDropShadow dx="0" dy="4" stdDeviation="4" flood-opacity="0.3" />
+    </filter>
+    <linearGradient id="folderGradient1" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#B76D68" />
+      <stop offset="100%" stop-color="#964b45" />
+    </linearGradient>
+    <linearGradient id="folderGradient2" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#F4A4A6" />
+      <stop offset="100%" stop-color="#d88385" />
+    </linearGradient>
+    <linearGradient id="folderGradient3" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#5C6D70" />
+      <stop offset="100%" stop-color="#4a5658" />
+    </linearGradient>
+    <linearGradient id="folderGradient4" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#6ec4e8" />
+      <stop offset="100%" stop-color="#4eadd3" />
+    </linearGradient>
+    <linearGradient id="folderGradient5" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#92d36e" />
+      <stop offset="100%" stop-color="#7ab859" />
+    </linearGradient>
+  </defs>
+
+  <!-- Room background -->
+  <rect x="0" y="0" width="1200" height="800" fill="url(#roomGradient)" />
+
+  <!-- Floor -->
+  <rect x="0" y="730" width="1200" height="70" fill="#0D0F17" />
+
+  <!-- Desk legs -->
+  <rect x="200" y="450" width="40" height="280" fill="url(#deskLegGradient)" rx="5" />
+  <rect x="960" y="450" width="40" height="280" fill="url(#deskLegGradient)" rx="5" />
+
+  <!-- Desk surface -->
+  <rect x="150" y="400" width="900" height="50" fill="url(#deskGradient)" rx="5" filter="url(#shadow)" />
+  
+  <!-- Desk side panel -->
+  <rect x="150" y="450" width="20" height="200" fill="url(#deskLegGradient)" />
+  <rect x="1030" y="450" width="20" height="200" fill="url(#deskLegGradient)" />
+  
+  <!-- Desk drawer -->
+  <rect x="300" y="420" width="200" height="30" fill="#4a4238" rx="2" />
+  <rect x="390" y="435" width="20" height="5" fill="#5a4e44" rx="2" />
+
+  <!-- Main file stack based on reference image -->
+  <!-- Bottom folder -->
+  <g transform="translate(450, 365)">
+    <rect x="0" y="0" width="320" height="35" fill="url(#folderGradient1)" rx="3" />
+    <rect x="15" y="-8" width="290" height="8" fill="#964b45" rx="2" />
+    <rect x="20" y="10" width="280" height="1.5" fill="white" opacity="0.2" />
+    <rect x="20" y="18" width="200" height="1.5" fill="white" opacity="0.2" />
+    <rect x="20" y="26" width="250" height="1.5" fill="white" opacity="0.2" />
+  </g>
+  
+  <!-- Layer 2 -->
+  <g transform="translate(420, 340)">
+    <rect x="0" y="0" width="300" height="30" fill="url(#folderGradient2)" rx="3" />
+    <rect x="15" y="-8" width="270" height="8" fill="#d88385" rx="2" />
+    <rect x="20" y="10" width="260" height="1.5" fill="#B76D68" opacity="0.3" />
+    <rect x="20" y="18" width="190" height="1.5" fill="#B76D68" opacity="0.3" />
+  </g>
+  
+  <!-- Layer 3 -->
+  <g transform="translate(460, 320)">
+    <rect x="0" y="0" width="330" height="25" fill="url(#folderGradient4)" rx="3" />
+    <rect x="15" y="-8" width="300" height="8" fill="#4eadd3" rx="2" />
+    <rect x="20" y="10" width="290" height="1.5" fill="white" opacity="0.3" />
+    <rect x="20" y="17" width="260" height="1.5" fill="white" opacity="0.3" />
+  </g>
+  
+  <!-- Layer 4 -->
+  <g transform="translate(410, 300)">
+    <rect x="0" y="0" width="290" height="25" fill="url(#folderGradient5)" rx="3" />
+    <rect x="15" y="-8" width="260" height="8" fill="#7ab859" rx="2" />
+    <rect x="20" y="10" width="250" height="1.5" fill="white" opacity="0.3" />
+    <rect x="20" y="17" width="220" height="1.5" fill="white" opacity="0.3" />
+  </g>
+  
+  <!-- Layer 5 -->
+  <g transform="translate(440, 280)">
+    <rect x="0" y="0" width="310" height="25" fill="url(#folderGradient3)" rx="3" />
+    <rect x="15" y="-8" width="280" height="8" fill="#4a5658" rx="2" />
+    <rect x="20" y="10" width="270" height="1.5" fill="white" opacity="0.3" />
+    <rect x="20" y="17" width="230" height="1.5" fill="white" opacity="0.3" />
+  </g>
+  
+  <!-- Layer 6 (top) -->
+  <g transform="translate(425, 260)">
+    <rect x="0" y="0" width="280" height="25" fill="url(#folderGradient1)" rx="3" />
+    <rect x="15" y="-8" width="250" height="8" fill="#964b45" rx="2" />
+    <rect x="20" y="10" width="240" height="1.5" fill="white" opacity="0.2" />
+    <rect x="20" y="17" width="190" height="1.5" fill="white" opacity="0.2" />
+  </g>
+
+  <!-- Left side smaller stack -->
+  <!-- Bottom file -->
+  <g transform="translate(200, 375)">
+    <rect x="0" y="0" width="190" height="25" fill="url(#folderGradient3)" rx="3" />
+    <rect x="15" y="-7" width="160" height="7" fill="#4a5658" rx="2" />
+    <rect x="20" y="10" width="150" height="1.5" fill="white" opacity="0.3" />
+    <rect x="20" y="17" width="130" height="1.5" fill="white" opacity="0.3" />
+  </g>
+  
+  <!-- Layer 2 -->
+  <g transform="translate(180, 355)">
+    <rect x="0" y="0" width="170" height="25" fill="url(#folderGradient2)" rx="3" />
+    <rect x="15" y="-7" width="140" height="7" fill="#d88385" rx="2" />
+    <rect x="20" y="10" width="130" height="1.5" fill="#B76D68" opacity="0.3" />
+    <rect x="20" y="17" width="110" height="1.5" fill="#B76D68" opacity="0.3" />
+  </g>
+  
+  <!-- Layer 3 (top) -->
+  <g transform="translate(210, 335)">
+    <rect x="0" y="0" width="180" height="25" fill="url(#folderGradient1)" rx="3" />
+    <rect x="15" y="-7" width="150" height="7" fill="#964b45" rx="2" />
+    <rect x="20" y="10" width="140" height="1.5" fill="white" opacity="0.2" />
+    <rect x="20" y="17" width="120" height="1.5" fill="white" opacity="0.2" />
+  </g>
+
+  <!-- Right side stack -->
+  <!-- Bottom file -->
+  <g transform="translate(780, 380)">
+    <rect x="0" y="0" width="220" height="20" fill="url(#folderGradient4)" rx="3" />
+    <rect x="15" y="-7" width="190" height="7" fill="#4eadd3" rx="2" />
+    <rect x="20" y="8" width="180" height="1.5" fill="white" opacity="0.3" />
+    <rect x="20" y="14" width="150" height="1.5" fill="white" opacity="0.3" />
+  </g>
+  
+  <!-- Layer 2 -->
+  <g transform="translate(800, 365)">
+    <rect x="0" y="0" width="200" height="20" fill="url(#folderGradient5)" rx="3" />
+    <rect x="15" y="-7" width="170" height="7" fill="#7ab859" rx="2" />
+    <rect x="20" y="8" width="160" height="1.5" fill="white" opacity="0.3" />
+    <rect x="20" y="14" width="130" height="1.5" fill="white" opacity="0.3" />
+  </g>
+  
+  <!-- Layer 3 -->
+  <g transform="translate(770, 350)">
+    <rect x="0" y="0" width="190" height="20" fill="url(#folderGradient1)" rx="3" />
+    <rect x="15" y="-7" width="160" height="7" fill="#964b45" rx="2" />
+    <rect x="20" y="8" width="150" height="1.5" fill="white" opacity="0.2" />
+    <rect x="20" y="14" width="120" height="1.5" fill="white" opacity="0.2" />
+  </g>
+  
+  <!-- Layer 4 (top) -->
+  <g transform="translate(790, 335)">
+    <rect x="0" y="0" width="180" height="20" fill="url(#folderGradient2)" rx="3" />
+    <rect x="15" y="-7" width="150" height="7" fill="#d88385" rx="2" />
+    <rect x="20" y="8" width="140" height="1.5" fill="#B76D68" opacity="0.3" />
+    <rect x="20" y="14" width="110" height="1.5" fill="#B76D68" opacity="0.3" />
+  </g>
+
+  <!-- Scattered loose papers -->
+  <g transform="translate(630, 390) rotate(8)">
+    <rect x="0" y="0" width="140" height="20" fill="#f5f5f5" rx="2" />
+    <rect x="10" y="7" width="120" height="1" fill="#333" opacity="0.2" />
+    <rect x="10" y="12" width="100" height="1" fill="#333" opacity="0.2" />
+  </g>
+  
+  <g transform="translate(300, 388) rotate(-5)">
+    <rect x="0" y="0" width="120" height="18" fill="#f5f5f5" rx="2" />
+    <rect x="10" y="6" width="100" height="1" fill="#333" opacity="0.2" />
+    <rect x="10" y="11" width="90" height="1" fill="#333" opacity="0.2" />
+  </g>
+  
+  <g transform="translate(700, 385) rotate(15)">
+    <rect x="0" y="0" width="110" height="15" fill="#f5f5f5" rx="2" />
+    <rect x="10" y="5" width="90" height="1" fill="#333" opacity="0.2" />
+    <rect x="10" y="10" width="70" height="1" fill="#333" opacity="0.2" />
+  </g>
+  
+  <!-- Pens/pencils holder -->
+  <rect x="950" y="320" width="40" height="80" fill="#3A4547" rx="5" />
+  
+  <!-- Pens/pencils -->
+  <rect x="955" y="300" width="4" height="25" fill="#B76D68" rx="1" />
+  <rect x="963" y="295" width="4" height="30" fill="#F4A4A6" rx="1" />
+  <rect x="971" y="290" width="4" height="35" fill="#4eadd3" rx="1" />
+  <rect x="979" y="285" width="4" height="40" fill="#7ab859" rx="1" />
+  
+  <!-- Coffee mug -->
+  <rect x="180" y="340" width="25" height="35" fill="#B76D68" rx="5" />
+  <path d="M 205 350 Q 215 355 212 370 L 210 375 Q 208 380 205 375 Z" fill="#B76D68" />
+  <ellipse cx="192" cy="340" rx="13" ry="4" fill="#7D4B48" />
+  
+  <!-- Lamp reflection -->
+  <ellipse cx="600" cy="350" rx="400" ry="150" fill="#F4A4A6" opacity="0.05" filter="url(#glow)" />
+  
+  <!-- Small stars/light particles -->
+  <circle cx="200" cy="120" r="1" fill="white" opacity="0.6" />
+  <circle cx="350" cy="220" r="1" fill="white" opacity="0.5" />
+  <circle cx="700" cy="150" r="1" fill="white" opacity="0.7" />
+  <circle cx="900" cy="320" r="1" fill="white" opacity="0.4" />
+  <circle cx="500" cy="420" r="1" fill="white" opacity="0.6" />
+  <circle cx="250" cy="520" r="1" fill="white" opacity="0.5" />
+  <circle cx="600" cy="250" r="1" fill="white" opacity="0.7" />
+  <circle cx="800" cy="400" r="1" fill="white" opacity="0.4" />
+  <circle cx="450" cy="100" r="1" fill="white" opacity="0.6" />
+  <circle cx="850" cy="150" r="1" fill="white" opacity="0.5" />
+  <circle cx="300" cy="300" r="1" fill="white" opacity="0.7" />
+  <circle cx="950" cy="250" r="1" fill="white" opacity="0.4" />
+</svg> 

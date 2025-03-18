@@ -156,3 +156,57 @@ html {
     @apply px-4;
   }
 }
+
+/* Stars animation for signup and login pages */
+.stars-container {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+  overflow: hidden;
+}
+
+.star {
+  position: absolute;
+  width: 2px;
+  height: 2px;
+  border-radius: 50%;
+  background-color: #F4A4A6;
+  opacity: 0.6;
+  animation: twinkle 3s infinite;
+}
+
+.star-0 {
+  top: 15%;
+  left: 20%;
+  animation-delay: 0s;
+  animation-duration: 5s;
+}
+
+.star-1 {
+  top: 25%;
+  left: 30%;
+  animation-delay: 0.5s;
+  animation-duration: 6s;
+}
+
+.star-2 {
+  top: 35%;
+  left: 40%;
+  animation-delay: 1s;
+  animation-duration: 7s;
+}
+
+.star-3 {
+  top: 45%;
+  left: 15%;
+  animation-delay: 1.5s;
+  animation-duration: 4s;
+}
+
+.star-4 {
+  top: 55%;
+  left: 25%;
+  animation-delay: 2s;
+  animation-duration: 8s;
+}
