@@ -45,14 +45,7 @@ export const apiRequest = async <T>(
   const url = `${API_BASE_URL}${endpoint}`;
 
   console.log(`API Request: ${method} ${url}`);
-  
-  // Create a safe copy of headers for logging (mask auth token)
-  const safeHeaders = { ...headers };
-  if (safeHeaders.Authorization) {
-    safeHeaders.Authorization = safeHeaders.Authorization.replace(/Bearer .+/, 'Bearer [TOKEN MASKED]');
-  }
-  console.log("Request Headers:", safeHeaders);
-  
+  console.log("Request Headers:", headers);
   if (body) {
     console.log("Request Body:", body);
   }
@@ -120,27 +113,27 @@ export const apiRequest = async <T>(
 export const get = <T>(
   endpoint: string,
   options?: Omit<RequestOptions, "method" | "body">
-) => apiRequest<T>(endpoint, { method: "GET", includeAuth: true, ...options });
+) => apiRequest<T>(endpoint, { method: "GET", ...options });
 
 export const post = <T>(
   endpoint: string,
   body: any,
   options?: Omit<RequestOptions, "method">
-) => apiRequest<T>(endpoint, { method: "POST", body, includeAuth: true, ...options });
+) => apiRequest<T>(endpoint, { method: "POST", body, ...options });
 
 export const put = <T>(
   endpoint: string,
   body: any,
   options?: Omit<RequestOptions, "method">
-) => apiRequest<T>(endpoint, { method: "PUT", body, includeAuth: true, ...options });
+) => apiRequest<T>(endpoint, { method: "PUT", body, ...options });
 
 export const del = <T>(
   endpoint: string,
-  options?: Omit<RequestOptions, "method" | "body">
-) => apiRequest<T>(endpoint, { method: "DELETE", includeAuth: true, ...options });
+  options?: Omit<RequestOptions, "method">
+) => apiRequest<T>(endpoint, { method: "DELETE", ...options });
 
 export const patch = <T>(
   endpoint: string,
   body: any,
   options?: Omit<RequestOptions, "method">
-) => apiRequest<T>(endpoint, { method: "PATCH", body, includeAuth: true, ...options });
+) => apiRequest<T>(endpoint, { method: "PATCH", body, ...options });

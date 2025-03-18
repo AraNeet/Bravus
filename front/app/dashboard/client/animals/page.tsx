@@ -457,7 +457,7 @@ export default function AnimalsPage() {
   if (isLoading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[400px]">
-        <Loader2 className="w-12 h-12 text-[#9f6eff] animate-spin mb-4" />
+        <Loader2 className="w-12 h-12 text-spink animate-spin mb-4" />
         <p className="text-white/70">Loading your animals...</p>
       </div>
     );
@@ -476,63 +476,63 @@ export default function AnimalsPage() {
               Back to Dashboard
             </Link>
           </div>
-          <h1 className="text-3xl font-bold mb-1">My Animals</h1>
+          <h1 className="text-2xl font-bold mb-1">My Pets</h1>
           <p className="text-white/70">Manage your animal profiles</p>
         </div>
 
         <Button
           onClick={() => setIsAddDialogOpen(true)}
-          className="w-full md:w-auto bg-gradient-to-r from-[#9f6eff] to-[#c061f7] hover:from-[#8b4ff7] hover:to-[#b04fe3] border-none"
+          className="w-full md:w-auto bg-spink hover:bg-mred text-navy font-medium transition-all duration-300 shadow-lg shadow-spink/10 hover:shadow-mred/20 hover:scale-[1.02] active:scale-[0.98] rounded-xl"
         >
           <Plus className="w-4 h-4 mr-2" />
-          Add Animal
+          Add Pet
         </Button>
       </div>
 
       {/* Search and filter */}
-      <div className="flex flex-col md:flex-row gap-4">
+      <div className="flex flex-col sm:flex-row gap-4">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-white/40 w-4 h-4" />
           <Input
             placeholder="Search by name, breed, or color..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10 bg-gradient-to-br from-white/5 to-white/3 border-[#9f6eff]/20 focus:border-[#9f6eff]/40 focus:ring-[#9f6eff]/30"
+            className="pl-10 bg-navy/40 border-spink/10 focus:border-spink/40 focus:ring-spink/30"
           />
         </div>
 
         <Tabs
           value={activeTab}
           onValueChange={setActiveTab}
-          className="w-full md:w-auto"
+          className="w-full sm:w-auto"
         >
-          <TabsList className="grid grid-cols-4 md:grid-cols-7 w-full md:w-auto bg-gradient-to-r from-[#1a0b2e]/80 to-[#2c1250]/80 p-1 border border-white/10">
+          <TabsList className="grid grid-cols-4 md:grid-cols-7 w-full sm:w-auto bg-navy/40 border border-white/10 rounded-lg">
             <TabsTrigger
               value="all"
-              className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#9f6eff]/80 data-[state=active]:to-[#c061f7]/80 data-[state=active]:text-white data-[state=active]:shadow-md"
+              className="data-[state=active]:bg-spink/20 data-[state=active]:text-spink data-[state=active]:shadow-none"
             >
               All
             </TabsTrigger>
             <TabsTrigger
               value="dog"
-              className="flex items-center gap-1 data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#9f6eff]/80 data-[state=active]:to-[#c061f7]/80 data-[state=active]:text-white data-[state=active]:shadow-md"
+              className="flex items-center gap-1 data-[state=active]:bg-spink/20 data-[state=active]:text-spink data-[state=active]:shadow-none"
             >
-              <Dog className="w-4 h-4" />
-              <span className="hidden md:inline">Dogs</span>
+              <Dog className="w-4 h-4 text-white/70" />
+              <span className="hidden text-white/70 md:inline">Dogs</span>
             </TabsTrigger>
             <TabsTrigger
               value="cat"
-              className="flex items-center gap-1 data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#9f6eff]/80 data-[state=active]:to-[#c061f7]/80 data-[state=active]:text-white data-[state=active]:shadow-md"
+              className="flex items-center gap-1 data-[state=active]:bg-spink/20 data-[state=active]:text-spink data-[state=active]:shadow-none"
             >
-              <Cat className="w-4 h-4" />
-              <span className="hidden md:inline">Cats</span>
+              <Cat className="w-4 h-4 text-white/70" />
+              <span className="hidden text-white/70 md:inline">Cats</span>
             </TabsTrigger>
             <TabsTrigger
               value="other"
-              className="flex items-center gap-1 data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#9f6eff]/80 data-[state=active]:to-[#c061f7]/80 data-[state=active]:text-white data-[state=active]:shadow-md"
+              className="flex items-center gap-1 data-[state=active]:bg-spink/20 data-[state=active]:text-spink data-[state=active]:shadow-none"
             >
-              <HelpCircle className="w-4 h-4" />
-              <span className="hidden md:inline">Other</span>
+              <HelpCircle className="w-4 h-4 text-white/70" />
+              <span className="hidden text-white/70 md:inline">Other</span>
             </TabsTrigger>
           </TabsList>
         </Tabs>
@@ -541,21 +541,20 @@ export default function AnimalsPage() {
       {/* Animal list */}
       {filteredAnimals.length > 0 ? (
         <>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
             {currentAnimals.map((animal) => {
-              // Extract metadata
               const metadata = getAnimalMetadata(animal);
               const species = animal.species || "other";
 
               return (
                 <Card
                   key={animal.id}
-                  className="overflow-hidden bg-gradient-to-br from-white/5 to-white/3 backdrop-blur-sm border-[#9f6eff]/20 hover:border-[#9f6eff]/30 transition-all hover:shadow-md hover:shadow-[#9f6eff]/5"
+                  className="overflow-hidden bg-navy/40 backdrop-blur-sm border-spink/10 hover:border-spink/20 transition-all duration-300 hover:shadow-lg hover:shadow-spink/5"
                 >
                   <CardHeader className="pb-2">
                     <div className="flex justify-between items-start">
                       <div className="flex items-center gap-2">
-                        <div className="bg-gradient-to-br from-[#9f6eff]/20 to-[#c061f7]/20 p-2 rounded-full">
+                        <div className="bg-spink/10 p-2 rounded-full text-spink">
                           {getSpeciesIcon(species)}
                         </div>
                         <div>
@@ -569,7 +568,7 @@ export default function AnimalsPage() {
                       </div>
                       <Badge
                         variant="outline"
-                        className="bg-white/10 text-white border-white/20"
+                        className="bg-spink/10 text-spink border-spink/20"
                       >
                         {animal["animal_age"]}{" "}
                         {animal["animal_age"] === 1 ? "year" : "years"}
@@ -577,7 +576,7 @@ export default function AnimalsPage() {
                     </div>
                   </CardHeader>
 
-                  <CardContent className="pb-2">
+                  <CardContent className="pt-0">
                     <div className="grid grid-cols-2 gap-2 text-sm">
                       {metadata.color && (
                         <div>
@@ -609,12 +608,12 @@ export default function AnimalsPage() {
                     )}
                   </CardContent>
 
-                  <CardFooter className="flex justify-end gap-2 pt-2 border-t border-[#9f6eff]/10">
+                  <CardFooter className="flex justify-between pt-2 border-t border-white/10">
                     <Button
                       variant="ghost"
                       size="sm"
                       onClick={() => handleEditClick(animal)}
-                      className="text-white/70 hover:text-white hover:bg-[#9f6eff]/10"
+                      className="text-white/70 hover:text-spink hover:bg-spink/10"
                     >
                       <Pencil className="w-4 h-4 mr-1" /> Edit
                     </Button>
@@ -622,7 +621,7 @@ export default function AnimalsPage() {
                       variant="ghost"
                       size="sm"
                       onClick={() => handleDeleteClick(animal)}
-                      className="text-red-400 hover:text-red-300 hover:bg-red-500/10"
+                      className="text-white/70 hover:text-mred hover:bg-mred/10"
                     >
                       <Trash2 className="w-4 h-4 mr-1" /> Delete
                     </Button>
@@ -640,7 +639,7 @@ export default function AnimalsPage() {
                 size="sm"
                 onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
                 disabled={currentPage === 1}
-                className="bg-gradient-to-br from-white/5 to-white/3 border-[#9f6eff]/20 text-white hover:bg-white/10 hover:text-white hover:border-[#9f6eff]/40"
+                className="bg-navy/40 border-spink/10 text-white hover:bg-spink/10 hover:text-white hover:border-spink/20"
               >
                 <ChevronLeft className="w-4 h-4" />
               </Button>
@@ -656,7 +655,7 @@ export default function AnimalsPage() {
                   setCurrentPage((prev) => Math.min(prev + 1, totalPages))
                 }
                 disabled={currentPage === totalPages}
-                className="bg-gradient-to-br from-white/5 to-white/3 border-[#9f6eff]/20 text-white hover:bg-white/10 hover:text-white hover:border-[#9f6eff]/40"
+                className="bg-navy/40 border-spink/10 text-white hover:bg-spink/10 hover:text-white hover:border-spink/20"
               >
                 <ChevronRight className="w-4 h-4" />
               </Button>
@@ -664,43 +663,46 @@ export default function AnimalsPage() {
           )}
         </>
       ) : (
-        <div className="bg-gradient-to-br from-white/5 to-white/3 backdrop-blur-sm rounded-lg border border-[#9f6eff]/20 p-8 text-center">
+        <div className="bg-navy/40 backdrop-blur-sm rounded-xl border border-spink/10 p-8 text-center">
           <div className="flex justify-center mb-4">
             {activeTab === "all" ? (
               <HelpCircle className="w-12 h-12 text-white/40" />
             ) : (
-              getSpeciesIcon(activeTab)
+              <div className="text-spink">{getSpeciesIcon(activeTab)}</div>
             )}
           </div>
-          <h3 className="text-lg font-medium mb-2">No animals found</h3>
+          <h3 className="text-lg font-medium mb-2">No pets found</h3>
           <p className="text-white/60 mb-4">
             {searchQuery
-              ? "No animals match your search criteria. Try a different search term."
+              ? "No pets match your search criteria. Try a different search term."
               : activeTab !== "all"
               ? `You don't have any ${activeTab}s in your profile yet.`
-              : "You haven't added any animals to your profile yet."}
+              : "You haven't added any pets to your profile yet."}
           </p>
-          <Button onClick={() => setIsAddDialogOpen(true)}>
+          <Button 
+            onClick={() => setIsAddDialogOpen(true)}
+            className="bg-spink hover:bg-mred text-navy font-medium transition-colors rounded-lg"
+          >
             <Plus className="w-4 h-4 mr-2" />
-            Add Your First Animal
+            Add Your First Pet
           </Button>
         </div>
       )}
 
       {/* Add Animal Dialog */}
       <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-        <DialogContent className="sm:max-w-[500px] bg-gradient-to-br from-[#1a0b2e] to-[#2c1250] border-[#9f6eff]/20 text-white">
+        <DialogContent className="sm:max-w-[500px] bg-navy border-spink/20 text-white">
           <DialogHeader>
-            <DialogTitle>Add New Animal</DialogTitle>
+            <DialogTitle>Add New Pet</DialogTitle>
             <DialogDescription className="text-white/60">
-              Enter your animal's information below. Required fields are marked
+              Enter your pet's information below. Required fields are marked
               with an asterisk (*).
             </DialogDescription>
           </DialogHeader>
 
           {apiError && (
-            <div className="bg-red-500/20 border border-red-500/50 rounded-lg p-3 flex items-start gap-2">
-              <AlertCircle className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
+            <div className="bg-mred/20 border border-mred/50 rounded-lg p-3 flex items-start gap-2">
+              <AlertCircle className="w-5 h-5 text-mred flex-shrink-0 mt-0.5" />
               <p className="text-sm text-white">{apiError}</p>
             </div>
           )}
@@ -870,7 +872,7 @@ export default function AnimalsPage() {
                 name="notes"
                 value={formData.notes}
                 onChange={handleInputChange}
-                placeholder="Any additional information about your animal"
+                placeholder="Any additional information about your pet"
                 rows={3}
                 className="bg-white/5 border-white/10 text-white placeholder:text-white/40 min-h-[80px]"
               />
@@ -881,24 +883,24 @@ export default function AnimalsPage() {
             <Button
               variant="outline"
               onClick={() => setIsAddDialogOpen(false)}
-              className="bg-white/5 border-[#9f6eff]/20 text-white hover:bg-white/10 hover:text-white hover:border-[#9f6eff]/40"
+              className="bg-navy/60 border-white/10 text-white hover:bg-white/10 hover:text-white"
             >
               Cancel
             </Button>
             <Button
               onClick={handleAddAnimal}
               disabled={isSubmitting}
-              className="bg-gradient-to-r from-[#9f6eff] to-[#c061f7] hover:from-[#8b4ff7] hover:to-[#b04fe3] text-white border-none"
+              className="bg-spink hover:bg-mred text-navy font-medium transition-colors"
             >
               {isSubmitting ? (
                 <>
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Adding...
+                  Saving...
                 </>
               ) : (
                 <>
                   <Check className="w-4 h-4 mr-2" />
-                  Add Animal
+                  Save Pet
                 </>
               )}
             </Button>
@@ -908,17 +910,17 @@ export default function AnimalsPage() {
 
       {/* Edit Animal Dialog */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="sm:max-w-[500px] bg-gradient-to-br from-[#1a0b2e] to-[#2c1250] border-[#9f6eff]/20 text-white">
+        <DialogContent className="sm:max-w-[500px] bg-navy border-spink/20 text-white">
           <DialogHeader>
-            <DialogTitle>Edit Animal</DialogTitle>
+            <DialogTitle>Edit Pet</DialogTitle>
             <DialogDescription className="text-white/60">
-              Update your animal's information below.
+              Update your pet's information below.
             </DialogDescription>
           </DialogHeader>
 
           {apiError && (
-            <div className="bg-red-500/20 border border-red-500/50 rounded-lg p-3 flex items-start gap-2">
-              <AlertCircle className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
+            <div className="bg-mred/20 border border-mred/50 rounded-lg p-3 flex items-start gap-2">
+              <AlertCircle className="w-5 h-5 text-mred flex-shrink-0 mt-0.5" />
               <p className="text-sm text-white">{apiError}</p>
             </div>
           )}
@@ -1088,7 +1090,7 @@ export default function AnimalsPage() {
                 name="notes"
                 value={formData.notes}
                 onChange={handleInputChange}
-                placeholder="Any additional information about your animal"
+                placeholder="Any additional information about your pet"
                 rows={3}
                 className="bg-white/5 border-white/10 text-white placeholder:text-white/40 min-h-[80px]"
               />
@@ -1099,14 +1101,14 @@ export default function AnimalsPage() {
             <Button
               variant="outline"
               onClick={() => setIsEditDialogOpen(false)}
-              className="bg-white/5 border-[#9f6eff]/20 text-white hover:bg-white/10 hover:text-white hover:border-[#9f6eff]/40"
+              className="bg-navy/60 border-white/10 text-white hover:bg-white/10 hover:text-white"
             >
               Cancel
             </Button>
             <Button
               onClick={handleUpdateAnimal}
               disabled={isSubmitting}
-              className="bg-gradient-to-r from-[#9f6eff] to-[#c061f7] hover:from-[#8b4ff7] hover:to-[#b04fe3] text-white border-none"
+              className="bg-spink hover:bg-mred text-navy font-medium transition-colors"
             >
               {isSubmitting ? (
                 <>
@@ -1116,7 +1118,7 @@ export default function AnimalsPage() {
               ) : (
                 <>
                   <Check className="w-4 h-4 mr-2" />
-                  Update Animal
+                  Update Pet
                 </>
               )}
             </Button>
@@ -1125,30 +1127,26 @@ export default function AnimalsPage() {
       </Dialog>
 
       {/* Delete Confirmation Dialog */}
-      <AlertDialog
-        open={isDeleteDialogOpen}
-        onOpenChange={setIsDeleteDialogOpen}
-      >
-        <AlertDialogContent className="bg-gradient-to-br from-[#1a0b2e] to-[#2c1250] border-[#9f6eff]/20 text-white">
+      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <AlertDialogContent className="bg-navy border-spink/20 text-white">
           <AlertDialogHeader>
-            <AlertDialogTitle>Confirm Deletion</AlertDialogTitle>
-            <AlertDialogDescription className="text-white/60">
-              Are you sure you want to delete {selectedAnimal?.["animal_name"]}?
-              This action cannot be undone.
+            <AlertDialogTitle>Delete Pet</AlertDialogTitle>
+            <AlertDialogDescription className="text-white/70">
+              Are you sure you want to delete{" "}
+              <span className="font-medium text-white">
+                {selectedAnimal?.animal_name}
+              </span>
+              ? This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
-
           <AlertDialogFooter>
-            <AlertDialogCancel
-              className="bg-white/5 border-[#9f6eff]/20 text-white hover:bg-white/10 hover:text-white hover:border-[#9f6eff]/40"
-              onClick={() => setIsDeleteDialogOpen(false)}
-            >
+            <AlertDialogCancel className="bg-navy/60 border-white/10 text-white hover:bg-white/10 hover:text-white">
               Cancel
             </AlertDialogCancel>
             <AlertDialogAction
-              className="bg-gradient-to-r from-red-500/80 to-red-600/80 hover:from-red-500 hover:to-red-600 text-white border-none"
               onClick={handleDeleteAnimal}
               disabled={isSubmitting}
+              className="bg-mred hover:bg-mred/80 text-white hover:text-white border-none"
             >
               {isSubmitting ? (
                 <>

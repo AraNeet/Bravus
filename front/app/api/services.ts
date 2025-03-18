@@ -242,7 +242,7 @@ export const getAllServices = async (): Promise<Service[]> => {
 export const getServices = async (): Promise<Service[]> => {
   try {
     console.log("Fetching all services using dedicated endpoint");
-    const response = await get<any>('/service/get-services', { includeAuth: true });
+    const response = await get<any>('/service/get-services');
     
     // Handle different response formats
     const services = Array.isArray(response) ? response : [];

@@ -68,15 +68,11 @@ export default function ClientDashboard() {
   useEffect(() => {
     const fetchProvidersAndServices = async () => {
       try {
-        // Log the auth token (masked) for debugging
-        const token = localStorage.getItem("auth_token");
-        console.log("Auth token available:", token ? "Yes (token masked)" : "No");
-
         // Fetch providers
         const ownersData = await getOwners();
         setProvidersCount(ownersData.length);
         
-        // Fetch services directly from the new endpoint with auth
+        // Fetch services directly from the new endpoint
         const services = await getServices();
         setServicesCount(services.length);
       } catch (error) {
@@ -294,7 +290,8 @@ export default function ClientDashboard() {
           </div>
         </div>
       </div>
-
+      
+      {/* Main Content */}
       {/* Upcoming Appointments */}
       <div className="mt-6">
         <div className="bg-navy/40 backdrop-blur-sm rounded-xl border border-spink/10 p-5 transition-all duration-300 hover:shadow-lg hover:shadow-spink/5">
