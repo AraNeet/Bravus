@@ -1,6 +1,4 @@
 import { NextResponse } from "next/server";
-import { get } from "../helpers";
-
 // API base URL from environment
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
 

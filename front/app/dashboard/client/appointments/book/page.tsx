@@ -14,6 +14,7 @@ import {
   Loader2,
   AlertCircle,
   Info,
+  CalendarDays,
 } from "lucide-react";
 import { useAuth } from "@/app/hooks/useAuth";
 import type { Service, Appointment } from "@/app/api/types";
@@ -56,6 +57,9 @@ export default function BookAppointmentPage() {
   const [appointment, setAppointment] = useState<Appointment | null>(null);
   const [ownerServices, setOwnerServices] = useState<Service[]>([]);
   const [loadingServices, setLoadingServices] = useState<boolean>(false);
+  const [showCalendar, setShowCalendar] = useState(false);
+  const [tempDate, setTempDate] = useState<Date | null>(null);
+  const [tempTime, setTempTime] = useState<string>("");
 
   // Fetch owners and appointment data (if editing) on component mount
   useEffect(() => {
@@ -238,7 +242,7 @@ export default function BookAppointmentPage() {
       return (
         <button
           key={`day-${day}`}
-          onClick={() => !isPast && setSelectedDate(date)}
+          onClick={() => !isPast && setTempDate(date)}
           disabled={isPast}
           className={`
             aspect-square flex items-center justify-center rounded-lg text-sm
@@ -325,7 +329,7 @@ export default function BookAppointmentPage() {
   if (isLoading) {
     return (
       <div className="flex flex-col items-center justify-center py-12">
-        <Loader2 className="w-12 h-12 text-[#9f6eff] animate-spin mb-4" />
+        <Loader2 className="w-12 h-12 text-spink animate-spin mb-4" />
         <p className="text-white/70">
           Loading {isEditMode ? "appointment" : "service providers"}...
         </p>
@@ -335,12 +339,12 @@ export default function BookAppointmentPage() {
 
   if (error) {
     return (
-      <div className="bg-white/5 backdrop-blur-sm rounded-xl border border-white/10 p-8 text-center">
-        <AlertCircle className="w-16 h-16 text-red-400 mx-auto mb-4" />
-        <p className="text-red-400 mb-4">{error}</p>
+      <div className="bg-navy/40 backdrop-blur-sm rounded-xl border border-spink/10 p-8 text-center">
+        <AlertCircle className="w-16 h-16 text-mred mx-auto mb-4" />
+        <p className="text-mred mb-4">{error}</p>
         <Link
           href="/dashboard/client/appointments"
-          className="inline-flex items-center gap-2 bg-[#9f6eff] hover:bg-[#8b4ff7] px-4 py-2 rounded-lg transition-colors"
+          className="inline-flex items-center gap-2 bg-spink hover:bg-mred text-navy font-medium px-4 py-2 rounded-xl transition-all duration-300 hover:scale-[1.02] active:scale-[0.98]"
         >
           <ArrowLeft className="w-4 h-4" />
           Back to Appointments
@@ -355,7 +359,7 @@ export default function BookAppointmentPage() {
         <div className="flex items-center gap-2 mb-4">
           <Link
             href="/dashboard/client/appointments"
-            className="text-white/70 hover:text-white flex items-center gap-1"
+            className="text-white/70 hover:text-white flex items-center gap-1 transition-colors"
           >
             <ArrowLeft className="w-4 h-4" />
             Back to Appointments
@@ -372,10 +376,10 @@ export default function BookAppointmentPage() {
       </div>
 
       {/* Booking Steps */}
-      <div className="bg-white/5 backdrop-blur-sm rounded-xl border border-white/10 p-6 mb-8">
+      <div className="bg-navy/40 backdrop-blur-sm rounded-xl border border-spink/10 p-6 mb-8">
         {formError && (
-          <div className="mb-6 p-4 bg-red-500/20 border border-red-500/50 rounded-lg flex items-center gap-3">
-            <AlertCircle className="w-5 h-5 text-red-400 flex-shrink-0" />
+          <div className="mb-6 p-4 bg-mred/10 border border-mred/20 rounded-xl flex items-center gap-3">
+            <AlertCircle className="w-5 h-5 text-mred flex-shrink-0" />
             <p className="text-white text-sm">{formError}</p>
           </div>
         )}
@@ -383,16 +387,16 @@ export default function BookAppointmentPage() {
         <div className="flex items-center justify-between mb-8 flex-wrap">
           <div className="flex-1 flex flex-col items-center min-w-[100px] mb-4 md:mb-0">
             <div
-              className={`w-10 h-10 rounded-full flex items-center justify-center mb-2 ${
+              className={`w-12 h-12 rounded-xl flex items-center justify-center mb-2 transition-all duration-300 ${
                 step >= 1
-                  ? "bg-[#9f6eff] text-white"
-                  : "bg-white/10 text-white/50"
+                  ? "bg-spink text-navy shadow-lg shadow-spink/20"
+                  : "bg-navy/60 text-white/50 border border-white/10"
               }`}
             >
-              <User className="w-5 h-5" />
+              <User className="w-6 h-6" />
             </div>
             <span
-              className={`text-sm ${
+              className={`text-sm font-medium ${
                 step >= 1 ? "text-white" : "text-white/50"
               }`}
             >
@@ -402,24 +406,24 @@ export default function BookAppointmentPage() {
 
           <div className="w-8 h-0.5 bg-white/10 hidden md:block">
             <div
-              className={`h-full ${
-                step >= 2 ? "bg-[#9f6eff]" : "bg-transparent"
+              className={`h-full transition-all duration-300 ${
+                step >= 2 ? "bg-spink" : "bg-transparent"
               }`}
             ></div>
           </div>
 
           <div className="flex-1 flex flex-col items-center min-w-[100px] mb-4 md:mb-0">
             <div
-              className={`w-10 h-10 rounded-full flex items-center justify-center mb-2 ${
+              className={`w-12 h-12 rounded-xl flex items-center justify-center mb-2 transition-all duration-300 ${
                 step >= 2
-                  ? "bg-[#9f6eff] text-white"
-                  : "bg-white/10 text-white/50"
+                  ? "bg-spink text-navy shadow-lg shadow-spink/20"
+                  : "bg-navy/60 text-white/50 border border-white/10"
               }`}
             >
-              <Package className="w-5 h-5" />
+              <Package className="w-6 h-6" />
             </div>
             <span
-              className={`text-sm ${
+              className={`text-sm font-medium ${
                 step >= 2 ? "text-white" : "text-white/50"
               }`}
             >
@@ -429,56 +433,37 @@ export default function BookAppointmentPage() {
 
           <div className="w-8 h-0.5 bg-white/10 hidden md:block">
             <div
-              className={`h-full ${
-                step >= 3 ? "bg-[#9f6eff]" : "bg-transparent"
+              className={`h-full transition-all duration-300 ${
+                step >= 3 ? "bg-spink" : "bg-transparent"
               }`}
             ></div>
           </div>
 
           <div className="flex-1 flex flex-col items-center min-w-[100px] mb-4 md:mb-0">
             <div
-              className={`w-10 h-10 rounded-full flex items-center justify-center mb-2 ${
+              className={`w-12 h-12 rounded-xl flex items-center justify-center mb-2 transition-all duration-300 ${
                 step >= 3
-                  ? "bg-[#9f6eff] text-white"
-                  : "bg-white/10 text-white/50"
+                  ? "bg-spink text-navy shadow-lg shadow-spink/20"
+                  : "bg-navy/60 text-white/50 border border-white/10"
               }`}
             >
-              <Calendar className="w-5 h-5" />
+              <Calendar className="w-6 h-6" />
             </div>
             <span
-              className={`text-sm ${
+              className={`text-sm font-medium ${
                 step >= 3 ? "text-white" : "text-white/50"
               }`}
             >
-              Select Date
+              Select Date/Time
             </span>
           </div>
 
           <div className="w-8 h-0.5 bg-white/10 hidden md:block">
             <div
-              className={`h-full ${
-                step >= 4 ? "bg-[#9f6eff]" : "bg-transparent"
+              className={`h-full transition-all duration-300 ${
+                step >= 4 ? "bg-spink" : "bg-transparent"
               }`}
             ></div>
-          </div>
-
-          <div className="flex-1 flex flex-col items-center min-w-[100px]">
-            <div
-              className={`w-10 h-10 rounded-full flex items-center justify-center mb-2 ${
-                step >= 4
-                  ? "bg-[#9f6eff] text-white"
-                  : "bg-white/10 text-white/50"
-              }`}
-            >
-              <Clock className="w-5 h-5" />
-            </div>
-            <span
-              className={`text-sm ${
-                step >= 4 ? "text-white" : "text-white/50"
-              }`}
-            >
-              Select Time
-            </span>
           </div>
         </div>
 
@@ -489,49 +474,24 @@ export default function BookAppointmentPage() {
               Select a Service Provider
             </h2>
 
-            {/* Debug info */}
-            <div className="mb-4 p-2 rounded bg-gray-800/50 text-xs">
-              <p>Number of owners loaded: {owners.length}</p>
-              <button 
-                onClick={() => console.log("Current owners state:", owners)}
-                className="text-[#9f6eff] hover:underline mt-1"
-              >
-                Log owners to console
-              </button>
-              <button 
-                onClick={async () => {
-                  setIsLoading(true);
-                  try {
-                    const refreshedOwners = await getOwners();
-                    console.log("Refreshed owners:", refreshedOwners);
-                    const withOwnerFlag = refreshedOwners.map(o => ({...o, owner: true}));
-                    setOwners(withOwnerFlag.filter(o => o.owner === true));
-                  } catch (err) {
-                    console.error("Failed to refresh owners:", err);
-                  } finally {
-                    setIsLoading(false);
-                  }
-                }}
-                className="text-[#9f6eff] hover:underline mt-1 ml-4"
-              >
-                Refresh owners
-              </button>
-            </div>
-
             {owners.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {owners.map((owner) => (
                   <button
                     key={owner.id}
                     onClick={() => setSelectedOwner(owner.id)}
-                    className={`p-4 rounded-lg text-left transition-colors ${
+                    className={`p-6 rounded-xl text-left transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] ${
                       selectedOwner === owner.id
-                        ? "bg-[#9f6eff]/20 border border-[#9f6eff]/50"
-                        : "bg-white/5 border border-white/10 hover:bg-white/10"
+                        ? "bg-spink/20 border border-spink/50 shadow-lg shadow-spink/10"
+                        : "bg-navy/60 border border-white/10 hover:bg-navy/80"
                     }`}
                   >
-                    <div className="flex items-center gap-3 mb-2">
-                      <div className="w-10 h-10 rounded-full bg-[#9f6eff]/20 flex items-center justify-center">
+                    <div className="flex items-center gap-4 mb-4">
+                      <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-lg font-medium ${
+                        selectedOwner === owner.id
+                          ? "bg-spink text-navy"
+                          : "bg-white/10 text-white"
+                      }`}>
                         {owner.firstname?.charAt(0) || '?'}
                         {owner.lastname?.charAt(0) || ''}
                       </div>
@@ -549,8 +509,8 @@ export default function BookAppointmentPage() {
                     </div>
 
                     {owner.services && owner.services.length > 0 ? (
-                      <div className="mt-3 pt-3 border-t border-white/10">
-                        <p className="text-sm text-white/60 mb-2">
+                      <div className="mt-4 pt-4 border-t border-white/10">
+                        <p className="text-sm text-white/60 mb-3">
                           Services offered: {owner.services.length}
                         </p>
                         <div className="flex flex-wrap gap-2">
@@ -559,20 +519,20 @@ export default function BookAppointmentPage() {
                             .map((service: Service) => (
                               <span
                                 key={service.id}
-                                className="px-2 py-1 bg-white/10 rounded-full text-xs"
+                                className="px-3 py-1.5 bg-white/10 rounded-lg text-xs font-medium"
                               >
                                 {service.service_name || "Unnamed Service"}
                               </span>
                             ))}
                           {owner.services.length > 3 && (
-                            <span className="px-2 py-1 bg-white/10 rounded-full text-xs">
+                            <span className="px-3 py-1.5 bg-white/10 rounded-lg text-xs font-medium">
                               +{owner.services.length - 3} more
                             </span>
                           )}
                         </div>
                       </div>
                     ) : (
-                      <div className="mt-3 pt-3 border-t border-white/10 text-white/40 text-xs">
+                      <div className="mt-4 pt-4 border-t border-white/10 text-white/40 text-xs">
                         No services configured yet
                       </div>
                     )}
@@ -580,17 +540,17 @@ export default function BookAppointmentPage() {
                 ))}
               </div>
             ) : (
-              <div className="bg-white/5 rounded-lg p-6 text-center">
+              <div className="bg-navy/60 rounded-xl p-8 text-center border border-white/10">
                 <p className="text-white/60 mb-4">
                   No service providers available at the moment.
                 </p>
-                <p className="text-white/40 text-sm mb-4">
+                <p className="text-white/40 text-sm mb-6">
                   This could be because there are no providers in the system yet,
                   or there was an error loading the providers.
                 </p>
                 <button
                   onClick={() => window.location.reload()}
-                  className="px-4 py-2 bg-[#9f6eff] hover:bg-[#8b4ff7] rounded-lg transition-colors text-sm font-medium"
+                  className="px-6 py-2.5 bg-spink hover:bg-mred text-navy font-medium rounded-xl transition-all duration-300 hover:scale-[1.02] active:scale-[0.98]"
                 >
                   Refresh Page
                 </button>
@@ -601,7 +561,7 @@ export default function BookAppointmentPage() {
               <button
                 onClick={() => setStep(2)}
                 disabled={!selectedOwner}
-                className="px-4 py-2 bg-[#9f6eff] hover:bg-[#8b4ff7] rounded-lg transition-colors text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                className="px-6 py-2.5 bg-spink hover:bg-mred text-navy font-medium rounded-xl transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
               >
                 Continue
                 <ChevronRight className="w-4 h-4" />
@@ -615,9 +575,9 @@ export default function BookAppointmentPage() {
           <div>
             <h2 className="text-xl font-bold mb-4">Select a Service</h2>
 
-            <div className="bg-[#9f6eff]/10 rounded-lg p-4 border border-[#9f6eff]/30 mb-6">
-              <p className="font-medium">Selected Provider:</p>
-              <p className="text-lg">
+            <div className="bg-spink/10 rounded-xl p-4 border border-spink/20 mb-6">
+              <p className="font-medium text-white/60">Selected Provider:</p>
+              <p className="text-lg text-white">
                 {owners.find((o) => o.id === selectedOwner)?.firstname || owners.find((o) => o.id === selectedOwner)?.name || 'Unknown'}{" "}
                 {owners.find((o) => o.id === selectedOwner)?.lastname || ''}
               </p>
@@ -625,7 +585,7 @@ export default function BookAppointmentPage() {
 
             {loadingServices ? (
               <div className="py-8 flex flex-col items-center justify-center">
-                <Loader2 className="w-8 h-8 text-[#9f6eff] animate-spin mb-4" />
+                <Loader2 className="w-8 h-8 text-spink animate-spin mb-4" />
                 <p className="text-white/70">Loading services...</p>
               </div>
             ) : ownerServices.length > 0 ? (
@@ -634,36 +594,38 @@ export default function BookAppointmentPage() {
                   <button
                     key={service.id}
                     onClick={() => setSelectedService(service.id)}
-                    className={`p-4 rounded-lg text-left transition-colors ${
+                    className={`p-6 rounded-xl text-left transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] ${
                       selectedService === service.id
-                        ? "bg-[#9f6eff]/20 border border-[#9f6eff]/50"
-                        : "bg-white/5 border border-white/10 hover:bg-white/10"
+                        ? "bg-spink/20 border border-spink/50 shadow-lg shadow-spink/10"
+                        : "bg-navy/60 border border-white/10 hover:bg-navy/80"
                     }`}
                   >
-                    <h3 className="font-medium text-lg">
+                    <h3 className="font-medium text-lg mb-2">
                       {service.service_name}
                     </h3>
-                    <p className="text-white/60 text-sm mb-2">
+                    <p className="text-white/60 text-sm mb-4">
                       {service.service_desc}
                     </p>
-                    <p className="text-[#9f6eff] font-medium">
-                      ${service.price.toFixed(2)}
-                    </p>
-                    <p className="text-white/40 text-xs mt-1">
-                      Duration: {service.duration} minutes
-                    </p>
+                    <div className="flex items-center justify-between">
+                      <p className="text-spink font-medium">
+                        ${service.price.toFixed(2)}
+                      </p>
+                      <p className="text-white/40 text-xs">
+                        {service.duration} minutes
+                      </p>
+                    </div>
                   </button>
                 ))}
               </div>
             ) : (
-              <div className="bg-white/5 rounded-lg p-6 text-center">
+              <div className="bg-navy/60 rounded-xl p-8 text-center border border-white/10">
                 <p className="text-white/60 mb-4">
                   This provider has no services available.
                 </p>
-                <div className="flex flex-col gap-2 items-center">
+                <div className="flex flex-col gap-3 items-center">
                   <button
                     onClick={() => setStep(1)}
-                    className="px-4 py-2 bg-[#9f6eff] hover:bg-[#8b4ff7] rounded-lg transition-colors text-sm font-medium"
+                    className="px-6 py-2.5 bg-spink hover:bg-mred text-navy font-medium rounded-xl transition-all duration-300 hover:scale-[1.02] active:scale-[0.98]"
                   >
                     Select a different provider
                   </button>
@@ -681,7 +643,7 @@ export default function BookAppointmentPage() {
                         })
                         .finally(() => setLoadingServices(false));
                     }}
-                    className="px-4 py-2 bg-white/10 hover:bg-white/20 rounded-lg transition-colors text-sm font-medium mt-2"
+                    className="px-6 py-2.5 bg-white/10 hover:bg-white/20 rounded-xl transition-all duration-300 hover:scale-[1.02] active:scale-[0.98]"
                   >
                     Refresh Services
                   </button>
@@ -692,7 +654,7 @@ export default function BookAppointmentPage() {
             <div className="mt-8 flex justify-between">
               <button
                 onClick={() => setStep(1)}
-                className="px-4 py-2 bg-white/10 hover:bg-white/20 rounded-lg transition-colors text-sm font-medium flex items-center gap-2"
+                className="px-6 py-2.5 bg-white/10 hover:bg-white/20 rounded-xl transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] flex items-center gap-2"
               >
                 <ChevronLeft className="w-4 h-4" />
                 Back
@@ -701,7 +663,7 @@ export default function BookAppointmentPage() {
               <button
                 onClick={() => setStep(3)}
                 disabled={!selectedService}
-                className="px-4 py-2 bg-[#9f6eff] hover:bg-[#8b4ff7] rounded-lg transition-colors text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                className="px-6 py-2.5 bg-spink hover:bg-mred text-navy font-medium rounded-xl transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
               >
                 Continue
                 <ChevronRight className="w-4 h-4" />
@@ -710,163 +672,140 @@ export default function BookAppointmentPage() {
           </div>
         )}
 
-        {/* Step 3: Select Date */}
+        {/* Step 3: Select Date & Time */}
         {step === 3 && (
           <div>
-            <h2 className="text-xl font-bold mb-4">Select a Date</h2>
+            <h2 className="text-xl font-bold mb-4">Select Date & Time</h2>
 
-            <div className="bg-white/5 rounded-lg p-4 mb-4">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="font-medium">
-                  {currentMonth.toLocaleDateString(undefined, {
-                    month: "long",
-                    year: "numeric",
-                  })}
-                </h3>
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => {
-                      const newMonth = new Date(currentMonth);
-                      newMonth.setMonth(newMonth.getMonth() - 1);
-                      setCurrentMonth(newMonth);
-                    }}
-                    className="p-1 hover:bg-white/10 rounded-lg transition-colors"
-                  >
-                    <ChevronLeft className="w-4 h-4" />
-                  </button>
-                  <button
-                    onClick={() => {
-                      const newMonth = new Date(currentMonth);
-                      newMonth.setMonth(newMonth.getMonth() + 1);
-                      setCurrentMonth(newMonth);
-                    }}
-                    className="p-1 hover:bg-white/10 rounded-lg transition-colors"
-                  >
-                    <ChevronRight className="w-4 h-4" />
-                  </button>
-                </div>
+            <div className="bg-navy/60 rounded-xl p-6 border border-white/10">
+              <div className="mb-6">
+                <p className="text-white/60 mb-2">Selected Provider:</p>
+                <p className="text-lg text-white">
+                  {owners.find((o) => o.id === selectedOwner)?.firstname || owners.find((o) => o.id === selectedOwner)?.name || 'Unknown'}{" "}
+                  {owners.find((o) => o.id === selectedOwner)?.lastname || ''}
+                </p>
               </div>
 
-              <div className="grid grid-cols-7 gap-1 text-center mb-2">
-                {["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"].map((day) => (
-                  <div key={day} className="text-xs text-white/40 py-1">
-                    {day}
+              <div className="mb-6">
+                <p className="text-white/60 mb-2">Selected Service:</p>
+                <p className="text-lg text-white">
+                  {ownerServices.find((s: Service) => s.id === selectedService)?.service_name || "No service selected"}
+                </p>
+              </div>
+
+              <div className="space-y-6">
+                {/* Date Selection */}
+                <div>
+                  <label className="block text-white/60 mb-2">Select Date</label>
+                  <div className="relative">
+                    <input
+                      type="text"
+                      readOnly
+                      value={selectedDate ? selectedDate.toLocaleDateString(undefined, {
+                        weekday: "long",
+                        year: "numeric",
+                        month: "long",
+                        day: "numeric",
+                      }) : "Click to select date"}
+                      onClick={() => setShowCalendar(true)}
+                      className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white cursor-pointer hover:bg-white/10 transition-colors"
+                      placeholder="Select a date"
+                    />
+                    <CalendarDays className="absolute right-4 top-1/2 -translate-y-1/2 text-white/40 w-5 h-5" />
                   </div>
-                ))}
-              </div>
+                </div>
 
-              <div className="grid grid-cols-7 gap-1">
-                {generateCalendarDays()}
+                {/* Time Selection */}
+                <div>
+                  <label className="block text-white/60 mb-2">Select Time</label>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                    {availableTimes.map((time) => (
+                      <button
+                        key={time}
+                        onClick={() => {
+                          setSelectedTime(time);
+                          if (selectedDate) {
+                            const [hours, minutes] = time.split(':');
+                            const newDate = new Date(selectedDate);
+                            newDate.setHours(parseInt(hours), parseInt(minutes));
+                            setDateTimeString(formatDateToStandard(newDate));
+                          }
+                        }}
+                        className={`p-3 rounded-lg text-center transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] ${
+                          selectedTime === time
+                            ? "bg-spink text-navy font-medium"
+                            : "bg-white/5 hover:bg-white/10 text-white"
+                        }`}
+                      >
+                        {time}
+                      </button>
+                    ))}
+                  </div>
+                </div>
               </div>
             </div>
 
-            {selectedDate && (
-              <div className="bg-[#9f6eff]/10 rounded-lg p-4 border border-[#9f6eff]/30">
-                <p className="font-medium">Selected Date:</p>
-                <p className="text-lg">{formatDateForDisplay(selectedDate)}</p>
+            {/* Calendar Popup */}
+            {showCalendar && (
+              <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
+                <div className="bg-navy/90 rounded-xl p-6 border border-spink/20 shadow-xl max-w-md w-full mx-4">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-lg font-medium">Select Date</h3>
+                    <button
+                      onClick={() => setShowCalendar(false)}
+                      className="text-white/60 hover:text-white transition-colors"
+                    >
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  </div>
+                  
+                  <div className="bg-white/5 rounded-lg p-4">
+                    <div className="grid grid-cols-7 gap-2 mb-4">
+                      {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day) => (
+                        <div
+                          key={day}
+                          className="text-center text-sm text-white/40 font-medium"
+                        >
+                          {day}
+                        </div>
+                      ))}
+                    </div>
+
+                    <div className="grid grid-cols-7 gap-2">
+                      {generateCalendarDays()}
+                    </div>
+                  </div>
+
+                  <div className="mt-6 flex justify-end gap-3">
+                    <button
+                      onClick={() => setShowCalendar(false)}
+                      className="px-4 py-2 bg-white/10 hover:bg-white/20 rounded-lg transition-all duration-300 hover:scale-[1.02] active:scale-[0.98]"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={() => {
+                        if (tempDate) {
+                          setSelectedDate(tempDate);
+                          setShowCalendar(false);
+                          setTempDate(null); // Reset tempDate after using it
+                        }
+                      }}
+                      className="px-4 py-2 bg-spink hover:bg-mred text-navy font-medium rounded-lg transition-all duration-300 hover:scale-[1.02] active:scale-[0.98]"
+                    >
+                      Confirm
+                    </button>
+                  </div>
+                </div>
               </div>
             )}
 
             <div className="mt-8 flex justify-between">
               <button
                 onClick={() => setStep(2)}
-                className="px-4 py-2 bg-white/10 hover:bg-white/20 rounded-lg transition-colors text-sm font-medium flex items-center gap-2"
-              >
-                <ChevronLeft className="w-4 h-4" />
-                Back
-              </button>
-
-              <button
-                onClick={() => setStep(4)}
-                disabled={!selectedDate}
-                className="px-4 py-2 bg-[#9f6eff] hover:bg-[#8b4ff7] rounded-lg transition-colors text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-              >
-                Continue
-                <ChevronRight className="w-4 h-4" />
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* Step 4: Select Time and Notes */}
-        {step === 4 && (
-          <div>
-            <h2 className="text-xl font-bold mb-4">Select a Time</h2>
-
-            <div className="bg-white/5 rounded-lg p-4 mb-4">
-              <p className="font-medium mb-4">
-                Available times for{" "}
-                {selectedDate && formatDateForDisplay(selectedDate)}
-              </p>
-
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
-                  {availableTimes.map((time) => (
-                    <button
-                      key={time}
-                      onClick={() => setSelectedTime(time)}
-                      className={`py-2 px-4 rounded-lg text-center transition-colors ${
-                      selectedTime === time
-                        ? "bg-[#9f6eff] text-white"
-                        : "bg-white/5 hover:bg-white/10"
-                      }`}
-                    >
-                      {formatTimeStringForDisplay(time)}
-                    </button>
-                  ))}
-                </div>
-            </div>
-
-            {selectedTime && (
-              <div className="bg-[#9f6eff]/10 rounded-lg p-4 border border-[#9f6eff]/30 mb-4">
-                <p className="font-medium">Selected Time:</p>
-                <p className="text-lg">
-                  {formatTimeStringForDisplay(selectedTime)}
-                </p>
-              </div>
-            )}
-
-            {/* Date-Time Format Display */}
-            <div className="bg-[#9f6eff]/10 rounded-lg p-4 border border-[#9f6eff]/30 mb-4">
-              <div className="flex items-start gap-2">
-                <Info className="w-5 h-5 text-[#9f6eff] flex-shrink-0 mt-0.5" />
-                <div>
-                  <p className="font-medium text-white mb-1">
-                    Appointment Date & Time
-                  </p>
-                  <p className="text-white/80">
-                    {isValidDateTimeFormat(dateTimeString)
-                      ? dateTimeString
-                      : "Please select a valid date and time"}
-                  </p>
-                  <p className="text-xs text-white/60 mt-1">
-                    Format: YYYY-MM-DD HH:mm
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {/* Additional Notes */}
-            <div className="bg-white/5 rounded-lg p-4 mb-4">
-              <label
-                htmlFor="notes"
-                className="block text-sm font-medium text-white/80 mb-2"
-              >
-                Additional Notes
-              </label>
-              <textarea
-                id="notes"
-                value={notes}
-                onChange={(e) => setNotes(e.target.value)}
-                rows={4}
-                placeholder="Any special requests or information for this appointment"
-                className="w-full bg-white/5 border border-white/10 rounded-lg py-2 px-3 text-white focus:outline-none focus:ring-2 focus:ring-[#9f6eff]/50"
-              ></textarea>
-            </div>
-
-            <div className="mt-8 flex justify-between">
-              <button
-                onClick={() => setStep(3)}
-                className="px-4 py-2 bg-white/10 hover:bg-white/20 rounded-lg transition-colors text-sm font-medium flex items-center gap-2"
+                className="px-6 py-2.5 bg-white/10 hover:bg-white/20 rounded-xl transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] flex items-center gap-2"
               >
                 <ChevronLeft className="w-4 h-4" />
                 Back
@@ -874,10 +813,8 @@ export default function BookAppointmentPage() {
 
               <button
                 onClick={handleSubmit}
-                disabled={
-                  !selectedTime || !isValidDateTimeFormat(dateTimeString)
-                }
-                className="px-4 py-2 bg-[#9f6eff] hover:bg-[#8b4ff7] rounded-lg transition-colors text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                disabled={!selectedDate || !selectedTime}
+                className="px-6 py-2.5 bg-spink hover:bg-mred text-navy font-medium rounded-xl transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
               >
                 {isEditMode ? "Update Appointment" : "Book Appointment"}
               </button>
@@ -887,15 +824,15 @@ export default function BookAppointmentPage() {
       </div>
 
       {/* Booking Summary */}
-      <div className="bg-white/5 backdrop-blur-sm rounded-xl border border-white/10 p-6">
+      <div className="bg-navy/60 backdrop-blur-sm rounded-xl border border-white/10 p-6">
         <h2 className="text-xl font-bold mb-4">
           {isEditMode ? "Appointment Summary" : "Booking Summary"}
         </h2>
 
         <div className="space-y-4">
           <div className="flex items-start gap-4">
-            <div className="w-8 h-8 rounded-lg bg-[#9f6eff]/20 flex items-center justify-center flex-shrink-0">
-              <User className="w-4 h-4 text-[#9f6eff]" />
+            <div className="w-8 h-8 rounded-lg bg-spink/20 flex items-center justify-center flex-shrink-0">
+              <User className="w-4 h-4 text-spink" />
             </div>
             <div>
               <h3 className="text-sm font-medium text-white/60">Provider</h3>
@@ -910,8 +847,8 @@ export default function BookAppointmentPage() {
           </div>
 
           <div className="flex items-start gap-4">
-            <div className="w-8 h-8 rounded-lg bg-[#9f6eff]/20 flex items-center justify-center flex-shrink-0">
-              <Package className="w-4 h-4 text-[#9f6eff]" />
+            <div className="w-8 h-8 rounded-lg bg-spink/20 flex items-center justify-center flex-shrink-0">
+              <Package className="w-4 h-4 text-spink" />
             </div>
             <div>
               <h3 className="text-sm font-medium text-white/60">Service</h3>
@@ -923,7 +860,7 @@ export default function BookAppointmentPage() {
                   : "No service selected"}
               </p>
               {selectedService && (
-                <p className="text-[#9f6eff]">
+                <p className="text-spink">
                   $
                   {ownerServices
                     .find((s: Service) => s.id === selectedService)
@@ -934,8 +871,8 @@ export default function BookAppointmentPage() {
           </div>
 
           <div className="flex items-start gap-4">
-            <div className="w-8 h-8 rounded-lg bg-[#9f6eff]/20 flex items-center justify-center flex-shrink-0">
-              <Calendar className="w-4 h-4 text-[#9f6eff]" />
+            <div className="w-8 h-8 rounded-lg bg-spink/20 flex items-center justify-center flex-shrink-0">
+              <Calendar className="w-4 h-4 text-spink" />
             </div>
             <div>
               <h3 className="text-sm font-medium text-white/60">Date</h3>
@@ -948,8 +885,8 @@ export default function BookAppointmentPage() {
           </div>
 
           <div className="flex items-start gap-4">
-            <div className="w-8 h-8 rounded-lg bg-[#9f6eff]/20 flex items-center justify-center flex-shrink-0">
-              <Clock className="w-4 h-4 text-[#9f6eff]" />
+            <div className="w-8 h-8 rounded-lg bg-spink/20 flex items-center justify-center flex-shrink-0">
+              <Clock className="w-4 h-4 text-spink" />
             </div>
             <div>
               <h3 className="text-sm font-medium text-white/60">Time</h3>
@@ -963,8 +900,8 @@ export default function BookAppointmentPage() {
 
           {notes && (
             <div className="flex items-start gap-4">
-              <div className="w-8 h-8 rounded-lg bg-[#9f6eff]/20 flex items-center justify-center flex-shrink-0">
-                <Info className="w-4 h-4 text-[#9f6eff]" />
+              <div className="w-8 h-8 rounded-lg bg-spink/20 flex items-center justify-center flex-shrink-0">
+                <Info className="w-4 h-4 text-spink" />
               </div>
               <div>
                 <h3 className="text-sm font-medium text-white/60">Notes</h3>
@@ -978,7 +915,7 @@ export default function BookAppointmentPage() {
               <p className="text-sm text-white/60">
                 Standardized Date-Time Format:
               </p>
-              <p className="font-mono bg-white/5 px-3 py-2 rounded mt-1">
+              <p className="font-mono bg-navy/40 px-3 py-2 rounded mt-1">
                 {dateTimeString}
               </p>
             </div>

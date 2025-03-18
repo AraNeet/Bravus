@@ -13,25 +13,38 @@ import {
   XCircle,
   ArrowLeft,
   Calendar,
+  RefreshCcw,
+  AlertCircle,
+  CalendarDays,
+  ChevronDown,
 } from "lucide-react";
 import { useAuth } from "@/app/hooks/useAuth";
 import type { Appointment, Service } from "@/app/api/types";
 import { getCurrentClient } from "@/app/api";
+import { toast } from "sonner";
 
 // Status badge component
 const StatusBadge = ({ status }: { status: string }) => {
   const statusConfig = {
     confirmed: {
-      color: "bg-green-500/20 text-green-400",
+      color: "bg-gteal/15 text-gteal border border-gteal/20",
       icon: <CheckCircle2 className="w-3 h-3 mr-1" />,
     },
     cancelled: {
-      color: "bg-red-500/20 text-red-400",
+      color: "bg-mred/15 text-mred border border-mred/20",
       icon: <XCircle className="w-3 h-3 mr-1" />,
     },
     pending: {
-      color: "bg-yellow-500/20 text-yellow-400",
+      color: "bg-amber-400/15 text-amber-400 border border-amber-400/20",
       icon: <Clock className="w-3 h-3 mr-1" />,
+    },
+    upcoming: {
+      color: "bg-spink/15 text-spink border border-spink/20",
+      icon: <Calendar className="w-3 h-3 mr-1" />,
+    },
+    past: {
+      color: "bg-white/15 text-white/60 border border-white/20",
+      icon: <CalendarDays className="w-3 h-3 mr-1" />,
     },
   };
 
@@ -40,7 +53,7 @@ const StatusBadge = ({ status }: { status: string }) => {
 
   return (
     <span
-      className={`px-2 py-1 rounded-full ${config.color} text-xs flex items-center`}
+      className={`px-2 py-1 rounded-full ${config.color} text-xs flex items-center font-medium`}
     >
       {config.icon}
       <span>{status.charAt(0).toUpperCase() + status.slice(1)}</span>
@@ -56,8 +69,7 @@ export default function ClientAppointmentsPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [refreshing, setRefreshing] = useState(false);
   const [appointments, setAppointments] = useState<Appointment[]>([]);
-  const [showToast, setShowToast] = useState(false);
-  const appointmentsPerPage = 10;
+  const appointmentsPerPage = 6;
 
   // Update the refresh function to show a success message
   const refreshAppointments = async () => {
@@ -66,12 +78,10 @@ export default function ClientAppointmentsPage() {
       console.log("Refreshing appointments data...");
       // This will trigger a re-render with updated appointment data
       await getCurrentClient();
-      // Show success message
-      setShowToast(true);
-      // Hide success message after 3 seconds
-      setTimeout(() => setShowToast(false), 3000);
+      toast.success("Appointments refreshed successfully");
     } catch (error) {
       console.error("Error refreshing appointments:", error);
+      toast.error("Failed to refresh appointments");
     } finally {
       setRefreshing(false);
     }
@@ -90,6 +100,8 @@ export default function ClientAppointmentsPage() {
       statusMatch = new Date(appointment.datetime) > new Date();
     } else if (statusFilter === "past") {
       statusMatch = new Date(appointment.datetime) < new Date();
+    } else if (statusFilter !== "all") {
+      statusMatch = getAppointmentStatus(appointment) === statusFilter;
     }
 
     // Date filter
@@ -125,7 +137,7 @@ export default function ClientAppointmentsPage() {
 
   // Pagination
   const totalPages = Math.ceil(sortedAppointments.length / appointmentsPerPage);
-  const paginatedAppointments = filteredAppointments.slice(
+  const paginatedAppointments = sortedAppointments.slice(
     (currentPage - 1) * appointmentsPerPage,
     currentPage * appointmentsPerPage
   );
@@ -157,6 +169,40 @@ export default function ClientAppointmentsPage() {
     return "Unknown Service";
   }
 
+  // Format date to a friendly string
+  function formatAppointmentDate(datetime: string): string {
+    const date = new Date(datetime);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    
+    const isToday = date >= today && date < tomorrow;
+    const isTomorrow = date >= tomorrow && date < new Date(tomorrow.getTime() + 86400000);
+    
+    const options: Intl.DateTimeFormatOptions = {
+      hour: "2-digit",
+      minute: "2-digit",
+    };
+    
+    let dateString = "";
+    
+    if (isToday) {
+      dateString = "Today";
+    } else if (isTomorrow) {
+      dateString = "Tomorrow";
+    } else {
+      dateString = date.toLocaleDateString(undefined, {
+        weekday: "short",
+        month: "short", 
+        day: "numeric"
+      });
+    }
+    
+    return `${dateString} at ${date.toLocaleTimeString([], options)}`;
+  }
+
   // Add dependency on refreshing state
   useEffect(() => {
     if (user) {
@@ -170,52 +216,54 @@ export default function ClientAppointmentsPage() {
 
   return (
     <div className="space-y-6">
-      {/* Toast notification */}
-      {showToast && (
-        <div className="fixed top-5 right-5 bg-green-500 text-white px-4 py-2 rounded-lg shadow-lg z-50 animate-fade-in-down">
-          Appointments refreshed successfully!
-        </div>
-      )}
-
-      <div className="flex items-center gap-2 mb-4">
-        <Link
-          href="/dashboard/client"
-          className="text-white/70 hover:text-white flex items-center gap-1"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          Back to Dashboard
-        </Link>
-      </div>
-
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold mb-1">My Appointments</h1>
+          <div className="flex items-center gap-2 mb-2">
+            <Link
+              href="/dashboard/client"
+              className="text-white/70 hover:text-white flex items-center gap-1"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              Back to Dashboard
+            </Link>
+          </div>
+          <h1 className="text-2xl font-bold mb-1">My Appointments</h1>
           <p className="text-white/70">
             Manage your upcoming and past appointments
           </p>
         </div>
         
-        <button
-          onClick={refreshAppointments}
-          disabled={refreshing}
-          className="bg-[#9f6eff] hover:bg-[#8b4ff7] px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 disabled:opacity-50"
-        >
-          {refreshing ? (
-            <>
-              <Clock className="w-4 h-4 animate-spin" />
-              Refreshing...
-            </>
-          ) : (
-            <>
-              <Clock className="w-4 h-4" />
-              Refresh Appointments
-            </>
-          )}
-        </button>
+        <div className="flex gap-3">
+          <button
+            onClick={refreshAppointments}
+            disabled={refreshing}
+            className="bg-navy/40 backdrop-blur-sm hover:bg-navy/60 border border-spink/20 px-4 py-2 rounded-xl text-sm font-medium flex items-center gap-2 disabled:opacity-50 transition-all duration-300"
+          >
+            {refreshing ? (
+              <>
+                <RefreshCcw className="w-4 h-4 animate-spin" />
+                Refreshing...
+              </>
+            ) : (
+              <>
+                <RefreshCcw className="w-4 h-4" />
+                Refresh
+              </>
+            )}
+          </button>
+
+          <Link
+            href="/dashboard/client/appointments/book"
+            className="bg-spink hover:bg-mred text-navy font-medium transition-all duration-300 shadow-lg shadow-spink/10 hover:shadow-mred/20 px-4 py-2 rounded-xl text-sm flex items-center gap-2 hover:scale-[1.02] active:scale-[0.98]"
+          >
+            <PlusCircle className="h-4 w-4" />
+            Book New
+          </Link>
+        </div>
       </div>
 
       {/* Filters and Search */}
-      <div className="mb-6 grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="relative">
           <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-white/40" />
           <input
@@ -223,94 +271,86 @@ export default function ClientAppointmentsPage() {
             placeholder="Search by service..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full bg-white/5 border border-white/10 rounded-lg py-2 pl-10 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-[#9f6eff]/50"
+            className="w-full bg-navy/40 border-spink/10 focus:border-spink/40 focus:ring-spink/30 rounded-lg py-2 pl-10 pr-4 text-sm focus:outline-none"
           />
         </div>
 
-        <div className="flex items-center gap-2">
-          <Filter className="w-4 h-4 text-white/60" />
+        <div className="relative">
+          <div className="absolute left-3 top-1/2 -translate-y-1/2 text-white/40">
+            <Filter className="w-4 h-4" />
+          </div>
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            className="bg-white/5 border border-white/10 rounded-lg py-2 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#9f6eff]/50 flex-1"
+            className="w-full appearance-none bg-navy/40 border-spink/10 focus:border-spink/40 focus:ring-spink/30 rounded-lg py-2 pl-10 pr-9 text-sm focus:outline-none cursor-pointer"
           >
-            <option value="all" className="bg-[#1a0b2e]">
-              All Statuses
-            </option>
-            <option value="pending" className="bg-[#1a0b2e]">
-              Pending
-            </option>
-            <option value="confirmed" className="bg-[#1a0b2e]">
-              Confirmed
-            </option>
-            <option value="completed" className="bg-[#1a0b2e]">
-              Completed
-            </option>
-            <option value="cancelled" className="bg-[#1a0b2e]">
-              Cancelled
-            </option>
+            <option value="all" className="bg-navy">All Statuses</option>
+            <option value="upcoming" className="bg-navy">Upcoming</option>
+            <option value="past" className="bg-navy">Past</option>
+            <option value="pending" className="bg-navy">Pending</option>
+            <option value="confirmed" className="bg-navy">Confirmed</option>
+            <option value="cancelled" className="bg-navy">Cancelled</option>
           </select>
+          <div className="absolute right-3 top-1/2 -translate-y-1/2 text-white/40 pointer-events-none">
+            <ChevronDown className="w-4 h-4" />
+          </div>
         </div>
 
-        <div className="flex items-center gap-2">
-          <Clock className="w-4 h-4 text-white/60" />
+        <div className="relative">
+          <div className="absolute left-3 top-1/2 -translate-y-1/2 text-white/40">
+            <Calendar className="w-4 h-4" />
+          </div>
           <select
             value={dateFilter}
             onChange={(e) => setDateFilter(e.target.value)}
-            className="bg-white/5 border border-white/10 rounded-lg py-2 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#9f6eff]/50 flex-1"
+            className="w-full appearance-none bg-navy/40 border-spink/10 focus:border-spink/40 focus:ring-spink/30 rounded-lg py-2 pl-10 pr-9 text-sm focus:outline-none cursor-pointer"
           >
-            <option value="all" className="bg-[#1a0b2e]">
-              All Dates
-            </option>
-            <option value="today" className="bg-[#1a0b2e]">
-              Today
-            </option>
-            <option value="week" className="bg-[#1a0b2e]">
-              This Week
-            </option>
-            <option value="month" className="bg-[#1a0b2e]">
-              This Month
-            </option>
-            <option value="upcoming" className="bg-[#1a0b2e]">
-              Upcoming
-            </option>
-            <option value="past" className="bg-[#1a0b2e]">
-              Past
-            </option>
+            <option value="all" className="bg-navy">All Dates</option>
+            <option value="today" className="bg-navy">Today</option>
+            <option value="week" className="bg-navy">This Week</option>
+            <option value="month" className="bg-navy">This Month</option>
+            <option value="upcoming" className="bg-navy">Future</option>
+            <option value="past" className="bg-navy">Past</option>
           </select>
+          <div className="absolute right-3 top-1/2 -translate-y-1/2 text-white/40 pointer-events-none">
+            <ChevronDown className="w-4 h-4" />
+          </div>
         </div>
       </div>
 
       {/* Appointments List */}
       {filteredAppointments.length === 0 ? (
-        <div className="text-center py-8">
-          <div className="text-gray-400 mb-2">No appointments found</div>
-          <p className="text-gray-500 mb-4">
+        <div className="bg-navy/40 backdrop-blur-sm rounded-xl border border-spink/10 p-8 text-center">
+          <div className="flex justify-center mb-4">
+            <Calendar className="w-12 h-12 text-spink/60" />
+          </div>
+          <h3 className="text-lg font-medium mb-2">No appointments found</h3>
+          <p className="text-white/60 mb-4">
             {searchQuery || statusFilter !== "all" || dateFilter !== "all" 
-              ? "Try clearing your filters or refreshing the page."
-              : "You don't have any appointments yet. Book one now!"}
+              ? "Try adjusting your search filters for different results."
+              : "You don't have any appointments yet. Schedule one now!"}
           </p>
-          <div className="flex justify-center space-x-4">
+          <div className="flex flex-col sm:flex-row justify-center gap-3">
             <button
               onClick={refreshAppointments}
               disabled={refreshing}
-              className="bg-[#9f6eff] hover:bg-[#8b4ff7] px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 disabled:opacity-50"
+              className="bg-navy/60 hover:bg-navy/80 border border-white/10 px-4 py-2 rounded-xl text-sm font-medium flex items-center justify-center gap-2 disabled:opacity-50"
             >
               {refreshing ? (
                 <>
-                  <Clock className="w-4 h-4 animate-spin" />
+                  <RefreshCcw className="w-4 h-4 animate-spin" />
                   Refreshing...
                 </>
               ) : (
                 <>
-                  <Clock className="w-4 h-4" />
+                  <RefreshCcw className="w-4 h-4" />
                   Refresh
                 </>
               )}
             </button>
             <Link
               href="/dashboard/client/appointments/book"
-              className="bg-[#4f46e5] hover:bg-[#4338ca] px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2"
+              className="bg-spink hover:bg-mred text-navy font-medium transition-colors px-4 py-2 rounded-xl text-sm flex items-center justify-center gap-2"
             >
               <PlusCircle className="h-4 w-4" />
               Book Appointment
@@ -318,91 +358,56 @@ export default function ClientAppointmentsPage() {
           </div>
         </div>
       ) : (
-        <div className="bg-white/5 backdrop-blur-sm rounded-xl border border-white/10 overflow-hidden mb-6">
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b border-white/10">
-                  <th className="px-6 py-3 text-left text-xs font-medium text-white/60 uppercase tracking-wider">
-                    Date & Time
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-white/60 uppercase tracking-wider">
-                    Service
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-white/60 uppercase tracking-wider">
-                    Status
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-white/60 uppercase tracking-wider">
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {paginatedAppointments.map((appointment) => (
-                  <tr
-                    key={appointment.id}
-                    className="border-b border-white/5 hover:bg-white/5"
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {paginatedAppointments.map((appointment) => (
+            <div
+              key={appointment.id}
+              className="bg-navy/40 backdrop-blur-sm rounded-xl border border-spink/10 hover:border-spink/20 transition-all duration-300 hover:shadow-lg hover:shadow-spink/5 overflow-hidden flex flex-col"
+            >
+              <div className="p-4 border-b border-white/10">
+                <div className="flex justify-between items-start mb-3">
+                  <StatusBadge status={getAppointmentStatus(appointment)} />
+                  <span className="text-xs text-white/50">ID: #{appointment.id.substring(0, 6)}</span>
+                </div>
+                <h3 className="font-medium mb-1 text-lg">{getServiceName(appointment)}</h3>
+                <div className="flex items-center gap-2 text-sm text-white/70">
+                  <Calendar className="w-3.5 h-3.5" />
+                  <span>{formatAppointmentDate(appointment.datetime)}</span>
+                </div>
+              </div>
+              
+              <div className="p-4 mt-auto flex justify-end gap-2 border-t border-white/5">
+                <Link
+                  href={`/dashboard/client/appointments/${appointment.id}`}
+                  className="px-3 py-1.5 rounded-lg bg-spink/10 hover:bg-spink/20 text-white text-sm font-medium transition-colors flex items-center gap-1"
+                >
+                  View Details
+                </Link>
+                
+                {getAppointmentStatus(appointment) === "upcoming" && (
+                  <button
+                    className="px-3 py-1.5 rounded-lg bg-mred/10 hover:bg-mred/20 text-white text-sm font-medium transition-colors flex items-center gap-1"
+                    onClick={() => {
+                      // Handle cancellation logic here
+                      alert(`Cancel appointment ${appointment.id}`);
+                    }}
                   >
-                    <td className="px-6 py-4 whitespace-nowrap text-sm">
-                      {new Date(appointment.datetime).toLocaleString([], {
-                        weekday: "short",
-                        month: "short",
-                        day: "numeric",
-                        year: "numeric",
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm">
-                      {getServiceName(appointment)}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm">
-                      <StatusBadge status={getAppointmentStatus(appointment)} />
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm">
-                      <div className="flex items-center gap-2">
-                        <Link
-                          href={`/dashboard/client/appointments/${appointment.id}`}
-                          className="text-[#9f6eff] hover:text-[#8b4ff7] transition-colors"
-                        >
-                          View
-                        </Link>
-                        {getAppointmentStatus(appointment) === "pending" && (
-                          <>
-                            <Link
-                              href={`/dashboard/client/appointments/${appointment.id}/edit`}
-                              className="text-[#9f6eff] hover:text-[#8b4ff7] transition-colors"
-                            >
-                              Edit
-                            </Link>
-                            <button
-                              className="text-red-400 hover:text-red-300 transition-colors"
-                              onClick={() => {
-                                // Handle cancellation logic here
-                                alert(`Cancel appointment ${appointment.id}`);
-                              }}
-                            >
-                              Cancel
-                            </button>
-                          </>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                    Cancel
+                  </button>
+                )}
+              </div>
+            </div>
+          ))}
         </div>
       )}
 
       {/* Pagination */}
       {totalPages > 1 && (
-        <div className="flex justify-center items-center gap-2">
+        <div className="flex justify-center items-center gap-2 mt-6">
           <button
             onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
             disabled={currentPage === 1}
-            className="p-2 rounded-lg bg-white/5 hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="p-2 rounded-lg bg-navy/40 border border-spink/10 hover:bg-spink/10 hover:border-spink/20 disabled:opacity-50 disabled:hover:bg-transparent disabled:cursor-not-allowed transition-colors"
           >
             <ChevronLeft className="w-4 h-4" />
           </button>
@@ -412,10 +417,10 @@ export default function ClientAppointmentsPage() {
               <button
                 key={page}
                 onClick={() => setCurrentPage(page)}
-                className={`w-8 h-8 rounded-lg flex items-center justify-center text-sm ${
+                className={`w-8 h-8 rounded-lg flex items-center justify-center text-sm transition-colors ${
                   currentPage === page
-                    ? "bg-[#9f6eff] text-white"
-                    : "bg-white/5 hover:bg-white/10 text-white/70"
+                    ? "bg-spink/20 text-spink border border-spink/30"
+                    : "bg-navy/40 border border-spink/10 hover:bg-spink/10 text-white/70"
                 }`}
               >
                 {page}
@@ -428,7 +433,7 @@ export default function ClientAppointmentsPage() {
               setCurrentPage((prev) => Math.min(prev + 1, totalPages))
             }
             disabled={currentPage === totalPages}
-            className="p-2 rounded-lg bg-white/5 hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="p-2 rounded-lg bg-navy/40 border border-spink/10 hover:bg-spink/10 hover:border-spink/20 disabled:opacity-50 disabled:hover:bg-transparent disabled:cursor-not-allowed transition-colors"
           >
             <ChevronRight className="w-4 h-4" />
           </button>
