@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Clock, Users, Package, ChevronRight, PlusCircle } from "lucide-react";
+import { Clock, Users, Package, ChevronRight, PlusCircle, Calendar, BarChart3 } from "lucide-react";
 import { useAuth } from "@/app/hooks/useAuth";
 import { getUserServices } from "@/app/api/services";
 import { getOwnerAppointments } from "@/app/api/appointments";
@@ -36,6 +36,24 @@ interface ExtendedOwner {
   appointments: AppointmentWithUsers[];
 }
 
+// Client-side only component for displaying time
+function FormattedTime({ dateString }: { dateString: string }) {
+  const [formattedTime, setFormattedTime] = useState<string>("");
+  
+  useEffect(() => {
+    // Only run on client side
+    const appointmentTime = new Date(dateString);
+    // Add 4 hours to the appointment time
+    appointmentTime.setHours(appointmentTime.getHours() + 4);
+    setFormattedTime(appointmentTime.toLocaleTimeString([], {
+      hour: '2-digit',
+      minute: '2-digit'
+    }));
+  }, [dateString]);
+  
+  return <span>{formattedTime}</span>;
+}
+
 export default function OwnerDashboard() {
   const { user, authUser, isLoading, isLoggedIn, userType } = useAuth();
   const router = useRouter();
@@ -43,6 +61,12 @@ export default function OwnerDashboard() {
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [isLoadingServices, setIsLoadingServices] = useState(false);
   const [isLoadingAppointments, setIsLoadingAppointments] = useState(false);
+  const [isClient, setIsClient] = useState(false);
+
+  // Detect client-side rendering
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   // Redirect to login if not authenticated or to client dashboard if not an owner
   useEffect(() => {
@@ -144,72 +168,89 @@ export default function OwnerDashboard() {
     return appointmentDate >= today && appointmentDate < tomorrow;
   });
 
+  // Extract first name if available
+  const firstName = userData && typeof userData === 'object' && 'firstname' in userData 
+    ? String(userData.firstname) 
+    : userData && typeof userData === 'object' && 'name' in userData 
+      ? String(userData.name).split(' ')[0] 
+      : "Business Owner";
+  
+  // Prevent any rendering until client-side hydration is complete
+  if (!isClient) {
+    return <div className="min-h-screen flex items-center justify-center">
+      <div className="animate-spin w-8 h-8 border-3 border-spink border-t-transparent rounded-full mx-auto"></div>
+    </div>;
+  }
+
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       {/* Welcome Section */}
-      <section className="mb-4">
-        <h1 className="text-3xl font-bold mb-2">Business Dashboard</h1>
-        <p className="text-white/70">
-          Manage your appointments, clients, and services
-        </p>
+      <section className="flex justify-between items-center bg-navy/40 backdrop-blur-sm rounded-xl border border-spink/10 p-6 mb-6">
+        <div>
+          <h1 className="text-2xl font-bold mb-1">Welcome back</h1>
+          <p className="text-xl font-bold text-spink">{firstName}!</p>
+        </div>
+        <div className="hidden md:block">
+          <img src="/images/dashboard-illustration.svg" alt="Dashboard" className="h-24 w-auto" onError={(e) => {e.currentTarget.style.display = 'none'}} />
+        </div>
       </section>
 
-      {/* Quick Stats */}
-      <section className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <div className="bg-white/5 backdrop-blur-sm rounded-xl border border-white/10 p-6">
-          <div className="flex items-center gap-4 mb-4">
-            <div className="w-12 h-12 rounded-lg bg-[#9f6eff]/20 flex items-center justify-center">
-              <Clock className="w-6 h-6 text-[#9f6eff]" />
+      {/* Stats Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+        <div className="bg-navy/40 backdrop-blur-sm rounded-xl border border-spink/10 p-6 hover:shadow-lg hover:shadow-spink/5 transition-all duration-300">
+          <div className="flex items-center gap-4">
+            <div className="w-14 h-14 rounded-full bg-spink/20 flex items-center justify-center">
+              <Clock className="w-7 h-7 text-spink" />
             </div>
             <div>
-              <h2 className="font-medium">Appointments</h2>
-              <p className="text-2xl font-bold">
-                {appointments.length || 0}
+              <p className="text-white/70 text-sm">Active Appointments</p>
+              <h2 className="text-3xl font-bold">{appointments.length || 0}</h2>
+              <p className="text-xs text-white/50 mt-1">
+                {todaysAppointments.length} today
               </p>
             </div>
           </div>
-          <Link
-            href="/dashboard/owner/appointments"
-            className="flex items-center justify-between text-sm text-[#9f6eff] hover:underline"
-          >
-            <span>View all appointments</span>
-            <ChevronRight className="w-4 h-4" />
-          </Link>
         </div>
 
-        <div className="bg-white/5 backdrop-blur-sm rounded-xl border border-white/10 p-6">
-          <div className="flex items-center gap-4 mb-4">
-            <div className="w-12 h-12 rounded-lg bg-[#9f6eff]/20 flex items-center justify-center">
-              <Package className="w-6 h-6 text-[#9f6eff]" />
+        <div className="bg-navy/40 backdrop-blur-sm rounded-xl border border-spink/10 p-6 hover:shadow-lg hover:shadow-spink/5 transition-all duration-300">
+          <div className="flex items-center gap-4">
+            <div className="w-14 h-14 rounded-full bg-mred/20 flex items-center justify-center">
+              <Package className="w-7 h-7 text-mred" />
             </div>
             <div>
-              <h2 className="font-medium">Services</h2>
-              <p className="text-2xl font-bold">{services.length || 0}</p>
+              <p className="text-white/70 text-sm">Total Services</p>
+              <h2 className="text-3xl font-bold">{services.length || 0}</h2>
+              <p className="text-xs text-white/50 mt-1">
+                Active offerings
+              </p>
             </div>
           </div>
-          <Link
-            href="/dashboard/owner/service"
-            className="flex items-center justify-between text-sm text-[#9f6eff] hover:underline"
-          >
-            <span>View all services</span>
-            <ChevronRight className="w-4 h-4" />
-          </Link>
         </div>
-      </section>
+      </div>
 
       {/* Today's Appointments */}
-      <section className="mb-8">
+      <section className="mb-6">
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-bold">Today's Appointments</h2>
-          {/* New Appointment button removed - owners can only edit existing appointments */}
+          <div className="flex items-center gap-2">
+            <Calendar className="w-5 h-5 text-spink" />
+            <h2 className="text-xl font-bold">Today's Appointments</h2>
+          </div>
+          <Link
+            href="/dashboard/owner/appointments"
+            className="text-sm text-spink hover:underline flex items-center gap-1"
+          >
+            <span>View all</span>
+            <ChevronRight className="w-4 h-4" />
+          </Link>
         </div>
 
         {isLoadingAppointments ? (
-          <div className="bg-white/5 backdrop-blur-sm rounded-xl border border-white/10 p-6 text-center">
+          <div className="bg-navy/40 backdrop-blur-sm rounded-xl border border-spink/10 p-6 text-center">
+            <div className="animate-spin w-8 h-8 border-3 border-spink border-t-transparent rounded-full mx-auto mb-2"></div>
             <p>Loading appointments...</p>
           </div>
         ) : todaysAppointments.length > 0 ? (
-          <div className="bg-white/5 backdrop-blur-sm rounded-xl border border-white/10 overflow-hidden">
+          <div className="bg-navy/40 backdrop-blur-sm rounded-xl border border-spink/10 overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
@@ -230,7 +271,6 @@ export default function OwnerDashboard() {
                 </thead>
                 <tbody className="divide-y divide-white/10">
                   {todaysAppointments.map((appointment) => {
-                    const appointmentTime = new Date(appointment.datetime);
                     const clientName = appointment.clients && appointment.clients.length > 0 
                       ? appointment.clients[0].name 
                       : "Unknown Client";
@@ -241,10 +281,7 @@ export default function OwnerDashboard() {
                     return (
                       <tr key={appointment.id} className="hover:bg-white/5">
                         <td className="px-6 py-4 whitespace-nowrap">
-                          {appointmentTime.toLocaleTimeString([], {
-                            hour: '2-digit',
-                            minute: '2-digit'
-                          })}
+                          <FormattedTime dateString={appointment.datetime} />
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           {clientName}
@@ -255,7 +292,7 @@ export default function OwnerDashboard() {
                         <td className="px-6 py-4 whitespace-nowrap">
                           <Link
                             href={`/dashboard/owner/appointments/${appointment.id}`}
-                            className="text-[#9f6eff] hover:underline"
+                            className="text-spink hover:underline"
                           >
                             View Details
                           </Link>
@@ -268,7 +305,7 @@ export default function OwnerDashboard() {
             </div>
           </div>
         ) : (
-          <div className="bg-white/5 backdrop-blur-sm rounded-xl border border-white/10 p-6 text-center">
+          <div className="bg-navy/40 backdrop-blur-sm rounded-xl border border-spink/10 p-6 text-center">
             <p>No appointments scheduled for today.</p>
           </div>
         )}
@@ -277,10 +314,13 @@ export default function OwnerDashboard() {
       {/* Services List */}
       <section>
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-bold">Your Services</h2>
+          <div className="flex items-center gap-2">
+            <Package className="w-5 h-5 text-mred" />
+            <h2 className="text-xl font-bold">Your Services</h2>
+          </div>
           <Link
             href="/dashboard/owner/service/new"
-            className="flex items-center gap-1 text-sm bg-gradient-to-r from-[#9f6eff] to-[#c061f7] hover:from-[#8b4ff7] hover:to-[#b04fe3] px-3 py-2 rounded-lg transition-colors"
+            className="flex items-center gap-1 text-sm bg-gradient-to-r from-spink to-mred hover:from-spink/90 hover:to-mred/90 px-3 py-2 rounded-lg transition-colors"
           >
             <PlusCircle className="w-4 h-4" />
             <span>Add Service</span>
@@ -288,8 +328,8 @@ export default function OwnerDashboard() {
         </div>
 
         {isLoadingServices ? (
-          <div className="bg-white/5 backdrop-blur-sm rounded-xl border border-white/10 p-8 flex justify-center items-center">
-            <div className="animate-spin w-8 h-8 border-3 border-[#9f6eff] border-t-transparent rounded-full"></div>
+          <div className="bg-navy/40 backdrop-blur-sm rounded-xl border border-spink/10 p-8 flex justify-center items-center">
+            <div className="animate-spin w-8 h-8 border-3 border-spink border-t-transparent rounded-full"></div>
             <span className="ml-3 text-white/70">Loading services...</span>
           </div>
         ) : services.length > 0 ? (
@@ -313,18 +353,18 @@ export default function OwnerDashboard() {
               return (
                 <div
                   key={service.id}
-                  className="bg-gradient-to-br from-white/5 to-white/3 backdrop-blur-sm rounded-xl border border-[#9f6eff]/20 p-6 hover:shadow-lg hover:shadow-[#9f6eff]/10 transition-all duration-300"
+                  className="bg-gradient-to-br from-navy/40 to-navy/30 backdrop-blur-sm rounded-xl border border-spink/10 p-6 hover:shadow-lg hover:shadow-spink/5 transition-all duration-300"
                 >
                   <div className="flex justify-between items-start mb-3">
                     <h3 className="font-semibold text-lg text-white truncate">
                       {serviceName}
                     </h3>
-                    <div className="px-3 py-1 bg-[#9f6eff]/20 rounded-full text-[#c061f7] text-xs font-medium">
+                    <div className="px-3 py-1 bg-spink/20 rounded-full text-spink text-xs font-medium">
                       Active
                     </div>
                   </div>
 
-                  <div className="mb-3 text-2xl font-bold bg-gradient-to-r from-[#9f6eff] to-[#c061f7] bg-clip-text text-transparent">
+                  <div className="mb-3 text-2xl font-bold bg-gradient-to-r from-spink to-mred bg-clip-text text-transparent">
                     ${price}
                   </div>
 
@@ -349,11 +389,11 @@ export default function OwnerDashboard() {
             })}
           </div>
         ) : (
-          <div className="bg-white/5 backdrop-blur-sm rounded-xl border border-white/10 p-8 text-center">
+          <div className="bg-navy/40 backdrop-blur-sm rounded-xl border border-spink/10 p-8 text-center">
             <p className="text-white/60 mb-4">No services available yet</p>
             <Link
               href="/dashboard/owner/service/new"
-              className="inline-flex items-center gap-1 text-sm bg-[#9f6eff] hover:bg-[#8b4ff7] px-4 py-2 rounded-lg transition-colors"
+              className="inline-flex items-center gap-1 text-sm bg-gradient-to-r from-spink to-mred hover:from-spink/90 hover:to-mred/90 px-4 py-2 rounded-lg transition-colors"
             >
               <PlusCircle className="w-4 h-4" />
               <span>Add your first service</span>
