@@ -6,6 +6,7 @@
 
 import { get, post, put, del } from "./http";
 import type { Service, ServiceRequest } from "./types";
+import { getOwners } from "./users";
 
 // Types
 export interface CreateServiceRequest {
@@ -198,3 +199,72 @@ function normalizeServices(services: any[], ownerId: string): Service[] {
     return normalized;
   });
 }
+
+/**
+ * Get all services across all providers
+ * This fetches all owners with their services and flattens them into a single array
+ */
+export const getAllServices = async (): Promise<Service[]> => {
+  try {
+    // Fetch all owners with their services
+    const owners = await getOwners();
+    
+    // Extract and flatten all services
+    const allServices: Service[] = [];
+    
+    owners.forEach(owner => {
+      if (Array.isArray(owner.services)) {
+        // Add each service to our collection
+        owner.services.forEach(service => {
+          // Ensure it has a valid owner_id
+          const normalizedService = {
+            ...service,
+            owner_id: service.owner_id || owner.id
+          };
+          
+          allServices.push(normalizedService);
+        });
+      }
+    });
+    
+    console.log(`Found a total of ${allServices.length} services across all providers`);
+    return allServices;
+  } catch (error) {
+    console.error("Error fetching all services:", error);
+    return [];
+  }
+};
+
+/**
+ * Get all services directly using the dedicated endpoint
+ * This uses the /service/get-services endpoint which returns all services in the system
+ */
+export const getServices = async (): Promise<Service[]> => {
+  try {
+    console.log("Fetching all services using dedicated endpoint");
+    const response = await get<any>('/service/get-services', { includeAuth: true });
+    
+    // Handle different response formats
+    const services = Array.isArray(response) ? response : [];
+    
+    console.log(`Found ${services.length} services from get-services endpoint`);
+    
+    // Normalize the service data
+    const normalizedServices = services.map((service: any) => ({
+      id: service.id || service.ID || "",
+      service_name: service.service_name || service.ServiceName || service["service-name"] || "Unnamed Service",
+      service_desc: service.service_desc || service.ServiceDesc || service["service-desc"] || "",
+      price: typeof service.price === "number" ? service.price : parseFloat(service.price || "0"),
+      duration: service.duration || service.Duration || 60,
+      owner_id: service.owner_id || service.OwnerID || service.ownerID || "",
+    }));
+    
+    return normalizedServices;
+  } catch (error) {
+    console.error("Error fetching all services:", error);
+    
+    // Fall back to the previous method if the direct endpoint fails
+    console.log("Falling back to getting services from owners");
+    return getAllServices();
+  }
+};

@@ -84,33 +84,24 @@ func CreateService(c *fiber.Ctx) error {
 }
 
 // GetService retrieves a service based on the provided ID
-func GetService(c *fiber.Ctx) error {
-	id := c.Query("id")
-	if id == "" {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid ID"})
-	}
-
-	err := Util.ValidateUUIDs(id)
-	if err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid ID"})
-	}
-
+func GetServices(c *fiber.Ctx) error {
 	db := c.Locals("db").(*gorm.DB)
-	service := models.Service{}
+	var services []models.Service
 
-	if err := db.Preload("Owner").First(&service, "id = ?", id).Error; err != nil {
-		if err == gorm.ErrRecordNotFound {
-			return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "Service not found"})
+	if err := db.Find(&services).Error; err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to retrieve services"})
+	}
+
+	serializedServices := []Struct.ServiceSerializer{}
+	for _, service := range services {
+		response, err := Util.Serializer(service)
+		if err != nil {
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to serialize services"})
 		}
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to retrieve service"})
+		serializedServices = append(serializedServices, response.(Struct.ServiceSerializer))
 	}
 
-	response, err := Util.Serializer(service)
-	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to serialize service"})
-	}
-
-	return c.Status(fiber.StatusOK).JSON(response)
+	return c.Status(fiber.StatusOK).JSON(serializedServices)
 }
 
 // UpdateService updates an existing service
