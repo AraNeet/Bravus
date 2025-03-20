@@ -152,16 +152,16 @@ export default function CreateSpreadsheet() {
 
       // Create spreadsheet
       const response = await createSpreadsheet({
-        title: title.trim(),
+        name: title.trim(),
         description: description.trim() || undefined,
         sheetNames: filteredSheetNames,
       });
 
       // Save to localStorage
-      saveSpreadsheetId(response.spreadsheetId, title.trim());
+      saveSpreadsheetId(response.id, title.trim());
 
       // Redirect to the spreadsheet view page
-      router.push(`/dashboard/owner/sheets/${response.spreadsheetId}`);
+      router.push(`/dashboard/owner/sheets/${response.id}`);
     } catch (error) {
       console.error("Error creating spreadsheet:", error);
       setError("Failed to create spreadsheet. Please try again.");
@@ -265,8 +265,14 @@ export default function CreateSpreadsheet() {
             {showPreview && (
               <div className="border border-gteal/20 rounded-lg overflow-hidden mt-4">
                 <SpreadsheetGrid
+                  data={previewData}
                   sheetNames={sheetNames}
-                  previewData={previewData}
+                  activeSheetIndex={activeSheetIndex}
+                  onCellChange={handleCellChange}
+                  onAddRow={handleAddRow}
+                  onAddColumn={handleAddColumn}
+                  onDeleteColumn={handleDeleteColumn}
+                  onSheetChange={setActiveSheetIndex}
                 />
               </div>
             )}

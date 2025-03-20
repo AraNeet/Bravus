@@ -17,7 +17,8 @@ export interface Spreadsheet {
 
 export interface CreateSpreadsheetRequest {
   name: string;
-  // Add any other fields needed for spreadsheet creation
+  description?: string;
+  sheetNames?: string[];
 }
 
 /**
