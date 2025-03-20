@@ -37,7 +37,16 @@ export const getDefaultHeaders = (includeAuth = true) => {
   if (includeAuth && typeof window !== "undefined") {
     const token = localStorage.getItem("auth_token");
     if (token) {
-      headers["Authorization"] = `Bearer ${token}`;
+      // Ensure we consistently use 'Bearer ' prefix with a space
+      headers["Authorization"] = token.startsWith("Bearer ")
+        ? token
+        : `Bearer ${token}`;
+        
+      // Log the token being used for debugging purposes
+      console.log("Adding auth token to request. Token starts with:", 
+        token.substring(0, 15) + "...");
+    } else {
+      console.warn("No auth token found in localStorage for authenticated request");
     }
   }
 

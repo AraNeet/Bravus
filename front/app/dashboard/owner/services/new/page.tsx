@@ -2,15 +2,23 @@
 
 import type React from "react";
 
-import { useState, useEffect, useRef } from "react";
-import { useRouter, useParams } from "next/navigation";
+import { useState, useRef } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, Upload, X, Loader2, Check, Package } from "lucide-react";
+import {
+  ArrowLeft,
+  Upload,
+  X,
+  Info,
+  Package,
+  PlusCircle,
+  Loader2,
+} from "lucide-react";
 import { toast, Toaster } from "sonner";
 import { useAuth } from "@/app/hooks/useAuth";
-import { getServiceById, updateService } from "@/app/api/services";
-import type { Service } from "@/app/api/types";
-import type { UpdateServiceRequest } from "@/app/api/services";
+import { createService } from "@/app/api/services";
+import type { ServiceRequest } from "@/app/api/services";
+import { getUserIdFromToken } from "@/app/utils/jwt-utils";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -19,21 +27,16 @@ import {
   CardDescription,
 } from "@/components/ui/card";
 
-export default function EditServicePage() {
-  const params = useParams();
-  const { user, authUser, isLoading: authLoading } = useAuth();
+export default function NewServicePage() {
+  const { user, authUser, isLoading } = useAuth();
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const serviceId = params.id as string;
 
-  const [isLoading, setIsLoading] = useState(true);
-  const [service, setService] = useState<Service | null>(null);
   const [serviceName, setServiceName] = useState("");
   const [serviceDesc, setServiceDesc] = useState("");
   const [price, setPrice] = useState("");
   const [duration, setDuration] = useState("60");
   const [category, setCategory] = useState("");
-  const [active, setActive] = useState(true);
   const [image, setImage] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -41,58 +44,6 @@ export default function EditServicePage() {
 
   // Get user data from either full profile or auth response
   const userData = user || authUser;
-
-  useEffect(() => {
-    const fetchService = async () => {
-      if (authLoading) return;
-
-      if (!userData) {
-        router.push("/login");
-        return;
-      }
-
-      try {
-        setIsLoading(true);
-        console.log("Fetching service with ID:", serviceId);
-        const serviceData = await getServiceById(serviceId);
-        console.log("Service data received:", serviceData);
-        setService(serviceData);
-
-        // Handle different service data formats
-        const name =
-          serviceData.service_name ||
-          (serviceData as any)["service-name"] ||
-          "";
-        const desc =
-          serviceData.service_desc ||
-          (serviceData as any)["service-desc"] ||
-          "";
-        const servicePrice = serviceData.price?.toString() || "0";
-        const serviceDuration = serviceData.duration?.toString() || "60";
-
-        // Populate form fields
-        setServiceName(name);
-        setServiceDesc(desc);
-        setPrice(servicePrice);
-        setDuration(serviceDuration);
-
-        // Default values if not provided by API
-        setCategory("");
-        setActive(true);
-
-        // In a real app, you would set the image preview from the service's image URL
-        setImagePreview(null);
-      } catch (error) {
-        console.error("Error fetching service:", error);
-        toast.error("Failed to load service details. Please try again.");
-        router.push("/dashboard/owner/service");
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchService();
-  }, [serviceId, userData, authLoading, router]);
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -148,64 +99,69 @@ export default function EditServicePage() {
 
     if (!validateForm()) return;
 
-    if (!service) {
-      toast.error("Unable to update service");
-      return;
-    }
-
     try {
       setIsSubmitting(true);
 
-      // Support both kebab-case and snake_case property names to handle
-      // potential API inconsistencies
+      // Get user ID from token
+      const userId = getUserIdFromToken();
+      if (!userId) {
+        toast.error("Authentication error. Please log in again.");
+        return;
+      }
+
+      // Structure service data exactly as expected by the backend
+      // Backend expects ServiceName, ServiceDesc, Price and Duration in the ServiceRequestHandler struct
       const serviceData = {
         "service-name": serviceName,
         "service-desc": serviceDesc,
-        service_name: serviceName,
-        service_desc: serviceDesc,
         price: Number.parseFloat(price),
         duration: Number.parseInt(duration),
+        ServiceName: serviceName, // Add these fields as backup
+        ServiceDesc: serviceDesc,
+        Price: Number.parseFloat(price),
+        Duration: Number.parseInt(duration),
       };
 
-      console.log("Updating service with data:", serviceData);
+      // Add detailed debug logging
+      console.log(
+        "Creating service with data:",
+        JSON.stringify(serviceData, null, 2)
+      );
+      console.log("Sending to endpoint:", `/service/create?id=${userId}`);
 
-      // In a real app, you would upload the image to a storage service
-      // and include the URL in the service data
+      try {
+        const response = await createService(userId, serviceData);
+        console.log("Service creation response:", response);
+        toast.success("Service created successfully");
+        router.push("/dashboard/owner/services");
+      } catch (error) {
+        console.error("Error creating service:", error);
 
-      await updateService(service.id, serviceData);
+        // Detailed error logging
+        if (error && typeof error === "object" && "message" in error) {
+          console.error("Error message:", (error as any).message);
+        }
+        if (error && typeof error === "object" && "status" in error) {
+          console.error("Error status:", (error as any).status);
+        }
+        if (error && typeof error === "object" && "data" in error) {
+          console.error("Error data:", (error as any).data);
+        }
 
-      toast.success("Service updated successfully");
-      router.push("/dashboard/owner/service");
-    } catch (error) {
-      console.error("Error updating service:", error);
-      toast.error("Failed to update service. Please try again.");
+        toast.error(
+          "Failed to create service. Please check console for details."
+        );
+      }
     } finally {
       setIsSubmitting(false);
     }
   };
 
   // If still loading, show loading state
-  if (authLoading || isLoading) {
+  if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-[#1a0b2e] to-[#2c1250] text-white flex items-center justify-center">
-        <div className="animate-spin w-12 h-12 border-4 border-[#9f6eff] border-t-transparent rounded-full"></div>
-      </div>
-    );
-  }
-
-  // If service not found
-  if (!service) {
-    return (
-      <div className="min-h-screen bg-gradient-to-b from-[#1a0b2e] to-[#2c1250] text-white flex items-center justify-center">
-        <div className="text-center">
-          <p className="text-xl mb-4">Service not found</p>
-          <Link
-            href="/dashboard/owner/services"
-            className="px-6 py-2 rounded-lg bg-[#9f6eff] hover:bg-[#8b4ff7] transition-colors"
-          >
-            Back to Services
-          </Link>
-        </div>
+      <div className="min-h-screen bg-gradient-to-b from-navy to-navy/70 text-white flex items-center justify-center">
+        <div className="animate-spin w-12 h-12 border-4 border-mred border-t-transparent rounded-full"></div>
       </div>
     );
   }
@@ -215,7 +171,7 @@ export default function EditServicePage() {
       <div className="flex items-center gap-2 mb-4">
         <Button
           variant="outline"
-          className="border-white/10 bg-white/5 text-white hover:bg-white/10"
+          className="border-gteal/20 bg-navy/30 text-white hover:bg-navy/50"
           onClick={() => router.back()}
         >
           <ArrowLeft className="mr-2 h-4 w-4" />
@@ -224,25 +180,27 @@ export default function EditServicePage() {
       </div>
 
       <div>
-        <h1 className="text-3xl font-bold mb-2">Edit Service</h1>
+        <h1 className="text-3xl font-bold mb-2 bg-gradient-to-r from-spink to-mred bg-clip-text text-transparent">Add New Service</h1>
         <p className="text-white/70">
-          Update your service information and availability
+          Create a new service offering that will be visible to your clients
         </p>
       </div>
 
       {/* Form */}
-      <Card className="bg-gradient-to-br from-white/5 to-white/3 border-[#9f6eff]/20 shadow-lg shadow-[#9f6eff]/5">
+      <Card className="bg-navy/30 border-gteal/20 shadow-lg shadow-navy/40 relative overflow-hidden">
+        {/* Color accent line at top */}
+        <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-mred to-spink"></div>
+        
         <CardHeader className="pb-4">
           <CardTitle className="text-xl flex items-center gap-2">
-            <Package className="w-5 h-5 text-[#9f6eff]" />
+            <Package className="w-5 h-5 text-spink" />
             Service Information
           </CardTitle>
           <CardDescription>
-            Make changes to your service details and click Update when you're
-            done
+            Enter all the details about your new service offering
           </CardDescription>
         </CardHeader>
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit} className="px-6 pb-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
             {/* Left Column - Service Details */}
             <div className="space-y-6">
@@ -258,9 +216,9 @@ export default function EditServicePage() {
                   type="text"
                   value={serviceName}
                   onChange={(e) => setServiceName(e.target.value)}
-                  className={`w-full bg-white/5 border ${
-                    errors.serviceName ? "border-red-500" : "border-white/10"
-                  } rounded-lg py-2 px-4 text-white focus:outline-none focus:ring-2 focus:ring-[#9f6eff]/50`}
+                  className={`w-full bg-navy/50 border ${
+                    errors.serviceName ? "border-red-500" : "border-gteal/20"
+                  } rounded-lg py-2 px-4 text-white focus:outline-none focus:ring-2 focus:ring-mred/30`}
                   placeholder="e.g., Pet Grooming"
                 />
                 {errors.serviceName && (
@@ -282,9 +240,9 @@ export default function EditServicePage() {
                   type="text"
                   value={price}
                   onChange={(e) => setPrice(e.target.value)}
-                  className={`w-full bg-white/5 border ${
-                    errors.price ? "border-red-500" : "border-white/10"
-                  } rounded-lg py-2 px-4 text-white focus:outline-none focus:ring-2 focus:ring-[#9f6eff]/50`}
+                  className={`w-full bg-navy/50 border ${
+                    errors.price ? "border-red-500" : "border-gteal/20"
+                  } rounded-lg py-2 px-4 text-white focus:outline-none focus:ring-2 focus:ring-mred/30`}
                   placeholder="e.g., 49.99"
                 />
                 {errors.price && (
@@ -303,24 +261,24 @@ export default function EditServicePage() {
                   id="duration"
                   value={duration}
                   onChange={(e) => setDuration(e.target.value)}
-                  className="w-full bg-white/5 border border-white/10 rounded-lg py-2 px-4 text-white focus:outline-none focus:ring-2 focus:ring-[#9f6eff]/50"
+                  className="w-full bg-navy/50 border border-gteal/20 rounded-lg py-2 px-4 text-white focus:outline-none focus:ring-2 focus:ring-mred/30"
                 >
-                  <option value="15" className="bg-[#1a0b2e] text-white">
+                  <option value="15" className="bg-navy text-white">
                     15 minutes
                   </option>
-                  <option value="30" className="bg-[#1a0b2e] text-white">
+                  <option value="30" className="bg-navy text-white">
                     30 minutes
                   </option>
-                  <option value="45" className="bg-[#1a0b2e] text-white">
+                  <option value="45" className="bg-navy text-white">
                     45 minutes
                   </option>
-                  <option value="60" className="bg-[#1a0b2e] text-white">
+                  <option value="60" className="bg-navy text-white">
                     1 hour
                   </option>
-                  <option value="90" className="bg-[#1a0b2e] text-white">
+                  <option value="90" className="bg-navy text-white">
                     1.5 hours
                   </option>
-                  <option value="120" className="bg-[#1a0b2e] text-white">
+                  <option value="120" className="bg-navy text-white">
                     2 hours
                   </option>
                 </select>
@@ -337,58 +295,27 @@ export default function EditServicePage() {
                   id="category"
                   value={category}
                   onChange={(e) => setCategory(e.target.value)}
-                  className="w-full bg-white/5 border border-white/10 rounded-lg py-2 px-4 text-white focus:outline-none focus:ring-2 focus:ring-[#9f6eff]/50"
+                  className="w-full bg-navy/50 border border-gteal/20 rounded-lg py-2 px-4 text-white focus:outline-none focus:ring-2 focus:ring-mred/30"
                 >
-                  <option value="" className="bg-[#1a0b2e] text-white">
+                  <option value="" className="bg-navy text-white">
                     Select a category
                   </option>
-                  <option value="grooming" className="bg-[#1a0b2e] text-white">
+                  <option value="grooming" className="bg-navy text-white">
                     Grooming
                   </option>
-                  <option value="medical" className="bg-[#1a0b2e] text-white">
+                  <option value="medical" className="bg-navy text-white">
                     Medical
                   </option>
-                  <option value="training" className="bg-[#1a0b2e] text-white">
+                  <option value="training" className="bg-navy text-white">
                     Training
                   </option>
-                  <option value="boarding" className="bg-[#1a0b2e] text-white">
+                  <option value="boarding" className="bg-navy text-white">
                     Boarding
                   </option>
-                  <option value="daycare" className="bg-[#1a0b2e] text-white">
+                  <option value="daycare" className="bg-navy text-white">
                     Daycare
                   </option>
                 </select>
-              </div>
-
-              <div>
-                <label
-                  htmlFor="status"
-                  className="block text-sm font-medium text-white/70 mb-2"
-                >
-                  Status
-                </label>
-                <div className="flex items-center gap-4">
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input
-                      type="radio"
-                      name="status"
-                      checked={active}
-                      onChange={() => setActive(true)}
-                      className="w-4 h-4 accent-[#9f6eff]"
-                    />
-                    <span>Active</span>
-                  </label>
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input
-                      type="radio"
-                      name="status"
-                      checked={!active}
-                      onChange={() => setActive(false)}
-                      className="w-4 h-4 accent-[#9f6eff]"
-                    />
-                    <span>Inactive</span>
-                  </label>
-                </div>
               </div>
             </div>
 
@@ -398,7 +325,7 @@ export default function EditServicePage() {
                 <label className="block text-sm font-medium text-white/70 mb-2">
                   Service Image
                 </label>
-                <div className="border border-dashed border-white/20 rounded-lg p-4">
+                <div className="border border-dashed border-gteal/20 rounded-lg p-4">
                   {imagePreview ? (
                     <div className="relative">
                       <img
@@ -417,9 +344,9 @@ export default function EditServicePage() {
                   ) : (
                     <div
                       onClick={() => fileInputRef.current?.click()}
-                      className="flex flex-col items-center justify-center h-48 cursor-pointer bg-white/5 rounded-lg hover:bg-white/10 transition-colors"
+                      className="flex flex-col items-center justify-center h-48 cursor-pointer bg-navy/50 rounded-lg hover:bg-navy/70 transition-colors"
                     >
-                      <Upload className="w-8 h-8 text-white/40 mb-2" />
+                      <Upload className="w-8 h-8 text-spink/60 mb-2" />
                       <p className="text-sm text-white/60">
                         Click to upload image
                       </p>
@@ -450,9 +377,9 @@ export default function EditServicePage() {
                   value={serviceDesc}
                   onChange={(e) => setServiceDesc(e.target.value)}
                   rows={5}
-                  className={`w-full bg-white/5 border ${
-                    errors.serviceDesc ? "border-red-500" : "border-white/10"
-                  } rounded-lg py-2 px-4 text-white focus:outline-none focus:ring-2 focus:ring-[#9f6eff]/50`}
+                  className={`w-full bg-navy/50 border ${
+                    errors.serviceDesc ? "border-red-500" : "border-gteal/20"
+                  } rounded-lg py-2 px-4 text-white focus:outline-none focus:ring-2 focus:ring-mred/30`}
                   placeholder="Describe your service..."
                 />
                 {errors.serviceDesc && (
@@ -464,13 +391,25 @@ export default function EditServicePage() {
             </div>
           </div>
 
+          {/* Additional Info */}
+          <div className="bg-spink/10 border border-spink/20 rounded-lg p-4 mb-8 flex items-start gap-3">
+            <Info className="w-5 h-5 text-spink mt-0.5 flex-shrink-0" />
+            <div>
+              <p className="text-sm text-white/80">
+                Services you create will be visible to clients who can book
+                appointments for them. Make sure to provide clear descriptions
+                and accurate pricing.
+              </p>
+            </div>
+          </div>
+
           {/* Form Actions */}
-          <div className="flex sm:flex-row flex-col justify-end gap-3 mt-6">
+          <div className="flex sm:flex-row flex-col justify-end gap-3 mt-8">
             <Button
               type="button"
               variant="outline"
-              onClick={() => router.push("/dashboard/owner/service")}
-              className="border-white/10 bg-white/5 hover:bg-white/10 flex items-center"
+              onClick={() => router.push("/dashboard/owner/services")}
+              className="border-gteal/20 bg-navy/50 hover:bg-navy/70 flex items-center"
             >
               <X className="w-4 h-4 mr-2" />
               Cancel
@@ -478,17 +417,17 @@ export default function EditServicePage() {
             <Button
               type="submit"
               disabled={isSubmitting}
-              className="bg-gradient-to-r from-[#9f6eff] to-[#c061f7] hover:from-[#8b4ff7] hover:to-[#b04fe7] transition-colors"
+              className="bg-gradient-to-r from-mred to-spink hover:opacity-90 transition-colors"
             >
               {isSubmitting ? (
                 <span className="flex items-center gap-2">
                   <Loader2 className="w-4 h-4 animate-spin" />
-                  Updating...
+                  Creating...
                 </span>
               ) : (
                 <>
-                  <Check className="w-4 h-4 mr-2" />
-                  Update Service
+                  <PlusCircle className="w-4 h-4 mr-2" />
+                  Create Service
                 </>
               )}
             </Button>

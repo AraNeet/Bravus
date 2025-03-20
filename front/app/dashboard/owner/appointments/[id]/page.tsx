@@ -16,6 +16,9 @@ import {
   MapPin,
   CheckCircle,
   XCircle,
+  Download,
+  HelpCircle,
+  CalendarCheck,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/app/hooks/useAuth";
@@ -44,6 +47,12 @@ export default function AppointmentDetailPage() {
   const [notFound, setNotFound] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [isClient, setIsClient] = useState(false);
+
+  // Detect client-side rendering
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   // Fetch appointment and service data
   useEffect(() => {
@@ -93,6 +102,8 @@ export default function AppointmentDetailPage() {
     if (!appointment) return "unknown";
     
     const appointmentDate = new Date(appointment.datetime);
+    // Add 4 hours to the appointment time
+    appointmentDate.setHours(appointmentDate.getHours() + 4);
     const now = new Date();
     
     if (appointmentDate < now) {
@@ -113,7 +124,7 @@ export default function AppointmentDetailPage() {
         icon: <CheckCircle className="w-4 h-4 mr-2" />,
       },
       cancelled: {
-        color: "bg-red-500/20 text-red-400",
+        color: "bg-mred/20 text-mred",
         icon: <XCircle className="w-4 h-4 mr-2" />,
       },
       pending: {
@@ -121,7 +132,7 @@ export default function AppointmentDetailPage() {
         icon: <Clock className="w-4 h-4 mr-2" />,
       },
       completed: {
-        color: "bg-blue-500/20 text-blue-400",
+        color: "bg-spink/20 text-spink",
         icon: <CheckCircle className="w-4 h-4 mr-2" />,
       },
       unknown: {
@@ -187,21 +198,21 @@ export default function AppointmentDetailPage() {
 
     return (
       <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-        <div className="bg-gradient-to-b from-[#2a1347] to-[#1a0b2e] rounded-xl border border-[#9f6eff]/20 shadow-lg p-6 max-w-md w-full">
+        <div className="bg-navy/80 rounded-xl border border-spink/20 shadow-lg p-6 max-w-md w-full">
           <h3 className="text-xl font-bold mb-2">{title}</h3>
           <p className="text-white/70 mb-6">{message}</p>
           <div className="flex justify-end gap-3">
             <button
               disabled={isConfirming}
               onClick={onClose}
-              className="px-4 py-2 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 transition-colors disabled:opacity-50"
+              className="px-4 py-2 rounded-lg bg-navy/60 hover:bg-navy/80 border border-white/10 transition-colors disabled:opacity-50"
             >
               Cancel
             </button>
             <button
               disabled={isConfirming}
               onClick={onConfirm}
-              className="px-4 py-2 rounded-lg bg-red-500/80 hover:bg-red-500 transition-colors flex items-center gap-2 disabled:opacity-50"
+              className="px-4 py-2 rounded-lg bg-mred/80 hover:bg-mred transition-colors flex items-center gap-2 disabled:opacity-50"
             >
               {isConfirming ? (
                 <>
@@ -218,125 +229,156 @@ export default function AppointmentDetailPage() {
     );
   };
 
+  // Prevent any rendering until client-side hydration is complete
+  if (!isClient) {
+    return <div className="min-h-screen flex items-center justify-center">
+      <div className="animate-spin w-8 h-8 border-3 border-spink border-t-transparent rounded-full mx-auto"></div>
+    </div>;
+  }
+
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center p-12">
-        <div className="animate-spin w-12 h-12 border-4 border-[#9f6eff] border-t-transparent rounded-full"></div>
+      <div className="bg-navy/40 backdrop-blur-sm rounded-xl border border-spink/10 p-8 max-w-md mx-auto text-center">
+        <div className="animate-spin w-16 h-16 border-4 border-spink border-t-transparent rounded-full mx-auto mb-4"></div>
+        <h1 className="text-2xl font-bold mb-4">Loading Appointment</h1>
+        <p className="text-white/70">Retrieving appointment details...</p>
       </div>
     );
   }
 
   if (notFound || !appointment) {
     return (
-      <div className="bg-white/5 backdrop-blur-sm rounded-xl border border-white/10 p-8 text-center">
-        <AlertCircle className="w-16 h-16 text-red-400 mx-auto mb-4" />
+      <div className="bg-navy/40 backdrop-blur-sm rounded-xl border border-spink/10 p-8 max-w-md mx-auto text-center">
+        <AlertCircle className="w-16 h-16 text-mred mx-auto mb-4" />
         <h1 className="text-2xl font-bold mb-4">Appointment Not Found</h1>
         <p className="text-white/70 mb-6">
           We couldn't find the appointment you're looking for.
         </p>
-        <Button
-          variant="outline"
-          className="border-white/10 bg-white/5 text-white hover:bg-white/10"
-          onClick={() => router.push("/dashboard/owner/appointments")}
+        <Link
+          href="/dashboard/owner/appointments"
+          className="inline-flex items-center justify-center gap-2 bg-navy/60 hover:bg-navy/80 px-4 py-2 rounded-lg transition-colors"
         >
-          <ArrowLeft className="mr-2 h-4 w-4" />
+          <ArrowLeft className="w-4 h-4" />
           Back to Appointments
-        </Button>
+        </Link>
       </div>
     );
   }
 
+  const appointmentDate = new Date(appointment.datetime);
+  // Add 4 hours to the appointment time
+  appointmentDate.setHours(appointmentDate.getHours() + 4);
+  const isPast = appointmentDate < new Date();
+
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <Button
-          variant="outline"
-          className="border-white/10 bg-white/5 text-white hover:bg-white/10"
-          onClick={() => router.push("/dashboard/owner/appointments")}
-        >
-          <ArrowLeft className="mr-2 h-4 w-4" />
+    <>
+      {/* Summary Section */}
+      <div className="mb-8">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <div>
+            <div className="flex items-center gap-2 mb-1">
+              <Link
+                href="/dashboard/owner/appointments"
+                className="text-white/70 hover:text-white flex items-center gap-1"
+              >
+                <ArrowLeft className="w-4 h-4" />
           Back to Appointments
-        </Button>
-
-        <div className="flex items-center gap-2">
-          <Button
-            variant="destructive"
-            className="bg-red-500/20 hover:bg-red-500/30 border-red-500/30 text-white"
+              </Link>
+            </div>
+            <h1 className="text-2xl font-bold mb-2">Appointment Details</h1>
+            <p className="text-white/70">
+              {appointmentDate.toLocaleDateString(undefined, {
+                weekday: "long",
+                year: "numeric",
+                month: "long",
+                day: "numeric",
+                hour: "2-digit",
+                minute: "2-digit",
+              })}
+            </p>
+          </div>
+          <div className="flex items-center gap-3">
+            <button 
+              className="px-4 py-2 bg-mred/20 hover:bg-mred/30 text-mred rounded-lg transition-colors text-sm font-medium flex items-center gap-2"
             onClick={handleDeleteClick}
-          >
-            <Trash2 className="mr-2 h-4 w-4" />
-            Delete
-          </Button>
+              disabled={isDeleting}
+            >
+              {isDeleting ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-mred border-t-transparent rounded-full animate-spin"></div>
+                  Cancelling...
+                </>
+              ) : (
+                <>
+                  <Trash2 className="w-4 h-4" />
+                  Cancel Appointment
+                </>
+              )}
+            </button>
+            <StatusBadge />
+          </div>
         </div>
-      </div>
-
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-        <div>
-          <h1 className="text-3xl font-bold mb-2">Appointment Details</h1>
-          <p className="text-white/70">
-            View and manage the appointment information
-          </p>
-        </div>
-        <StatusBadge />
       </div>
 
       {/* Error Message */}
       {error && (
-        <div className="bg-red-500/20 border border-red-500/50 rounded-lg p-4 flex items-start gap-3">
-          <AlertCircle className="w-5 h-5 text-red-400 shrink-0 mt-0.5" />
-          <p>{error}</p>
+        <div className="bg-mred/10 border border-mred/20 rounded-lg p-4 flex items-start gap-3 mb-6">
+          <AlertCircle className="w-5 h-5 text-mred shrink-0 mt-0.5" />
+          <p className="text-mred">{error}</p>
         </div>
       )}
 
-      {/* Appointment Details */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        {/* Date & Time */}
-        <div className="bg-gradient-to-br from-white/5 to-white/3 backdrop-blur-sm rounded-xl border border-white/10 p-6">
-          <div className="flex items-center gap-4 mb-4">
-            <div className="w-10 h-10 rounded-lg bg-[#9f6eff]/20 flex items-center justify-center">
-              <Calendar className="w-5 h-5 text-[#9f6eff]" />
-            </div>
-            <div>
-              <h2 className="font-medium text-lg">Date & Time</h2>
-            </div>
-          </div>
-          <div className="space-y-2">
-            <div className="flex items-start gap-2 text-white/80">
-              <Calendar className="w-4 h-4 mt-1 shrink-0" />
-              <span>
-                {appointment.datetime
-                  ? formatDateForDisplay(new Date(appointment.datetime))
-                  : "Not specified"}
-              </span>
-            </div>
-            <div className="flex items-start gap-2 text-white/80">
-              <Clock className="w-4 h-4 mt-1 shrink-0" />
-              <span>
-                {appointment.datetime
-                  ? formatTimeForDisplay(new Date(appointment.datetime))
-                  : "Not specified"}
-              </span>
-            </div>
-          </div>
-        </div>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {/* Appointment Details Card */}
+        <div className="md:col-span-2 bg-navy/40 backdrop-blur-sm rounded-xl border border-spink/10 p-6 hover:shadow-lg hover:shadow-spink/5 transition-all duration-300">
+          <h2 className="text-xl font-bold mb-6 flex items-center gap-2">
+            <Calendar className="w-5 h-5 text-spink" />
+            Appointment Information
+          </h2>
 
-        {/* Service */}
-        <div className="bg-gradient-to-br from-white/5 to-white/3 backdrop-blur-sm rounded-xl border border-white/10 p-6">
-          <div className="flex items-center gap-4 mb-4">
-            <div className="w-10 h-10 rounded-lg bg-[#9f6eff]/20 flex items-center justify-center">
-              <Package className="w-5 h-5 text-[#9f6eff]" />
+          <div className="space-y-8">
+            {/* Date and Time */}
+            <div className="flex items-start gap-4">
+              <div className="w-12 h-12 rounded-full bg-spink/20 flex items-center justify-center flex-shrink-0">
+                <Clock className="w-5 h-5 text-spink" />
             </div>
             <div>
-              <h2 className="font-medium text-lg">Service</h2>
-            </div>
+                <h3 className="text-sm font-medium text-white/60 mb-1">Date & Time</h3>
+                <p className="text-lg font-bold">
+                  {appointmentDate.toLocaleDateString(undefined, {
+                    weekday: "long",
+                    year: "numeric",
+                    month: "long",
+                    day: "numeric",
+                  })}
+                </p>
+                <p className="text-white/80 font-medium">
+                  {appointmentDate.toLocaleTimeString(undefined, {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}
+                </p>
+                <p className="text-white/60 text-sm mt-1">
+                  ({isPast ? "Past appointment" : "Upcoming appointment"})
+                </p>
           </div>
-          <div className="space-y-4">
+            </div>
+
+            {/* Services Section - Enhanced to show all services */}
+            <div className="flex items-start gap-4">
+              <div className="w-12 h-12 rounded-full bg-mred/20 flex items-center justify-center flex-shrink-0">
+                <Package className="w-5 h-5 text-mred" />
+            </div>
+              <div className="w-full">
+                <h3 className="text-sm font-medium text-white/60 mb-2">Service{appointment.services && appointment.services.length > 1 ? 's' : ''}</h3>
+                
             {appointment.services && appointment.services.length > 0 ? (
-              appointment.services.map((serviceItem: any) => (
-                <div key={serviceItem.id} className="bg-white/5 rounded-lg p-3">
+                  <div className="space-y-3">
+                    {appointment.services.map((serviceItem: any) => (
+                      <div key={serviceItem.id} className="bg-navy/70 rounded-lg p-4 border border-spink/10">
                   <div className="flex justify-between items-start">
-                    <p className="text-lg font-medium">{serviceItem.service_name}</p>
-                    <p className="text-[#9f6eff] font-medium">${serviceItem.price?.toFixed(2) || '0.00'}</p>
+                          <p className="text-lg font-bold">{serviceItem.service_name}</p>
+                          <p className="text-lg font-bold bg-gradient-to-r from-spink to-mred bg-clip-text text-transparent">${serviceItem.price?.toFixed(2) || '0.00'}</p>
                   </div>
                   <p className="text-white/80 text-sm mt-1">{serviceItem.service_desc}</p>
                   <div className="flex items-center gap-2 mt-2 text-white/60 text-xs">
@@ -344,65 +386,27 @@ export default function AppointmentDetailPage() {
                     <span>{serviceItem.duration || 60} minutes</span>
                   </div>
                 </div>
-              ))
-            ) : (
-              <div className="text-white/60">No service information available</div>
-            )}
-          </div>
-        </div>
-
-        {/* Client */}
-        <div className="bg-gradient-to-br from-white/5 to-white/3 backdrop-blur-sm rounded-xl border border-white/10 p-6">
-          <div className="flex items-center gap-4 mb-4">
-            <div className="w-10 h-10 rounded-lg bg-[#9f6eff]/20 flex items-center justify-center">
-              <User className="w-5 h-5 text-[#9f6eff]" />
-            </div>
-            <div>
-              <h2 className="font-medium text-lg">Client</h2>
-            </div>
-          </div>
-          {appointment.clients && appointment.clients.length > 0 ? (
-            appointment.clients.map((client: any) => (
-              <div key={client.id} className="space-y-2">
-                <div className="flex items-center gap-2 text-white/80">
-                  <User className="w-4 h-4 shrink-0" />
-                  <span>{client.name}</span>
-                </div>
-                {client.phone && (
-                  <div className="flex items-center gap-2 text-white/80">
-                    <Phone className="w-4 h-4 shrink-0" />
-                    <span>{client.phone}</span>
+                    ))}
                   </div>
-                )}
-                {client.location && (
-                  <div className="flex items-center gap-2 text-white/80">
-                    <MapPin className="w-4 h-4 shrink-0" />
-                    <span>{client.location}</span>
-                  </div>
-                )}
-              </div>
-            ))
-          ) : (
-            <div className="text-white/60">No client information available</div>
+                ) : (
+                  <p className="text-white/60">No service information available</p>
           )}
         </div>
       </div>
 
       {/* Animals Section - Show animals associated with this appointment */}
       {appointment.animals && appointment.animals.length > 0 && (
-        <div className="bg-gradient-to-br from-white/5 to-white/3 backdrop-blur-sm rounded-xl border border-white/10 p-6">
-          <div className="flex items-center gap-4 mb-4">
-            <div className="w-10 h-10 rounded-lg bg-[#9f6eff]/20 flex items-center justify-center">
-              <div className="text-[#9f6eff] text-lg">🐾</div>
+              <div className="flex items-start gap-4">
+                <div className="w-12 h-12 rounded-full bg-gteal/20 flex items-center justify-center flex-shrink-0">
+                  <div className="text-gteal text-lg">🐾</div>
             </div>
-            <div>
-              <h2 className="font-medium text-lg">Animals</h2>
-            </div>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="w-full">
+                  <h3 className="text-sm font-medium text-white/60 mb-2">Animal{appointment.animals.length > 1 ? 's' : ''}</h3>
+                  
+                  <div className="space-y-3">
             {appointment.animals.map((animal: any) => (
-              <div key={animal.id} className="bg-white/5 rounded-lg p-3">
-                <p className="text-lg font-medium">{animal.animal_name}</p>
+                      <div key={animal.id} className="bg-navy/70 rounded-lg p-4 border border-spink/10">
+                        <p className="text-lg font-bold">{animal.animal_name}</p>
                 <div className="flex flex-wrap gap-x-4 gap-y-1 mt-1 text-white/80 text-sm">
                   <span>{animal.species}</span>
                   <span>{animal.animal_race}</span>
@@ -410,34 +414,182 @@ export default function AppointmentDetailPage() {
                 </div>
               </div>
             ))}
+                  </div>
           </div>
         </div>
       )}
 
-      {/* Notes Section - Show appointment notes if available */}
-      {appointment.notes && (
-        <div className="bg-gradient-to-br from-white/5 to-white/3 backdrop-blur-sm rounded-xl border border-white/10 p-6">
-          <div className="flex items-center gap-4 mb-4">
-            <div className="w-10 h-10 rounded-lg bg-[#9f6eff]/20 flex items-center justify-center">
-              <AlertCircle className="w-5 h-5 text-[#9f6eff]" />
+            {/* Client */}
+            <div className="flex items-start gap-4">
+              <div className="w-12 h-12 rounded-full bg-gteal/20 flex items-center justify-center flex-shrink-0">
+                <User className="w-5 h-5 text-gteal" />
+              </div>
+              <div className="w-full">
+                <h3 className="text-sm font-medium text-white/60 mb-2">Client Information</h3>
+                
+                {appointment.clients && appointment.clients.length > 0 ? (
+                  <div className="space-y-3">
+                    {appointment.clients.map((client: any) => (
+                      <div key={client.id} className="bg-navy/70 rounded-lg p-4 border border-spink/10">
+                        <div className="flex justify-between items-start">
+                          <p className="text-lg font-bold">{client.name}</p>
+                        </div>
+                        <div className="space-y-2 mt-2">
+                          {client.phone && (
+                            <div className="flex items-center gap-2 text-white/80">
+                              <Phone className="w-4 h-4 text-white/60" />
+                              <span>{client.phone}</span>
+                            </div>
+                          )}
+                          {client.location && (
+                            <div className="flex items-center gap-2 text-white/80">
+                              <MapPin className="w-4 h-4 text-white/60" />
+                              <span>{client.location}</span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-white/60">No client information available</p>
+                )}
+              </div>
+            </div>
+
+            {/* Location */}
+            <div className="flex items-start gap-4">
+              <div className="w-12 h-12 rounded-full bg-spink/20 flex items-center justify-center flex-shrink-0">
+                <MapPin className="w-5 h-5 text-spink" />
             </div>
             <div>
-              <h2 className="font-medium text-lg">Notes</h2>
+                <h3 className="text-sm font-medium text-white/60 mb-1">Location</h3>
+                <p className="text-lg font-bold">Bravus Main Office</p>
+                <p className="text-white/80">123 Business Ave, Suite 101</p>
+                <p className="text-white/80">New York, NY 10001</p>
+              </div>
+            </div>
+
+            {/* Additional Notes (if any) */}
+            {appointment.notes && (
+              <div className="bg-navy/70 rounded-lg p-4 mt-4 border border-spink/10">
+                <h3 className="text-sm font-medium text-white/60 mb-2">Additional Notes</h3>
+                <p className="text-white/80">{appointment.notes}</p>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Client Information Card - Enhanced */}
+        <div className="bg-navy/40 backdrop-blur-sm rounded-xl border border-spink/10 p-6 hover:shadow-lg hover:shadow-spink/5 transition-all duration-300">
+          <h2 className="text-xl font-bold mb-6 flex items-center gap-2">
+            <HelpCircle className="w-5 h-5 text-spink" />
+            Quick Actions
+          </h2>
+
+          <div className="space-y-6">
+            {/* Add to calendar */}
+            <button
+              className="w-full px-4 py-2 bg-gradient-to-r from-spink to-mred hover:from-spink/90 hover:to-mred/90 rounded-lg transition-colors text-sm font-medium flex items-center justify-center gap-2"
+              onClick={() => {
+                // Generate calendar data
+                const startTime = new Date(appointment.datetime);
+                // Add 4 hours to the appointment time for calendar export
+                startTime.setHours(startTime.getHours() + 4);
+                const serviceItem = appointment.services && appointment.services.length > 0 ? appointment.services[0] : null;
+                const endTime = new Date(startTime.getTime() + (serviceItem?.duration || 60) * 60000);
+                
+                // Format for iCal
+                const formatDate = (date: Date) => date.toISOString().replace(/-|:|\.\d+/g, '');
+                
+                const iCalData = `BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Bravus//Appointment//EN
+BEGIN:VEVENT
+SUMMARY:${serviceItem?.service_name || 'Bravus Appointment'}
+DTSTART:${formatDate(startTime)}
+DTEND:${formatDate(endTime)}
+LOCATION:Bravus Main Office
+DESCRIPTION:${appointment.notes || ''}
+STATUS:CONFIRMED
+END:VEVENT
+END:VCALENDAR`;
+
+                const blob = new Blob([iCalData], { type: 'text/calendar' });
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = `bravus_appointment_${formatDate(startTime)}.ics`;
+                link.click();
+              }}
+            >
+              <CalendarCheck className="w-4 h-4" />
+              Add to Calendar
+            </button>
+
+            {/* Client contact info if available */}
+            {appointment.clients && appointment.clients.length > 0 && appointment.clients[0].phone && (
+              <button
+                className="w-full px-4 py-2 bg-navy/60 hover:bg-navy/80 rounded-lg transition-colors text-sm font-medium flex items-center justify-center gap-2"
+                onClick={() => {
+                  const client = appointment.clients[0];
+                  // Generate vCard data
+                  const vCardData = `BEGIN:VCARD
+VERSION:3.0
+FN:${client.name} (Bravus Client)
+TEL:${client.phone}
+ADR:;;${client.location || ''};;;;
+END:VCARD`;
+                  
+                  const blob = new Blob([vCardData], { type: 'text/vcard' });
+                  const url = URL.createObjectURL(blob);
+                  const link = document.createElement('a');
+                  link.href = url;
+                  link.download = `${client.name.replace(/\s+/g, '_')}_contact.vcf`;
+                  link.click();
+                }}
+              >
+                <Download className="w-4 h-4" />
+                Save Client Contact
+              </button>
+            )}
+            
+            <div className="border-t border-white/10 my-6"></div>
+            
+            <div className="space-y-4">
+              <h3 className="text-lg font-bold mb-2">Appointment Tips</h3>
+              
+              <div className="bg-navy/70 rounded-lg p-4 border border-spink/10">
+                <p className="text-white/70 text-sm">
+                  Remember to check your schedule 30 minutes before the appointment and prepare any necessary materials.
+                </p>
+              </div>
+              
+              <div className="bg-navy/70 rounded-lg p-4 border border-spink/10">
+                <p className="text-white/70 text-sm">
+                  If you need to cancel this appointment, use the "Cancel Appointment" button above. The client will be notified automatically.
+                </p>
+              </div>
+              
+              <div className="bg-navy/70 rounded-lg p-4 border border-spink/10">
+                <p className="text-white/70 text-sm">
+                  Need to make changes? Contact support at <span className="text-spink">support@bravus.com</span> for assistance.
+                </p>
+              </div>
             </div>
           </div>
-          <p className="text-white/80">{appointment.notes}</p>
         </div>
-      )}
+      </div>
 
       {/* Delete Confirmation Dialog */}
       <ConfirmationDialog
         isOpen={showDeleteConfirm}
         onClose={handleDeleteCancel}
         onConfirm={handleDelete}
-        title="Delete Appointment"
-        message={`Are you sure you want to delete this appointment on ${formatDateForDisplay(new Date(appointment.datetime))} at ${formatTimeForDisplay(new Date(appointment.datetime))}? This action cannot be undone.`}
+        title="Cancel Appointment"
+        message={`Are you sure you want to cancel this appointment on ${formatDateForDisplay(appointmentDate)} at ${formatTimeForDisplay(appointmentDate)}? This action cannot be undone.`}
         isConfirming={isDeleting}
       />
-    </div>
+    </>
   );
 }

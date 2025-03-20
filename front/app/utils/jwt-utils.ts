@@ -52,13 +52,14 @@ export function getUserIdFromToken(): string | null {
   const decoded = decodeToken(token);
   console.log("Decoded token payload:", decoded);
 
-  // Look for user_id in the payload
-  const userId = decoded?.user_id || null;
-  console.log("Extracted user_id from token:", userId);
+  // Check for different possible ID field names in the payload
+  // Backend might use user_id, ID, id, or userId
+  const userId = decoded?.user_id || decoded?.ID || decoded?.id || decoded?.userId || null;
+  console.log("Extracted user ID from token:", userId);
 
   // If we found the ID in the token, store it in localStorage for future use
   if (userId) {
-    console.log("Storing user_id in localStorage:", userId);
+    console.log("Storing user ID in localStorage:", userId);
     localStorage.setItem("ID", userId);
   }
 
@@ -122,6 +123,12 @@ export const getUserTypeFromToken = (): string | null => {
     return null;
   }
 
+  // First check if user_type is stored in localStorage
+  const storedType = localStorage.getItem("user_type");
+  if (storedType) {
+    return storedType;
+  }
+
   const token = localStorage.getItem("auth_token");
   if (!token) {
     return null;
@@ -129,16 +136,40 @@ export const getUserTypeFromToken = (): string | null => {
 
   try {
     const decoded = decodeToken(token);
-    // Check if the token contains user_type claim
+    // Check for different possible user type field names in the payload
     if (decoded?.user_type) {
+      localStorage.setItem("user_type", decoded.user_type);
       return decoded.user_type;
     }
+    
+    if (decoded?.userType) {
+      localStorage.setItem("user_type", decoded.userType);
+      return decoded.userType;
+    }
+    
+    if (decoded?.type) {
+      localStorage.setItem("user_type", decoded.type);
+      return decoded.type;
+    }
 
-    // If user_type is not in the token, try to infer from other fields
-    if (decoded?.is_owner === true) {
+    // If no explicit type field, try to infer from is_owner or other flags
+    if (decoded?.is_owner === true || decoded?.isOwner === true) {
+      localStorage.setItem("user_type", "owner");
       return "owner";
-    } else if (decoded?.is_owner === false) {
+    } else if (decoded?.is_owner === false || decoded?.isOwner === false || decoded?.is_client === true || decoded?.isClient === true) {
+      localStorage.setItem("user_type", "client");
       return "client";
+    }
+
+    // Check if we can infer from the endpoint that was used
+    if (decoded?.aud && typeof decoded.aud === 'string') {
+      if (decoded.aud.includes('owner')) {
+        localStorage.setItem("user_type", "owner");
+        return "owner";
+      } else if (decoded.aud.includes('client')) {
+        localStorage.setItem("user_type", "client");
+        return "client";
+      }
     }
 
     return null;

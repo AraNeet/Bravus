@@ -319,7 +319,7 @@ export default function OwnerDashboard() {
             <h2 className="text-xl font-bold">Your Services</h2>
           </div>
           <Link
-            href="/dashboard/owner/service/new"
+            href="/dashboard/owner/services/new"
             className="flex items-center gap-1 text-sm bg-gradient-to-r from-spink to-mred hover:from-spink/90 hover:to-mred/90 px-3 py-2 rounded-lg transition-colors"
           >
             <PlusCircle className="w-4 h-4" />
@@ -378,7 +378,7 @@ export default function OwnerDashboard() {
                   </div>
 
                   <Link
-                    href={`/dashboard/owner/service/${service.id}`}
+                    href={`/dashboard/owner/services/${service.id}`}
                     className="flex items-center justify-center gap-1 w-full text-sm bg-white/5 hover:bg-white/10 py-2 rounded-lg transition-colors"
                   >
                     <span>Manage Service</span>
@@ -392,7 +392,7 @@ export default function OwnerDashboard() {
           <div className="bg-navy/40 backdrop-blur-sm rounded-xl border border-spink/10 p-8 text-center">
             <p className="text-white/60 mb-4">No services available yet</p>
             <Link
-              href="/dashboard/owner/service/new"
+              href="/dashboard/owner/services/new"
               className="inline-flex items-center gap-1 text-sm bg-gradient-to-r from-spink to-mred hover:from-spink/90 hover:to-mred/90 px-4 py-2 rounded-lg transition-colors"
             >
               <PlusCircle className="w-4 h-4" />

@@ -59,10 +59,11 @@ export const login = async (
         localStorage.setItem("email", clientResponse.email);
       }
 
-      // Extract and store user ID from token
+      // Extract and store user ID from token and from response
       const decoded = decodeToken(clientResponse.token);
-      if (decoded?.user_id) {
-        localStorage.setItem("ID", decoded.user_id);
+      if (decoded?.user_id || decoded?.id || decoded?.ID || decoded?.userId) {
+        const userId = decoded?.user_id || decoded?.id || decoded?.ID || decoded?.userId;
+        localStorage.setItem("ID", userId);
       } else if (clientResponse.id) {
         localStorage.setItem("ID", clientResponse.id);
       }
@@ -93,10 +94,11 @@ export const login = async (
           localStorage.setItem("email", ownerResponse.email);
         }
 
-        // Extract and store user ID from token
+        // Extract and store user ID from token and from response
         const decoded = decodeToken(ownerResponse.token);
-        if (decoded?.user_id) {
-          localStorage.setItem("ID", decoded.user_id);
+        if (decoded?.user_id || decoded?.id || decoded?.ID || decoded?.userId) {
+          const userId = decoded?.user_id || decoded?.id || decoded?.ID || decoded?.userId;
+          localStorage.setItem("ID", userId);
         } else if (ownerResponse.id) {
           localStorage.setItem("ID", ownerResponse.id);
         }
@@ -151,10 +153,11 @@ export const signupClient = async (
         localStorage.setItem("email", response.email);
       }
 
-      // Extract and store user ID from token
+      // Extract and store user ID from token and from response
       const decoded = decodeToken(response.token);
-      if (decoded?.user_id) {
-        localStorage.setItem("ID", decoded.user_id);
+      if (decoded?.user_id || decoded?.id || decoded?.ID || decoded?.userId) {
+        const userId = decoded?.user_id || decoded?.id || decoded?.ID || decoded?.userId;
+        localStorage.setItem("ID", userId);
       } else if (response.id) {
         localStorage.setItem("ID", response.id);
       }
@@ -232,10 +235,11 @@ export const signupOwner = async (
         localStorage.setItem("email", response.email);
       }
 
-      // Extract and store user ID from token
+      // Extract and store user ID from token and from response
       const decoded = decodeToken(response.token);
-      if (decoded?.user_id) {
-        localStorage.setItem("ID", decoded.user_id);
+      if (decoded?.user_id || decoded?.id || decoded?.ID || decoded?.userId) {
+        const userId = decoded?.user_id || decoded?.id || decoded?.ID || decoded?.userId;
+        localStorage.setItem("ID", userId);
       } else if (response.id) {
         localStorage.setItem("ID", response.id);
       }

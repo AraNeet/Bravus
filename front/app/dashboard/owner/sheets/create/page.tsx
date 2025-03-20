@@ -10,12 +10,17 @@ import {
   Calendar,
   ArrowLeft,
   AlertCircle,
+  Loader2,
 } from "lucide-react";
 import { createSpreadsheet } from "@/app/api/google";
 import SpreadsheetGrid from "@/app/components/SpreadsheetGrid";
 import { saveSpreadsheetId } from "@/app/utils/localStorageUtils";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
 
 export default function CreateSpreadsheet() {
   const router = useRouter();
@@ -165,169 +170,149 @@ export default function CreateSpreadsheet() {
   };
 
   return (
-    <>
-      {/* Back Button */}
-      <div className="mb-4">
-        <Button
-          variant="outline"
-          className="border-white/10 bg-white/5 text-white hover:bg-white/10"
-          onClick={() => router.push("/dashboard/owner/sheets")}
+    <div className="space-y-6">
+      <div className="flex items-center gap-2 mb-2">
+        <Link
+          href="/dashboard/owner/sheets"
+          className="text-white/70 hover:text-white flex items-center gap-1 transition-colors duration-200"
         >
-          <ArrowLeft className="mr-2 h-4 w-4" />
+          <ArrowLeft className="w-4 h-4" />
           Back to Spreadsheets
-        </Button>
+        </Link>
       </div>
+      <h1 className="text-3xl font-bold mb-1 bg-gradient-to-r from-spink to-mred bg-clip-text text-transparent">
+        Create Spreadsheet
+      </h1>
+      <p className="text-white/70 mb-6">
+        Create a new Google spreadsheet to store and manage your data
+      </p>
 
-      {/* Create Spreadsheet Form */}
-      <div className="space-y-6">
-        <div>
-          <h1 className="text-3xl font-bold mb-2">Create New Spreadsheet</h1>
-          <p className="text-white/70">
-            Create a new Google Spreadsheet for your data
-          </p>
+      <div className="space-y-8 bg-navy/30 backdrop-blur-sm rounded-xl border border-gteal/20 p-6 shadow-lg shadow-navy/30">
+        <div className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="title">Title</Label>
+            <Input
+              id="title"
+              placeholder="Enter spreadsheet title"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              className="bg-navy/40 border-gteal/20 focus:border-mred/40 focus:ring-mred/30 text-white"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="description">Description (Optional)</Label>
+            <Textarea
+              id="description"
+              placeholder="Enter a description for this spreadsheet"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              className="bg-navy/40 border-gteal/20 focus:border-mred/40 focus:ring-mred/30 text-white"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <Label>Sheet Names</Label>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={addSheetName}
+                className="text-white/80 border-gteal/20 bg-navy/50 hover:bg-navy/70 hover:text-white"
+              >
+                <Plus className="w-4 h-4 mr-1" />
+                Add Sheet
+              </Button>
+            </div>
+            <div className="space-y-3">
+              {sheetNames.map((name, index) => (
+                <div key={index} className="flex items-center gap-2">
+                  <Input
+                    placeholder={`Sheet ${index + 1}`}
+                    value={name}
+                    onChange={(e) => updateSheetName(index, e.target.value)}
+                    className="bg-navy/40 border-gteal/20 focus:border-mred/40 focus:ring-mred/30 text-white"
+                  />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => removeSheetName(index)}
+                    disabled={sheetNames.length <= 1}
+                    className="text-red-400 hover:text-red-300 hover:bg-red-500/10"
+                  >
+                    <X className="w-4 h-4" />
+                    <span className="sr-only">Remove</span>
+                  </Button>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="border-t border-gteal/20 pt-4">
+            <div className="flex items-center mb-2">
+              <Switch
+                id="preview"
+                checked={showPreview}
+                onCheckedChange={setShowPreview}
+                className="data-[state=checked]:bg-mred"
+              />
+              <Label htmlFor="preview" className="ml-2">
+                Show preview
+              </Label>
+            </div>
+            {showPreview && (
+              <div className="border border-gteal/20 rounded-lg overflow-hidden mt-4">
+                <SpreadsheetGrid
+                  sheetNames={sheetNames}
+                  previewData={previewData}
+                />
+              </div>
+            )}
+          </div>
         </div>
 
-        <Card className="bg-gradient-to-br from-white/5 to-white/3 border-white/10">
-          <form onSubmit={handleSubmit}>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <div className="mb-6">
-                  <label htmlFor="title" className="block text-white/80 mb-2">
-                    Spreadsheet Title <span className="text-red-400">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    id="title"
-                    value={title}
-                    onChange={(e) => setTitle(e.target.value)}
-                    placeholder="Enter spreadsheet title"
-                    className="w-full bg-white/5 border border-white/10 rounded-lg py-3 px-4 text-white focus:outline-none focus:ring-2 focus:ring-[#9f6eff]/50"
-                    required
-                  />
-                </div>
-
-                <div className="mb-6">
-                  <label
-                    htmlFor="description"
-                    className="block text-white/80 mb-2"
-                  >
-                    Description (Optional)
-                  </label>
-                  <textarea
-                    id="description"
-                    value={description}
-                    onChange={(e) => setDescription(e.target.value)}
-                    placeholder="Enter a description for your spreadsheet"
-                    className="w-full bg-white/5 border border-white/10 rounded-lg py-3 px-4 text-white focus:outline-none focus:ring-2 focus:ring-[#9f6eff]/50 min-h-[100px]"
-                  />
-                </div>
-
-                <div className="mb-6">
-                  <div className="flex justify-between items-center mb-2">
-                    <label className="block text-white/80">
-                      Sheets <span className="text-red-400">*</span>
-                    </label>
-                    <button
-                      type="button"
-                      onClick={addSheetName}
-                      className="text-sm text-[#9f6eff] hover:text-[#8a5de8] flex items-center gap-1"
-                    >
-                      <Plus className="w-4 h-4" />
-                      Add Sheet
-                    </button>
-                  </div>
-
-                  <div className="space-y-3 max-h-[250px] overflow-y-auto pr-2">
-                    {sheetNames.map((name, index) => (
-                      <div key={index} className="flex gap-2">
-                        <input
-                          type="text"
-                          value={name}
-                          onChange={(e) =>
-                            updateSheetName(index, e.target.value)
-                          }
-                          placeholder={`Sheet ${index + 1}`}
-                          className="flex-1 bg-white/5 border border-white/10 rounded-lg py-2 px-4 text-white focus:outline-none focus:ring-2 focus:ring-[#9f6eff]/50"
-                          required
-                        />
-                        {sheetNames.length > 1 && (
-                          <button
-                            type="button"
-                            onClick={() => removeSheetName(index)}
-                            className="p-2 text-white/60 hover:text-red-400 hover:bg-red-400/10 rounded transition-colors"
-                            title="Remove sheet"
-                          >
-                            <X className="w-5 h-5" />
-                          </button>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-
-              <div>
-                <div className="flex justify-between items-center mb-4">
-                  <h3 className="text-lg font-medium">Spreadsheet Preview</h3>
-                  <button
-                    type="button"
-                    onClick={togglePreview}
-                    className="text-sm text-[#9f6eff] hover:text-[#8a5de8] flex items-center gap-1"
-                  >
-                    {showPreview ? "Hide Preview" : "Show Preview"}
-                  </button>
-                </div>
-
-                {showPreview && (
-                  <div className="bg-white/5 rounded-lg overflow-hidden">
-                    <SpreadsheetGrid
-                      data={previewData}
-                      onCellChange={handleCellChange}
-                      onAddRow={handleAddRow}
-                      onAddColumn={handleAddColumn}
-                      onDeleteColumn={handleDeleteColumn}
-                      sheetNames={sheetNames}
-                      activeSheetIndex={activeSheetIndex}
-                      onSheetChange={setActiveSheetIndex}
-                      className="w-full border border-white/10 rounded"
-                    />
-                  </div>
-                )}
-
-                {!showPreview && (
-                  <div className="border border-dashed border-white/20 rounded-lg h-[300px] flex items-center justify-center">
-                    <button
-                      type="button"
-                      onClick={togglePreview}
-                      className="flex flex-col items-center gap-2 text-white/50 hover:text-white/80"
-                    >
-                      <FileSpreadsheet className="w-12 h-12" />
-                      <span>Click to show spreadsheet preview</span>
-                    </button>
-                  </div>
-                )}
-              </div>
+        {/* Error handling */}
+        {error && (
+          <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-4 flex items-start gap-3">
+            <AlertCircle className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
+            <div>
+              <h3 className="font-medium text-white">Error</h3>
+              <p className="text-white/70">{error}</p>
             </div>
+          </div>
+        )}
 
-            <div className="flex justify-end gap-4 mt-8">
-              <Link
-                href="/dashboard/owner/sheets"
-                className="px-6 py-3 border border-white/20 rounded-lg hover:bg-white/5 transition-colors"
-              >
-                Cancel
-              </Link>
-              <button
-                type="submit"
-                disabled={isCreating}
-                className="px-6 py-3 bg-[#9f6eff] hover:bg-[#8a5de8] rounded-lg transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                <FileSpreadsheet className="w-5 h-5" />
-                {isCreating ? "Creating..." : "Create Spreadsheet"}
-              </button>
-            </div>
-          </form>
-        </Card>
+        <div className="flex items-center justify-end gap-3 border-t border-gteal/20 pt-4">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => router.push("/dashboard/owner/sheets")}
+            className="border-gteal/20 bg-navy/50 hover:bg-navy/70 text-white"
+          >
+            Cancel
+          </Button>
+          <Button
+            type="button"
+            onClick={handleSubmit}
+            disabled={isCreating || !title || !sheetNames[0]}
+            className="bg-gradient-to-r from-mred to-spink hover:opacity-90 border-none text-white shadow-md shadow-navy/20"
+          >
+            {isCreating ? (
+              <>
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                Creating...
+              </>
+            ) : (
+              <>
+                <FileSpreadsheet className="w-4 h-4 mr-2" />
+                Create Spreadsheet
+              </>
+            )}
+          </Button>
+        </div>
       </div>
-    </>
+    </div>
   );
 }

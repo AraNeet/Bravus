@@ -181,21 +181,21 @@ export default function SheetsDashboard() {
             <div className="flex items-center gap-2 mb-2">
               <Link
                 href="/dashboard/owner"
-                className="text-white/70 hover:text-white flex items-center gap-1"
+                className="text-white/70 hover:text-white flex items-center gap-1 transition-colors duration-200"
               >
                 <ArrowLeft className="w-4 h-4" />
                 Back to Dashboard
               </Link>
             </div>
-            <h1 className="text-3xl font-bold mb-1">Spreadsheet Management</h1>
+            <h1 className="text-3xl font-bold mb-1 bg-gradient-to-r from-spink to-mred bg-clip-text text-transparent">Spreadsheet Management</h1>
             <p className="text-white/70">
               Connect with Google Sheets to manage your data
             </p>
           </div>
         </div>
 
-        <div className="bg-white/5 backdrop-blur-sm rounded-lg border border-white/10 p-8 text-center">
-          <FileSpreadsheet className="w-16 h-16 text-white/40 mx-auto mb-4" />
+        <div className="bg-navy/30 backdrop-blur-sm rounded-xl border border-gteal/20 p-8 text-center shadow-lg shadow-navy/40">
+          <FileSpreadsheet className="w-16 h-16 text-spink/60 mx-auto mb-4" />
           <h2 className="text-xl font-semibold mb-2">Connect with Google</h2>
           <p className="text-white/70 mb-6 max-w-md mx-auto">
             To manage your spreadsheets, you need to connect your Google
@@ -204,7 +204,7 @@ export default function SheetsDashboard() {
           <Button
             onClick={handleGoogleAuth}
             disabled={isAuthenticating}
-            className="bg-gradient-to-r from-[#4285F4] to-[#34A853] hover:from-[#3b76d9] hover:to-[#2e9549] border-none"
+            className="bg-gradient-to-r from-[#4285F4] to-[#34A853] hover:opacity-90 border-none shadow-md"
           >
             {isAuthenticating ? (
               <>
@@ -230,13 +230,13 @@ export default function SheetsDashboard() {
           <div className="flex items-center gap-2 mb-2">
             <Link
               href="/dashboard/owner"
-              className="text-white/70 hover:text-white flex items-center gap-1"
+              className="text-white/70 hover:text-white flex items-center gap-1 transition-colors duration-200"
             >
               <ArrowLeft className="w-4 h-4" />
               Back to Dashboard
             </Link>
           </div>
-          <h1 className="text-3xl font-bold mb-1">Spreadsheet Management</h1>
+          <h1 className="text-3xl font-bold mb-1 bg-gradient-to-r from-spink to-mred bg-clip-text text-transparent">Spreadsheet Management</h1>
           <p className="text-white/70">Manage your data and exports</p>
         </div>
 
@@ -244,7 +244,7 @@ export default function SheetsDashboard() {
           onClick={() =>
             (window.location.href = "/dashboard/owner/sheets/create")
           }
-          className="w-full md:w-auto bg-gradient-to-r from-[#9f6eff] to-[#c061f7] hover:from-[#8b4ff7] hover:to-[#b04fe3] border-none"
+          className="w-full md:w-auto bg-gradient-to-r from-mred to-spink hover:opacity-90 border-none text-white shadow-md shadow-navy/20"
         >
           <Plus className="w-4 h-4 mr-2" />
           New Spreadsheet
@@ -270,7 +270,7 @@ export default function SheetsDashboard() {
             placeholder="Search spreadsheets..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10 bg-white/5 border-white/10 text-white"
+            className="pl-10 bg-navy/30 border-gteal/20 focus:border-mred/40 focus:ring-mred/30 text-white"
           />
         </div>
       </div>
@@ -278,7 +278,7 @@ export default function SheetsDashboard() {
       {/* Loading state */}
       {isLoadingSheets ? (
         <div className="flex flex-col items-center justify-center py-12">
-          <Loader2 className="w-12 h-12 text-[#9f6eff] animate-spin mb-4" />
+          <div className="animate-spin w-12 h-12 border-4 border-mred border-t-transparent rounded-full mb-4"></div>
           <p className="text-white/70">Loading your spreadsheets...</p>
         </div>
       ) : (
@@ -287,13 +287,16 @@ export default function SheetsDashboard() {
             filteredSheets.map((sheet) => (
               <Card
                 key={sheet.id}
-                className="bg-white/5 backdrop-blur-sm border-white/10 hover:border-[#9f6eff]/40 transition-colors"
+                className="bg-navy/30 backdrop-blur-sm border-gteal/20 hover:border-spink/40 transition-colors relative overflow-hidden"
               >
+                {/* Color accent line at top */}
+                <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-mred to-spink"></div>
+                
                 <CardHeader className="pb-2">
                   <div className="flex justify-between items-start">
                     <CardTitle className="text-lg">{sheet.name}</CardTitle>
-                    <div className="bg-[#9f6eff]/20 p-2 rounded-full">
-                      <FileSpreadsheet className="w-5 h-5 text-[#9f6eff]" />
+                    <div className="bg-spink/20 p-2 rounded-full">
+                      <FileSpreadsheet className="w-5 h-5 text-spink" />
                     </div>
                   </div>
                   <CardDescription className="text-white/60">
@@ -305,13 +308,13 @@ export default function SheetsDashboard() {
                     Last modified on {formatDate(sheet.lastModified)}
                   </div>
                 </CardContent>
-                <CardFooter className="pt-2 border-t border-white/10 flex justify-between">
+                <CardFooter className="pt-2 border-t border-gteal/20 flex justify-between">
                   <div className="flex items-center gap-2">
                     <Button
                       variant="ghost"
                       size="sm"
                       onClick={() => handleEditSpreadsheet(sheet)}
-                      className="text-white/70 hover:text-white hover:bg-white/10"
+                      className="text-white/70 hover:text-white hover:bg-gteal/10"
                     >
                       <Edit className="w-4 h-4 mr-1" /> Edit
                     </Button>
@@ -319,7 +322,7 @@ export default function SheetsDashboard() {
                       variant="ghost"
                       size="sm"
                       onClick={() => handleOpenSpreadsheet(sheet)}
-                      className="text-white/70 hover:text-white hover:bg-white/10"
+                      className="text-white/70 hover:text-white hover:bg-gteal/10"
                     >
                       <ExternalLink className="w-4 h-4 mr-1" /> Open
                     </Button>
@@ -339,9 +342,9 @@ export default function SheetsDashboard() {
               </Card>
             ))
           ) : (
-            <div className="col-span-full bg-white/5 backdrop-blur-sm rounded-lg border border-white/10 p-8 text-center">
-              <FileSpreadsheet className="w-12 h-12 text-white/40 mx-auto mb-4" />
-              <h3 className="text-lg font-medium mb-2">
+            <div className="col-span-full bg-navy/30 backdrop-blur-sm rounded-xl border border-gteal/20 p-8 text-center">
+              <FileSpreadsheet className="w-12 h-12 text-spink/60 mx-auto mb-4" />
+              <h3 className="text-lg font-medium mb-2 text-white">
                 No spreadsheets found
               </h3>
               <p className="text-white/60 mb-4">
@@ -353,7 +356,7 @@ export default function SheetsDashboard() {
                 onClick={() =>
                   (window.location.href = "/dashboard/owner/sheets/create")
                 }
-                className="bg-gradient-to-r from-[#9f6eff] to-[#c061f7] hover:from-[#8b4ff7] hover:to-[#b04fe3] border-none"
+                className="bg-gradient-to-r from-mred to-spink hover:opacity-90 border-none"
               >
                 <Plus className="w-4 h-4 mr-2" /> Create your first spreadsheet
               </Button>
@@ -367,7 +370,7 @@ export default function SheetsDashboard() {
         open={isDeleteDialogOpen}
         onOpenChange={setIsDeleteDialogOpen}
       >
-        <AlertDialogContent className="bg-gradient-to-br from-[#1a0b2e] to-[#2c1250] border-[#9f6eff]/20 text-white">
+        <AlertDialogContent className="bg-navy border-gteal/20 text-white animate-fadeIn">
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Spreadsheet</AlertDialogTitle>
             <AlertDialogDescription className="text-white/60">
@@ -377,7 +380,7 @@ export default function SheetsDashboard() {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel
-              className="bg-white/5 border-[#9f6eff]/20 text-white hover:bg-white/10 hover:text-white hover:border-[#9f6eff]/40"
+              className="bg-navy/50 hover:bg-navy/70 border border-gteal/20 text-white"
               onClick={() => setIsDeleteDialogOpen(false)}
             >
               Cancel

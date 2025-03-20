@@ -21,6 +21,13 @@ import {
   X,
   CheckCircle,
   ArrowLeft,
+  PlusCircle,
+  RefreshCcw,
+  CalendarDays,
+  ChevronDown,
+  XCircle,
+  CheckCircle2,
+  User,
 } from "lucide-react";
 import { toast, Toaster } from "sonner";
 import type {
@@ -82,6 +89,47 @@ const isFuture = (date: Date): boolean => {
   return date > new Date();
 };
 
+// Format date to a friendly string
+function formatAppointmentDate(datetime: string): string {
+  const date = new Date(datetime);
+  
+  // Add 4 hours to the time
+  date.setHours(date.getHours() + 4);
+  
+  // Use UTC methods to ensure consistent rendering
+  const today = new Date();
+  today.setUTCHours(0, 0, 0, 0);
+  
+  const tomorrow = new Date(today);
+  tomorrow.setUTCDate(tomorrow.getUTCDate() + 1);
+  
+  const isToday = date >= today && date < tomorrow;
+  const isTomorrow = date >= tomorrow && date < new Date(tomorrow.getTime() + 86400000);
+  
+  const options: Intl.DateTimeFormatOptions = {
+    hour: "2-digit",
+    minute: "2-digit",
+    timeZone: 'UTC' // Use UTC to ensure consistent rendering
+  };
+  
+  let dateString = "";
+  
+  if (isToday) {
+    dateString = "Today";
+  } else if (isTomorrow) {
+    dateString = "Tomorrow";
+  } else {
+    dateString = date.toLocaleDateString(undefined, {
+      weekday: "short",
+      month: "short", 
+      day: "numeric",
+      timeZone: 'UTC' // Use UTC to ensure consistent rendering
+    });
+  }
+  
+  return `${dateString} at ${date.toLocaleTimeString([], options)}`;
+}
+
 // Define CalendarClock icon as we're not importing it from lucide-react directly
 const CalendarClock = (props: any) => (
   <svg
@@ -107,42 +155,44 @@ const CalendarClock = (props: any) => (
 
 // Status badge component
 const StatusBadge = ({ status }: { status: string }) => {
-  switch (status.toLowerCase()) {
-    case "confirmed":
-      return (
-        <span className="px-2 py-1 rounded-full bg-green-500/20 text-green-400 text-xs flex items-center gap-1">
-          <CheckCircle className="w-3 h-3" />
-          Confirmed
-        </span>
-      );
-    case "pending":
-      return (
-        <span className="px-2 py-1 rounded-full bg-yellow-500/20 text-yellow-400 text-xs flex items-center gap-1">
-          <Clock className="w-3 h-3" />
-          Pending
-        </span>
-      );
-    case "cancelled":
-      return (
-        <span className="px-2 py-1 rounded-full bg-red-500/20 text-red-400 text-xs flex items-center gap-1">
-          <X className="w-3 h-3" />
-          Cancelled
-        </span>
-      );
-    case "completed":
-      return (
-        <span className="px-2 py-1 rounded-full bg-blue-500/20 text-blue-400 text-xs flex items-center gap-1">
-          <CheckCircle className="w-3 h-3" />
-          Completed
-        </span>
-      );
-    default:
-      return (
-        <span className="px-2 py-1 rounded-full bg-gray-500/20 text-gray-400 text-xs">
-          {status}
-        </span>
-      );
-  }
+  const statusConfig = {
+    confirmed: {
+      color: "bg-gteal/15 text-gteal border border-gteal/20",
+      icon: <CheckCircle2 className="w-3 h-3 mr-1" />,
+    },
+    cancelled: {
+      color: "bg-mred/15 text-mred border border-mred/20",
+      icon: <XCircle className="w-3 h-3 mr-1" />,
+    },
+    pending: {
+      color: "bg-amber-400/15 text-amber-400 border border-amber-400/20",
+      icon: <Clock className="w-3 h-3 mr-1" />,
+    },
+    upcoming: {
+      color: "bg-spink/15 text-spink border border-spink/20",
+      icon: <Calendar className="w-3 h-3 mr-1" />,
+    },
+    past: {
+      color: "bg-white/15 text-white/60 border border-white/20",
+      icon: <CalendarDays className="w-3 h-3 mr-1" />,
+    },
+    completed: {
+      color: "bg-spink/15 text-spink border border-spink/20",
+      icon: <CheckCircle2 className="w-3 h-3 mr-1" />,
+    },
+  };
+
+  const config =
+    statusConfig[status as keyof typeof statusConfig] || statusConfig.pending;
+
+  return (
+    <span
+      className={`px-2 py-1 rounded-full ${config.color} text-xs flex items-center font-medium`}
+    >
+      {config.icon}
+      <span>{status.charAt(0).toUpperCase() + status.slice(1)}</span>
+    </span>
+  );
 };
 
 // Confirmation dialog component
@@ -163,19 +213,19 @@ const ConfirmationDialog = ({
 
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="bg-gradient-to-b from-[#2a1347] to-[#1a0b2e] rounded-xl border border-[#9f6eff]/20 shadow-lg p-6 max-w-md w-full">
+      <div className="bg-navy/80 rounded-xl border border-spink/20 shadow-lg p-6 max-w-md w-full">
         <h3 className="text-xl font-bold mb-2">{title}</h3>
         <p className="text-white/70 mb-6">{message}</p>
         <div className="flex justify-end gap-3">
           <button
             onClick={onClose}
-            className="px-4 py-2 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 transition-colors"
+            className="px-4 py-2 rounded-lg bg-navy/60 hover:bg-navy/80 border border-white/10 transition-colors"
           >
             Cancel
           </button>
           <button
             onClick={onConfirm}
-            className="px-4 py-2 rounded-lg bg-red-500/80 hover:bg-red-500 transition-colors"
+            className="px-4 py-2 rounded-lg bg-mred/80 hover:bg-mred transition-colors"
           >
             Confirm
           </button>
@@ -192,7 +242,7 @@ export default function OwnerAppointments() {
   const [dateFilter, setDateFilter] = useState<string>("all");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [currentPage, setCurrentPage] = useState(1);
-  const [appointmentsPerPage] = useState(10);
+  const [appointmentsPerPage] = useState(6);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [appointmentToDelete, setAppointmentToDelete] = useState<string | null>(
     null
@@ -201,6 +251,7 @@ export default function OwnerAppointments() {
   const [serviceCache, setServiceCache] = useState<Record<string, Service>>({});
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [isLoadingAppointments, setIsLoadingAppointments] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
 
   // Redirect if not authenticated or not an owner
   useEffect(() => {
@@ -246,13 +297,32 @@ export default function OwnerAppointments() {
     if (!isLoading && isLoggedIn) {
       fetchAppointments();
     }
-  }, [isLoading, isLoggedIn, user]);
+  }, [isLoading, isLoggedIn, user, refreshing]);
+
+  // Function to refresh appointments
+  const refreshAppointments = async () => {
+    try {
+      setRefreshing(true);
+      console.log("Refreshing appointments data...");
+      const userId = getUserIdFromToken();
+      if (userId) {
+        const ownerAppointments = await getOwnerAppointments(userId);
+        setAppointments(Array.isArray(ownerAppointments) ? ownerAppointments : []);
+      }
+      toast.success("Appointments refreshed successfully");
+    } catch (error) {
+      console.error("Error refreshing appointments:", error);
+      toast.error("Failed to refresh appointments");
+    } finally {
+      setRefreshing(false);
+    }
+  };
 
   // If still loading, show loading state
   if (isLoading || isLoadingAppointments) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-[#1a0b2e] to-[#2c1250] text-white flex items-center justify-center">
-        <div className="animate-spin w-12 h-12 border-4 border-[#9f6eff] border-t-transparent rounded-full"></div>
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin w-16 h-16 border-4 border-spink border-t-transparent rounded-full"></div>
       </div>
     );
   }
@@ -276,9 +346,27 @@ export default function OwnerAppointments() {
     return "services" in data && Array.isArray(data.services);
   };
 
+  // Helper function to determine appointment status
+  function getAppointmentStatus(appointment: Appointment): string {
+    const appointmentDate = new Date(appointment.datetime);
+    // Add 4 hours to match the display time
+    appointmentDate.setHours(appointmentDate.getHours() + 4);
+    const now = new Date();
+    
+    // Simple status logic based on date
+    if (appointmentDate < now) {
+      return "completed";
+    } else if (appointmentDate.getTime() - now.getTime() < 24 * 60 * 60 * 1000) {
+      return "confirmed";
+    } else {
+      return "pending";
+    }
+  }
+
   // Filter appointments based on search query, date filter, and status filter
   const filteredAppointments = appointments.filter((appointment: Appointment) => {
     const appointmentDate = new Date(appointment.datetime);
+    appointmentDate.setHours(appointmentDate.getHours() + 4);
     const clientNames = appointment.clients
       ? appointment.clients
           .map((client: ClientAppointment) => `${client.name}`.toLowerCase())
@@ -305,22 +393,40 @@ export default function OwnerAppointments() {
       serviceName.includes(searchQuery.toLowerCase());
 
     // Date filter
-    let matchesDate = true;
+    let matchesDate = dateFilter === "all";
+    
+    const today = new Date();
+    today.setUTCHours(0, 0, 0, 0);
+    
+    const tomorrow = new Date(today);
+    tomorrow.setUTCDate(tomorrow.getUTCDate() + 1);
+    
+    const weekFromNow = new Date(today);
+    weekFromNow.setUTCDate(weekFromNow.getUTCDate() + 7);
+    
+    const monthFromNow = new Date(today);
+    monthFromNow.setUTCMonth(monthFromNow.getUTCMonth() + 1);
+
     if (dateFilter === "today") {
-      matchesDate = isToday(appointmentDate);
+      matchesDate = appointmentDate >= today && appointmentDate < tomorrow;
     } else if (dateFilter === "week") {
-      matchesDate = isThisWeek(appointmentDate);
+      matchesDate = appointmentDate >= today && appointmentDate < weekFromNow;
     } else if (dateFilter === "month") {
-      matchesDate = isThisMonth(appointmentDate);
+      matchesDate = appointmentDate >= today && appointmentDate < monthFromNow;
     } else if (dateFilter === "upcoming") {
-      matchesDate = isFuture(appointmentDate);
+      matchesDate = appointmentDate > today;
     }
 
-    // Status filter - for demo purposes, we'll assume all appointments are confirmed unless specified
-    // In a real app, you would have a status field in the appointment object
-    const appointmentStatus = "confirmed";
-    const matchesStatus =
-      statusFilter === "all" || statusFilter === appointmentStatus;
+    // Status filter
+    let matchesStatus = statusFilter === "all";
+    
+    if (statusFilter === "upcoming") {
+      matchesStatus = appointmentDate > new Date();
+    } else if (statusFilter === "past") {
+      matchesStatus = appointmentDate < new Date();
+    } else if (statusFilter !== "all") {
+      matchesStatus = getAppointmentStatus(appointment) === statusFilter;
+    }
 
     return matchesSearch && matchesDate && matchesStatus;
   });
@@ -333,15 +439,11 @@ export default function OwnerAppointments() {
   );
 
   // Pagination
-  const indexOfLastAppointment = currentPage * appointmentsPerPage;
-  const indexOfFirstAppointment = indexOfLastAppointment - appointmentsPerPage;
-  const currentAppointments = sortedAppointments.slice(
-    indexOfFirstAppointment,
-    indexOfLastAppointment
-  );
   const totalPages = Math.ceil(sortedAppointments.length / appointmentsPerPage);
-
-  const paginate = (pageNumber: number) => setCurrentPage(pageNumber);
+  const paginatedAppointments = sortedAppointments.slice(
+    (currentPage - 1) * appointmentsPerPage,
+    currentPage * appointmentsPerPage
+  );
 
   // Delete appointment
   const handleDeleteClick = (appointmentId: string) => {
@@ -396,9 +498,9 @@ export default function OwnerAppointments() {
         position="top-right"
         toastOptions={{
           style: {
-            background: "rgba(42, 19, 71, 0.9)",
+            background: "rgba(0, 0, 48, 0.8)",
             color: "#fff",
-            border: "1px solid rgba(159, 110, 255, 0.2)",
+            border: "1px solid rgba(255, 82, 181, 0.2)",
             backdropFilter: "blur(8px)",
           },
         }}
@@ -406,212 +508,210 @@ export default function OwnerAppointments() {
 
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold mb-1">Appointments</h1>
+          <div className="flex items-center gap-2 mb-2">
+            <Link
+              href="/dashboard/owner"
+              className="text-white/70 hover:text-white flex items-center gap-1"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              Back to Dashboard
+            </Link>
+          </div>
+          <h1 className="text-2xl font-bold mb-1">Appointments</h1>
           <p className="text-white/70">Manage your scheduled appointments</p>
         </div>
+        <div className="flex gap-3">
+          <button
+            onClick={refreshAppointments}
+            disabled={refreshing}
+            className="bg-navy/40 backdrop-blur-sm hover:bg-navy/60 border border-spink/20 px-4 py-2 rounded-xl text-sm font-medium flex items-center gap-2 disabled:opacity-50 transition-all duration-300"
+          >
+            {refreshing ? (
+              <>
+                <RefreshCcw className="w-4 h-4 animate-spin" />
+                Refreshing...
+              </>
+            ) : (
+              <>
+                <RefreshCcw className="w-4 h-4" />
+                Refresh
+              </>
+            )}
+          </button>
+        </div>
       </div>
 
-      {/* Filters */}
-      <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-4 mb-8">
-        <div className="flex flex-col md:flex-row gap-4">
-          <div className="flex-1">
-            <div className="relative">
-              <Search className="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-white/40" />
-              <input
-                type="text"
-                placeholder="Search by client or service..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full bg-white/5 border border-white/10 rounded-lg py-2 pl-10 pr-4 focus:outline-none focus:ring-2 focus:ring-[#9f6eff]/50"
-              />
-            </div>
+      {/* Filters and Search */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="relative">
+          <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-white/40" />
+          <input
+            type="text"
+            placeholder="Search by client or service..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full bg-navy/40 border-spink/10 focus:border-spink/40 focus:ring-spink/30 rounded-lg py-2 pl-10 pr-4 text-sm focus:outline-none"
+          />
+        </div>
+
+        <div className="relative">
+          <div className="absolute left-3 top-1/2 -translate-y-1/2 text-white/40">
+            <Filter className="w-4 h-4" />
           </div>
-          <div className="flex gap-4">
-            <div className="relative">
-              <select
-                value={dateFilter}
-                onChange={(e) => setDateFilter(e.target.value)}
-                className="appearance-none bg-white/5 border border-white/10 rounded-lg py-2 pl-10 pr-10 focus:outline-none focus:ring-2 focus:ring-[#9f6eff]/50"
-              >
-                <option value="all">All Dates</option>
-                <option value="today">Today</option>
-                <option value="week">This Week</option>
-                <option value="month">This Month</option>
-                <option value="upcoming">Upcoming</option>
-              </select>
-              <Calendar className="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-white/40" />
-              <ChevronRight className="w-5 h-5 absolute right-3 top-1/2 -translate-y-1/2 text-white/40 rotate-90" />
-            </div>
-            <div className="relative">
-              <select
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
-                className="appearance-none bg-white/5 border border-white/10 rounded-lg py-2 pl-10 pr-10 focus:outline-none focus:ring-2 focus:ring-[#9f6eff]/50"
-              >
-                <option value="all">All Status</option>
-                <option value="confirmed">Confirmed</option>
-                <option value="pending">Pending</option>
-                <option value="cancelled">Cancelled</option>
-                <option value="completed">Completed</option>
-              </select>
-              <Filter className="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-white/40" />
-              <ChevronRight className="w-5 h-5 absolute right-3 top-1/2 -translate-y-1/2 text-white/40 rotate-90" />
-            </div>
+          <select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+            className="w-full appearance-none bg-navy/40 border-spink/10 focus:border-spink/40 focus:ring-spink/30 rounded-lg py-2 pl-10 pr-9 text-sm focus:outline-none cursor-pointer"
+          >
+            <option value="all" className="bg-navy">All Statuses</option>
+            <option value="upcoming" className="bg-navy">Upcoming</option>
+            <option value="past" className="bg-navy">Past</option>
+            <option value="pending" className="bg-navy">Pending</option>
+            <option value="confirmed" className="bg-navy">Confirmed</option>
+            <option value="completed" className="bg-navy">Completed</option>
+            <option value="cancelled" className="bg-navy">Cancelled</option>
+          </select>
+          <div className="absolute right-3 top-1/2 -translate-y-1/2 text-white/40 pointer-events-none">
+            <ChevronDown className="w-4 h-4" />
+          </div>
+        </div>
+
+        <div className="relative">
+          <div className="absolute left-3 top-1/2 -translate-y-1/2 text-white/40">
+            <Calendar className="w-4 h-4" />
+          </div>
+          <select
+            value={dateFilter}
+            onChange={(e) => setDateFilter(e.target.value)}
+            className="w-full appearance-none bg-navy/40 border-spink/10 focus:border-spink/40 focus:ring-spink/30 rounded-lg py-2 pl-10 pr-9 text-sm focus:outline-none cursor-pointer"
+          >
+            <option value="all" className="bg-navy">All Dates</option>
+            <option value="today" className="bg-navy">Today</option>
+            <option value="week" className="bg-navy">This Week</option>
+            <option value="month" className="bg-navy">This Month</option>
+            <option value="upcoming" className="bg-navy">Future</option>
+          </select>
+          <div className="absolute right-3 top-1/2 -translate-y-1/2 text-white/40 pointer-events-none">
+            <ChevronDown className="w-4 h-4" />
           </div>
         </div>
       </div>
 
-      {/* Appointments Table */}
-      {currentAppointments.length > 0 ? (
-        <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl overflow-hidden mb-6">
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b border-white/10">
-                  <th className="px-6 py-3 text-left text-xs font-medium text-white/60 uppercase tracking-wider">
-                    Date & Time
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-white/60 uppercase tracking-wider">
-                    Client
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-white/60 uppercase tracking-wider">
-                    Service
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-white/60 uppercase tracking-wider">
-                    Status
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-white/60 uppercase tracking-wider">
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {currentAppointments.map((appointment: Appointment) => (
-                  <tr
-                    key={appointment.id}
-                    className="border-b border-white/5 hover:bg-white/5"
-                  >
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-start gap-3">
-                        <div className="bg-[#9f6eff]/10 rounded-lg p-2 flex items-center justify-center">
-                          <CalendarClock className="w-5 h-5 text-[#9f6eff]" />
-                        </div>
-                        <div>
-                          <p className="font-medium">
-                            {formatDateForDisplay(
-                              new Date(appointment.datetime)
-                            )}
-                          </p>
-                          <p className="text-sm text-white/60">
-                            {formatTimeForDisplay(
-                              new Date(appointment.datetime)
-                            )}
-                          </p>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div>
-                        {appointment.clients.map(
-                          (client: ClientAppointment, index: number) => (
-                            <div key={index}>
-                              <p className="font-medium">{client.name}</p>
-                              {client.phone && (
-                                <p className="text-sm text-white/60">
-                                  {client.phone}
-                                </p>
-                              )}
-                            </div>
-                          )
-                        )}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <p className="font-medium">
-                        {getServiceName(appointment)}
-                      </p>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <StatusBadge status="confirmed" />
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center gap-2">
-                        <Link
-                          href={`/dashboard/owner/appointments/${appointment.id}`}
-                          className="p-1.5 rounded-lg bg-white/5 hover:bg-white/10 transition-colors"
-                          aria-label="View appointment details"
-                        >
-                          <MoreHorizontal className="w-4 h-4 text-white/70" />
-                        </Link>
-                        <button
-                          onClick={() => handleDeleteClick(appointment.id)}
-                          className="p-1.5 rounded-lg bg-white/5 hover:bg-red-500/20 transition-colors"
-                          aria-label="Delete appointment"
-                        >
-                          <Trash2 className="w-4 h-4 text-white/70" />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+      {/* Appointments Grid */}
+      {paginatedAppointments.length === 0 ? (
+        <div className="bg-navy/40 backdrop-blur-sm rounded-xl border border-spink/10 p-8 text-center">
+          <div className="flex justify-center mb-4">
+            <Calendar className="w-12 h-12 text-spink/60" />
+          </div>
+          <h3 className="text-lg font-medium mb-2">No appointments found</h3>
+          <p className="text-white/60 mb-4">
+            {searchQuery || statusFilter !== "all" || dateFilter !== "all" 
+              ? "Try adjusting your search filters for different results."
+              : "You don't have any appointments scheduled yet."}
+          </p>
+          <div className="flex flex-col sm:flex-row justify-center gap-3">
+            <button
+              onClick={refreshAppointments}
+              disabled={refreshing}
+              className="bg-navy/60 hover:bg-navy/80 border border-white/10 px-4 py-2 rounded-xl text-sm font-medium flex items-center justify-center gap-2 disabled:opacity-50"
+            >
+              {refreshing ? (
+                <>
+                  <RefreshCcw className="w-4 h-4 animate-spin" />
+                  Refreshing...
+                </>
+              ) : (
+                <>
+                  <RefreshCcw className="w-4 h-4" />
+                  Refresh
+                </>
+              )}
+            </button>
           </div>
         </div>
       ) : (
-        <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-8 text-center mb-6">
-          <div className="flex flex-col items-center justify-center">
-            <div className="w-16 h-16 rounded-full bg-[#9f6eff]/10 flex items-center justify-center mb-4">
-              <Calendar className="w-8 h-8 text-[#9f6eff]" />
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {paginatedAppointments.map((appointment: Appointment) => (
+            <div
+              key={appointment.id}
+              className="bg-navy/40 backdrop-blur-sm rounded-xl border border-spink/10 hover:border-spink/20 transition-all duration-300 hover:shadow-lg hover:shadow-spink/5 overflow-hidden flex flex-col"
+            >
+              <div className="p-4 border-b border-white/10">
+                <div className="flex justify-between items-start mb-3">
+                  <StatusBadge status={getAppointmentStatus(appointment)} />
+                  <span className="text-xs text-white/50">ID: #{appointment.id.substring(0, 6)}</span>
+                </div>
+                <h3 className="font-medium mb-1 text-lg">{getServiceName(appointment)}</h3>
+                <div className="flex items-center gap-2 text-sm text-white/70">
+                  <Calendar className="w-3.5 h-3.5" />
+                  <span>{formatAppointmentDate(appointment.datetime)}</span>
+                </div>
+                {appointment.clients && appointment.clients.length > 0 && (
+                  <div className="mt-2 py-1 px-3 bg-navy/60 rounded-lg text-sm">
+                    <div className="flex items-center gap-2">
+                      <User className="w-3.5 h-3.5 text-white/70" />
+                      <span className="text-white/90 font-medium">{appointment.clients[0].name}</span>
+                    </div>
+                  </div>
+                )}
+              </div>
+              
+              <div className="p-4 mt-auto flex justify-end gap-2 border-t border-white/5">
+                <Link
+                  href={`/dashboard/owner/appointments/${appointment.id}`}
+                  className="px-3 py-1.5 rounded-lg bg-spink/10 hover:bg-spink/20 text-white text-sm font-medium transition-colors flex items-center gap-1"
+                >
+                  View Details
+                </Link>
+                
+                <button
+                  onClick={() => handleDeleteClick(appointment.id)}
+                  className="px-3 py-1.5 rounded-lg bg-mred/10 hover:bg-mred/20 text-white text-sm font-medium transition-colors flex items-center gap-1"
+                >
+                  Cancel
+                </button>
+              </div>
             </div>
-            <h3 className="text-xl font-bold mb-2">No appointments found</h3>
-            <p className="text-white/60 mb-6">
-              {searchQuery || dateFilter !== "all" || statusFilter !== "all"
-                ? "Try adjusting your filters to see more results"
-                : "You don't have any appointments yet"}
-            </p>
-          </div>
+          ))}
         </div>
       )}
 
       {/* Pagination */}
       {totalPages > 1 && (
-        <div className="flex justify-center mt-6">
-          <nav className="flex items-center gap-1">
-            <button
-              onClick={() => paginate(Math.max(1, currentPage - 1))}
-              disabled={currentPage === 1}
-              className="p-2 rounded-lg bg-white/5 hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-              aria-label="Previous page"
-            >
-              <ChevronLeft className="w-5 h-5" />
-            </button>
+        <div className="flex justify-center items-center gap-2 mt-6">
+          <button
+            onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+            disabled={currentPage === 1}
+            className="p-2 rounded-lg bg-navy/40 border border-spink/10 hover:bg-spink/10 hover:border-spink/20 disabled:opacity-50 disabled:hover:bg-transparent disabled:cursor-not-allowed transition-colors"
+          >
+            <ChevronLeft className="w-4 h-4" />
+          </button>
 
-            {Array.from({ length: totalPages }, (_, i) => i + 1).map(
-              (number) => (
-                <button
-                  key={number}
-                  onClick={() => paginate(number)}
-                  className={`w-10 h-10 rounded-lg ${
-                    currentPage === number
-                      ? "bg-[#9f6eff]/20 text-[#9f6eff] font-medium"
-                      : "bg-white/5 hover:bg-white/10"
-                  } transition-colors`}
-                >
-                  {number}
-                </button>
-              )
-            )}
+          <div className="flex items-center gap-1">
+            {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+              <button
+                key={page}
+                onClick={() => setCurrentPage(page)}
+                className={`w-8 h-8 rounded-lg flex items-center justify-center text-sm transition-colors ${
+                  currentPage === page
+                    ? "bg-spink/20 text-spink border border-spink/30"
+                    : "bg-navy/40 border border-spink/10 hover:bg-spink/10 text-white/70"
+                }`}
+              >
+                {page}
+              </button>
+            ))}
+          </div>
 
-            <button
-              onClick={() => paginate(Math.min(totalPages, currentPage + 1))}
-              disabled={currentPage === totalPages}
-              className="p-2 rounded-lg bg-white/5 hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-              aria-label="Next page"
-            >
-              <ChevronRight className="w-5 h-5" />
-            </button>
-          </nav>
+          <button
+            onClick={() =>
+              setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+            }
+            disabled={currentPage === totalPages}
+            className="p-2 rounded-lg bg-navy/40 border border-spink/10 hover:bg-spink/10 hover:border-spink/20 disabled:opacity-50 disabled:hover:bg-transparent disabled:cursor-not-allowed transition-colors"
+          >
+            <ChevronRight className="w-4 h-4" />
+          </button>
         </div>
       )}
 
@@ -620,8 +720,8 @@ export default function OwnerAppointments() {
         isOpen={isDeleteDialogOpen}
         onClose={() => setIsDeleteDialogOpen(false)}
         onConfirm={confirmDelete}
-        title="Delete Appointment"
-        message="Are you sure you want to delete this appointment? This action cannot be undone."
+        title="Cancel Appointment"
+        message="Are you sure you want to cancel this appointment? This action cannot be undone."
       />
     </div>
   );

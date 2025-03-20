@@ -278,8 +278,8 @@ export default function ServicesPage() {
   // If still loading, show loading state
   if (authLoading || isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-[#1a0b2e] to-[#2c1250] text-white flex items-center justify-center">
-        <div className="animate-spin w-12 h-12 border-4 border-[#9f6eff] border-t-transparent rounded-full"></div>
+      <div className="min-h-screen bg-gradient-to-b from-navy to-navy/70 text-white flex items-center justify-center">
+        <div className="animate-spin w-12 h-12 border-4 border-mred border-t-transparent rounded-full"></div>
       </div>
     );
   }
@@ -293,19 +293,19 @@ export default function ServicesPage() {
           <div className="flex items-center gap-2 mb-2">
             <Link
               href="/dashboard/owner"
-              className="text-white/70 hover:text-white flex items-center gap-1"
+              className="text-white/70 hover:text-white flex items-center gap-1 transition-colors duration-200"
             >
               <ArrowLeft className="w-4 h-4" />
               Back to Dashboard
             </Link>
           </div>
-          <h1 className="text-3xl font-bold mb-1">Services</h1>
+          <h1 className="text-3xl font-bold mb-1 bg-gradient-to-r from-spink to-mred bg-clip-text text-transparent">Services</h1>
           <p className="text-white/70">Manage your veterinary services</p>
         </div>
 
         <Button
-          onClick={() => router.push("/dashboard/owner/service/new")}
-          className="w-full sm:w-auto bg-gradient-to-r from-[#9f6eff] to-[#c061f7] hover:from-[#8b4ff7] hover:to-[#b04fe3] border-none text-white"
+          onClick={() => router.push("/dashboard/owner/services/new")}
+          className="w-full sm:w-auto bg-gradient-to-r from-mred to-spink hover:opacity-90 border-none text-white shadow-md shadow-navy/20"
         >
           <Plus className="w-4 h-4 mr-2" />
           Add Service
@@ -320,7 +320,7 @@ export default function ServicesPage() {
             placeholder="Search services by name or description..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10 bg-gradient-to-br from-white/5 to-white/3 border-[#9f6eff]/20 focus:border-[#9f6eff]/40 focus:ring-[#9f6eff]/30 w-full"
+            className="pl-10 bg-navy/30 border-gteal/20 focus:border-mred/40 focus:ring-mred/30 w-full"
           />
           {searchQuery && (
             <button
@@ -345,20 +345,23 @@ export default function ServicesPage() {
           {filteredServices.map((service) => (
             <div
               key={service.id}
-              className="bg-gradient-to-br from-white/5 to-white/3 backdrop-blur-sm rounded-xl border border-[#9f6eff]/20 p-6 hover:shadow-lg hover:shadow-[#9f6eff]/10 transition-all duration-300 flex flex-col h-full"
+              className="bg-navy/30 backdrop-blur-sm rounded-xl border border-gteal/20 p-6 hover:shadow-lg hover:shadow-mred/10 transition-all duration-300 flex flex-col h-full relative overflow-hidden"
             >
+              {/* Color accent line at top */}
+              <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-mred to-spink"></div>
+
               {/* Service Header */}
               <div className="flex justify-between items-start gap-2 mb-3">
                 <h3 className="font-semibold text-lg text-white truncate">
                   {getServiceName(service)}
                 </h3>
-                <div className="px-3 py-1 bg-[#9f6eff]/20 rounded-full text-[#c061f7] text-sm font-medium">
+                <div className="px-3 py-1 bg-spink/20 rounded-full text-spink text-sm font-medium">
                   Active
                 </div>
               </div>
 
               {/* Service Price */}
-              <div className="mb-3 text-2xl font-bold bg-gradient-to-r from-[#9f6eff] to-[#c061f7] bg-clip-text text-transparent">
+              <div className="mb-3 text-2xl font-bold bg-gradient-to-r from-mred to-spink bg-clip-text text-transparent">
                 $
                 {typeof service.price === "number"
                   ? service.price.toFixed(2)
@@ -372,15 +375,15 @@ export default function ServicesPage() {
 
               {/* Service Duration */}
               <div className="flex items-center gap-2 mb-4 text-white/70">
-                <Clock className="w-4 h-4" />
+                <Clock className="w-4 h-4 text-spink/80" />
                 <span>{service.duration || 60} minutes</span>
               </div>
 
               {/* Service Actions */}
-              <div className="flex justify-between items-center pt-3 border-t border-white/10">
+              <div className="flex justify-between items-center pt-3 border-t border-gteal/20">
                 <Link
-                  href={`/dashboard/owner/service/${service.id}`}
-                  className="px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 transition-colors text-sm font-medium flex items-center"
+                  href={`/dashboard/owner/services/${service.id}`}
+                  className="px-3 py-1.5 rounded-lg bg-gteal/10 hover:bg-gteal/20 transition-colors text-sm font-medium flex items-center"
                 >
                   <Edit className="w-3.5 h-3.5 mr-1.5" />
                   Edit
@@ -397,37 +400,37 @@ export default function ServicesPage() {
           ))}
         </div>
       ) : (
-        <div className="bg-gradient-to-br from-white/5 to-white/3 backdrop-blur-sm rounded-xl border border-[#9f6eff]/20 p-10 text-center">
+        <div className="bg-navy/30 backdrop-blur-sm rounded-xl border border-gteal/20 p-10 text-center">
           {searchQuery ? (
             <>
-              <div className="bg-white/5 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-6">
+              <div className="bg-navy/50 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-6 border border-gteal/20">
                 <Search className="w-8 h-8 text-white/40" />
               </div>
-              <h3 className="text-xl font-semibold mb-2">No matches found</h3>
+              <h3 className="text-xl font-semibold mb-2 text-white">No matches found</h3>
               <p className="text-white/60 mb-6 max-w-md mx-auto">
                 We couldn't find any services matching "{searchQuery}". Try a
                 different search term or clear the search.
               </p>
               <Button
                 onClick={() => setSearchQuery("")}
-                className="bg-gradient-to-r from-[#9f6eff] to-[#c061f7] hover:from-[#8b4ff7] hover:to-[#b04fe3]"
+                className="bg-gradient-to-r from-mred to-spink hover:opacity-90"
               >
                 Clear Search
               </Button>
             </>
           ) : (
             <>
-              <div className="bg-white/5 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-6">
-                <Package className="w-8 h-8 text-[#9f6eff]" />
+              <div className="bg-navy/50 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-6 border border-gteal/20">
+                <Package className="w-8 h-8 text-spink" />
               </div>
-              <h3 className="text-xl font-semibold mb-2">No services yet</h3>
+              <h3 className="text-xl font-semibold mb-2 text-white">No services yet</h3>
               <p className="text-white/60 mb-6 max-w-md mx-auto">
                 You haven't added any services to your profile yet. Services
                 will appear here once you create them.
               </p>
               <Button
-                onClick={() => router.push("/dashboard/owner/service/new")}
-                className="bg-gradient-to-r from-[#9f6eff] to-[#c061f7] hover:from-[#8b4ff7] hover:to-[#b04fe3]"
+                onClick={() => router.push("/dashboard/owner/services/new")}
+                className="bg-gradient-to-r from-mred to-spink hover:opacity-90"
               >
                 <PlusCircle className="w-4 h-4 mr-2" />
                 <span>Add Your First Service</span>
@@ -444,13 +447,13 @@ export default function ServicesPage() {
             <button
               onClick={() => paginate(currentPage - 1)}
               disabled={currentPage === 1}
-              className="p-2 rounded-lg bg-white/5 border border-white/10 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="p-2 rounded-lg bg-navy/30 border border-gteal/20 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-navy/50 transition-colors"
               aria-label="Previous page"
             >
               <ChevronLeft className="w-4 h-4" />
             </button>
 
-            <div className="px-4 py-2">
+            <div className="px-4 py-2 bg-navy/20 rounded-lg border border-gteal/10">
               <span className="text-white/70">
                 Page {currentPage} of {totalPages}
               </span>
@@ -459,7 +462,7 @@ export default function ServicesPage() {
             <button
               onClick={() => paginate(currentPage + 1)}
               disabled={currentPage === totalPages}
-              className="p-2 rounded-lg bg-white/5 border border-white/10 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="p-2 rounded-lg bg-navy/30 border border-gteal/20 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-navy/50 transition-colors"
               aria-label="Next page"
             >
               <ChevronRight className="w-4 h-4" />
@@ -472,14 +475,14 @@ export default function ServicesPage() {
       {isDeleting && (
         <div className="fixed inset-0 bg-black/70 backdrop-blur-md flex items-center justify-center z-50 p-4">
           <div
-            className="bg-gradient-to-br from-[#1a0b2e] to-[#2c1250] border border-[#9f6eff]/20 rounded-xl p-6 max-w-md w-full mx-4 shadow-xl shadow-[#9f6eff]/10"
+            className="bg-navy border border-gteal/20 rounded-xl p-6 max-w-md w-full mx-4 shadow-xl animate-fadeIn"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="mb-6 flex flex-col items-center text-center">
               <div className="w-16 h-16 bg-red-500/10 rounded-full flex items-center justify-center mb-4">
                 <Trash2 className="w-8 h-8 text-red-400" />
               </div>
-              <h2 className="text-xl font-bold mb-2">Delete Service</h2>
+              <h2 className="text-xl font-bold mb-2 text-white">Delete Service</h2>
               <p className="text-white/70">
                 Are you sure you want to delete this service? This action cannot
                 be undone and will remove all associated data.
@@ -489,7 +492,7 @@ export default function ServicesPage() {
             <div className="flex gap-3 sm:flex-row flex-col mt-6">
               <Button
                 onClick={cancelDelete}
-                className="bg-white/5 hover:bg-white/10 flex-1"
+                className="bg-navy/50 hover:bg-navy/70 border border-gteal/20 flex-1"
                 variant="outline"
               >
                 <X className="w-4 h-4 mr-2" />

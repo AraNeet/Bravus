@@ -23,6 +23,7 @@ import {
   BookOpen,
   PanelLeftClose,
   PanelLeftOpen,
+  Sheet,
 } from "lucide-react";
 
 export default function DashboardLayout({
@@ -164,14 +165,9 @@ export default function DashboardLayout({
           icon: <Package className="h-5 w-5" />,
         },
         {
-          name: "Clients",
-          href: "/dashboard/owner/clients",
-          icon: <Users className="h-5 w-5" />,
-        },
-        {
-          name: "Settings",
-          href: "/dashboard/owner/settings",
-          icon: <Settings className="h-5 w-5" />,
+          name: "Sheets",
+          href: "/dashboard/owner/sheets",
+          icon: <Sheet className="h-5 w-5" />,
         },
       ]
     : [

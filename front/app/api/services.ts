@@ -55,7 +55,60 @@ export const createService = async (
  * Get service by ID
  */
 export const getServiceById = async (id: string): Promise<Service> => {
-  return await get<Service>(`/service/get-service?id=${id}`);
+  console.log(`getServiceById called with ID: ${id}`);
+  
+  try {
+    // Try primary endpoint
+    const service = await get<Service>(`/service/get-service?id=${id}`);
+    console.log("Service fetched successfully from primary endpoint:", service);
+    return service;
+  } catch (error) {
+    console.error("Error fetching service from primary endpoint:", error);
+    
+    try {
+      // Try alternative endpoint format
+      console.log("Trying alternative endpoint 1...");
+      const service = await get<Service>(`/service/${id}`);
+      console.log("Service fetched successfully from alternative endpoint 1:", service);
+      return service;
+    } catch (altError) {
+      console.error("Error fetching service from alternative endpoint 1:", altError);
+      
+      try {
+        // Try second alternative endpoint format
+        console.log("Trying alternative endpoint 2...");
+        const service = await get<Service>(`/service/get?id=${id}`);
+        console.log("Service fetched successfully from alternative endpoint 2:", service);
+        return service;
+      } catch (altError2) {
+        console.error("Error fetching service from alternative endpoint 2:", altError2);
+        
+        // If all direct fetches fail, try to get all services and find the one we want
+        try {
+          console.log("Trying to find service in all services...");
+          const ownerId = localStorage.getItem("user_id") || 
+                      localStorage.getItem("userId") || 
+                      localStorage.getItem("owner_id") || 
+                      localStorage.getItem("ownerId");
+                      
+          if (ownerId) {
+            const services = await getUserServices(ownerId);
+            const service = services.find(s => s.id === id);
+            
+            if (service) {
+              console.log("Found service in all services:", service);
+              return service;
+            }
+          }
+        } catch (searchError) {
+          console.error("Error searching service in all services:", searchError);
+        }
+        
+        // If everything fails, throw the original error
+        throw error;
+      }
+    }
+  }
 };
 
 /**
